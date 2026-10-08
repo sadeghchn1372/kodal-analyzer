@@ -1,0 +1,668 @@
+/* ============================================================
+   license.js — سیستم لایسنس و اشتراک  |  v38
+   ابزار تحلیلگر صورت‌های مالی کدال
+   طراح: صادق رمضانی
+   
+   اطلاعات تماس:
+   📷 اینستاگرام: ramezani_sadegh1993
+   ✈️ تلگرام: sadeghchn1372
+============================================================ */
+
+(function(){
+  'use strict';
+
+  /* ============================================================
+     ⚙️ تنظیمات اصلی
+  ============================================================ */
+  const CONFIG = {
+    // کلید تأیید (از پنل admin گرفتی)
+    VERIFY_KEY: '9836c59751731ecccf7af5f04fd57adf79aa123871e6099c2a193e6a1ebf6237',
+
+    // اطلاعات تماس
+    TELEGRAM: 'sadeghchn1372',
+    INSTAGRAM: 'ramezani_sadegh1993',
+
+    // پلن‌ها
+    PLANS: {
+      trial:    { name: 'آزمایشی',  days: 7,   uploads: 10,   price: 'رایگان',          emoji: '🆓' },
+      monthly:  { name: 'ماهانه',   days: 30,  uploads: 60,   price: '۱۰۰,۰۰۰ تومان',  emoji: '📅' },
+      quarterly:{ name: 'سه‌ماهه',  days: 90,  uploads: 180,  price: '۲۷۰,۰۰۰ تومان',  emoji: '📅' },
+      yearly:   { name: 'سالانه',   days: 365, uploads: 9999, price: '۶۰۰,۰۰۰ تومان',  emoji: '⭐' },
+    },
+
+    // کلیدهای localStorage
+    LS_LICENSE: 'kodal_license_v1',
+    LS_TRIAL_USED: 'kodal_trial_used_v1',
+
+    // نسخه اسکیما
+    SCHEMA_VERSION: 1,
+  };
+
+  /* ============================================================
+     🔐 توابع رمزنگاری (HMAC-SHA256)
+  ============================================================ */
+  function hexToBytes(hex){
+    hex = String(hex).replace(/[^0-9a-fA-F]/g,'');
+    if(hex.length % 2) hex = '0' + hex;
+    const bytes = new Uint8Array(hex.length/2);
+    for(let i=0;i<bytes.length;i++){
+      bytes[i] = parseInt(hex.substr(i*2, 2), 16);
+    }
+    return bytes;
+  }
+
+  function b64UrlToBytes(str){
+    str = String(str).replace(/-/g,'+').replace(/_/g,'/');
+    while(str.length % 4) str += '=';
+    try{
+      const bin = atob(str);
+      const bytes = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+      return bytes;
+    }catch(e){
+      return null;
+    }
+  }
+
+  function bytesToB64Url(bytes){
+    let bin = '';
+    for(let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  }
+
+  async function hmacSha256(keyBytes, msgBytes){
+    const key = await crypto.subtle.importKey(
+      'raw', keyBytes,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false, ['sign']
+    );
+    const sig = await crypto.subtle.sign('HMAC', key, msgBytes);
+    return new Uint8Array(sig);
+  }
+
+  /* ============================================================
+     🎫 تجزیه و تأیید لایسنس
+  ============================================================ */
+  async function parseAndVerifyLicense(licenseCode){
+    if(!licenseCode || typeof licenseCode !== 'string') return null;
+    const trimmed = licenseCode.trim();
+
+    if(!trimmed.startsWith('KODAL-')){
+      return { error: 'کد لایسنس باید با KODAL- شروع بشه' };
+    }
+
+    const body = trimmed.slice(6);
+    const parts = body.split('.');
+    if(parts.length !== 2){
+      return { error: 'ساختار کد لایسنس نامعتبره' };
+    }
+
+    const payloadB64 = parts[0];
+    const sigB64 = parts[1];
+
+    const payloadBytes = b64UrlToBytes(payloadB64);
+    if(!payloadBytes) return { error: 'خطا در خواندن payload' };
+
+    let payload;
+    try{
+      const json = new TextDecoder().decode(payloadBytes);
+      payload = JSON.parse(json);
+    }catch(e){
+      return { error: 'payload نامعتبر' };
+    }
+
+    const keyBytes = hexToBytes(CONFIG.VERIFY_KEY);
+    const expectedSig = await hmacSha256(keyBytes, payloadBytes);
+    const expectedSigB64 = bytesToB64Url(expectedSig).slice(0, 32);
+
+    if(expectedSigB64 !== sigB64){
+      return { error: 'امضای لایسنس معتبر نیست (شاید دست‌کاری شده)' };
+    }
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const expireDate = new Date(payload.e);
+    if(isNaN(expireDate.getTime())){
+      return { error: 'تاریخ انقضای لایسنس نامعتبره' };
+    }
+    if(expireDate < today){
+      return { error: '❌ لایسنس شما منقضی شده — برای تمدید با ما در تماس باش', expired: true };
+    }
+
+    if(typeof payload.u !== 'number' || payload.u <= 0){
+      return { error: 'تعداد آپلود در لایسنس نامعتبره' };
+    }
+
+    return {
+      ok: true,
+      payload,
+      expireDate,
+    };
+  }
+
+  /* ============================================================
+     💾 ذخیره‌سازی لایسنس
+  ============================================================ */
+  function loadLicense(){
+    try{
+      const raw = localStorage.getItem(CONFIG.LS_LICENSE);
+      if(!raw) return null;
+      const data = JSON.parse(raw);
+      if(data.schema !== CONFIG.SCHEMA_VERSION) return null;
+      return data;
+    }catch(e){ return null; }
+  }
+
+  function saveLicense(data){
+    try{
+      localStorage.setItem(CONFIG.LS_LICENSE, JSON.stringify(data));
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function clearLicense(){
+    try{ localStorage.removeItem(CONFIG.LS_LICENSE); }catch(e){}
+  }
+
+  function hasUsedTrial(){
+    try{ return localStorage.getItem(CONFIG.LS_TRIAL_USED) === '1'; }
+    catch(e){ return false; }
+  }
+
+  function markTrialUsed(){
+    try{ localStorage.setItem(CONFIG.LS_TRIAL_USED, '1'); }catch(e){}
+  }
+
+  /* ============================================================
+     🎯 وضعیت فعلی
+  ============================================================ */
+  function getStatus(){
+    const lic = loadLicense();
+    if(!lic){
+      if(hasUsedTrial()){
+        return {
+          state: 'no-license',
+          message: 'دوره آزمایشی شما به پایان رسیده',
+        };
+      }
+      return {
+        state: 'new-user',
+        message: 'خوش اومدی! می‌تونی آزمایشی شروع کنی',
+      };
+    }
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const expireDate = new Date(lic.expireDate);
+    const daysLeft = Math.ceil((expireDate - today) / (1000 * 60 * 60 * 24));
+
+    if(daysLeft < 0){
+      return {
+        state: 'expired',
+        message: '❌ لایسنس شما منقضی شده',
+        license: lic,
+      };
+    }
+
+    if(lic.uploadsLeft <= 0){
+      return {
+        state: 'no-uploads',
+        message: '❌ اعتبار آپلود شما تموم شده',
+        license: lic,
+      };
+    }
+
+    return {
+      state: 'active',
+      message: '✅ لایسنس فعال',
+      license: lic,
+      daysLeft,
+      uploadsLeft: lic.uploadsLeft,
+    };
+  }
+
+  /* ============================================================
+     🎬 فعال‌سازی لایسنس
+  ============================================================ */
+  async function activateLicense(licenseCode){
+    const result = await parseAndVerifyLicense(licenseCode);
+    if(!result || result.error){
+      return { error: result?.error || 'کد نامعتبر' };
+    }
+
+    const { payload, expireDate } = result;
+
+    const data = {
+      schema: CONFIG.SCHEMA_VERSION,
+      code: licenseCode.trim(),
+      name: payload.n,
+      userId: payload.i,
+      plan: payload.p || 'سفارشی',
+      totalUploads: payload.u,
+      uploadsLeft: payload.u,
+      uploadsUsed: 0,
+      startDate: payload.c,
+      expireDate: payload.e,
+      activatedAt: new Date().toISOString(),
+    };
+
+    if(!saveLicense(data)){
+      return { error: 'خطا در ذخیره‌سازی لایسنس' };
+    }
+
+    return { ok: true, license: data };
+  }
+
+  /* ============================================================
+     🆓 فعال‌سازی آزمایشی
+  ============================================================ */
+  function activateTrial(){
+    if(hasUsedTrial()){
+      return { error: 'شما قبلاً از دوره آزمایشی استفاده کردید' };
+    }
+
+    const today = new Date();
+    const expire = new Date(today.getTime() + CONFIG.PLANS.trial.days * 24 * 60 * 60 * 1000);
+
+    const data = {
+      schema: CONFIG.SCHEMA_VERSION,
+      code: 'TRIAL-' + Date.now(),
+      name: 'کاربر آزمایشی',
+      userId: 'trial_user',
+      plan: 'آزمایشی',
+      totalUploads: CONFIG.PLANS.trial.uploads,
+      uploadsLeft: CONFIG.PLANS.trial.uploads,
+      uploadsUsed: 0,
+      startDate: today.toISOString().slice(0,10),
+      expireDate: expire.toISOString().slice(0,10),
+      activatedAt: today.toISOString(),
+      isTrial: true,
+    };
+
+    if(!saveLicense(data)){
+      return { error: 'خطا در ذخیره‌سازی' };
+    }
+
+    markTrialUsed();
+    return { ok: true, license: data };
+  }
+
+  /* ============================================================
+     📊 مصرف آپلود
+  ============================================================ */
+  function consumeUpload(){
+    const lic = loadLicense();
+    if(!lic) return { error: 'لایسنس فعال نیست' };
+
+    if(lic.uploadsLeft <= 0){
+      return { error: '❌ اعتبار آپلود شما تموم شده — برای خرید با ما در تماس باش' };
+    }
+
+    lic.uploadsLeft -= 1;
+    lic.uploadsUsed = (lic.uploadsUsed || 0) + 1;
+
+    if(!saveLicense(lic)){
+      return { error: 'خطا در ذخیره‌سازی' };
+    }
+
+    return { ok: true, license: lic };
+  }
+
+  /* ============================================================
+     🎨 UI — مودال ورود لایسنس
+  ============================================================ */
+  function toFa(x){
+    const FA = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+    return String(x).replace(/[0-9]/g, d => FA[Number(d)]);
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[c]);
+  }
+
+  function createModal(){
+    if(document.getElementById('licenseModal')) return;
+
+    const html = `
+      <div id="licenseModal" class="license-modal-overlay">
+        <div class="license-modal-box">
+
+          <div class="license-modal-header">
+            <span class="license-icon">🔐</span>
+            <h2>فعال‌سازی اپلیکیشن</h2>
+            <p class="license-modal-sub">برای استفاده از تحلیلگر، کد لایسنس خود را وارد کنید</p>
+          </div>
+
+          <div class="license-modal-body">
+
+            <div class="license-status-box" id="licenseStatusBox" style="display:none"></div>
+
+            <div class="license-section">
+              <label for="licenseInput">🔑 کد لایسنس</label>
+              <textarea id="licenseInput" placeholder="KODAL-..." rows="3" spellcheck="false"></textarea>
+              <button id="licenseActivateBtn" class="license-btn-primary">🔓 فعال‌سازی</button>
+            </div>
+
+            <div class="license-divider"><span>یا</span></div>
+
+            <div class="license-section">
+              <button id="licenseTrialBtn" class="license-btn-trial">
+                🆓 شروع دوره آزمایشی (۱۰ آپلود · ۷ روز)
+              </button>
+              <p class="license-trial-hint">یک‌بار قابل استفاده — بدون نیاز به کارت بانکی</p>
+            </div>
+
+            <div class="license-divider"><span>خرید لایسنس</span></div>
+
+            <div class="license-plans">
+              <div class="license-plan">
+                <div class="plan-emoji">📅</div>
+                <div class="plan-name">ماهانه</div>
+                <div class="plan-price">۱۰۰,۰۰۰ تومان</div>
+                <div class="plan-info">۳۰ روز · ۶۰ آپلود</div>
+              </div>
+              <div class="license-plan">
+                <div class="plan-emoji">📅</div>
+                <div class="plan-name">سه‌ماهه</div>
+                <div class="plan-price">۲۷۰,۰۰۰ تومان</div>
+                <div class="plan-info">۹۰ روز · ۱۸۰ آپلود</div>
+              </div>
+              <div class="license-plan featured">
+                <div class="plan-emoji">⭐</div>
+                <div class="plan-name">سالانه</div>
+                <div class="plan-price">۶۰۰,۰۰۰ تومان</div>
+                <div class="plan-info">۳۶۵ روز · نامحدود</div>
+              </div>
+            </div>
+
+            <div class="license-contact">
+              <p>برای خرید با ما در تماس باشید:</p>
+              <div class="license-contact-buttons">
+                <a href="https://t.me/${CONFIG.TELEGRAM}" target="_blank" rel="noopener" class="contact-btn contact-telegram">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                  تلگرام
+                </a>
+                <a href="https://instagram.com/${CONFIG.INSTAGRAM}" target="_blank" rel="noopener" class="contact-btn contact-instagram">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                  اینستاگرام
+                </a>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    const wrap = document.createElement('div');
+    wrap.innerHTML = html;
+    document.body.appendChild(wrap.firstElementChild);
+
+    document.getElementById('licenseActivateBtn').onclick = onActivateClick;
+    document.getElementById('licenseTrialBtn').onclick = onTrialClick;
+
+    document.getElementById('licenseInput').addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        onActivateClick();
+      }
+    });
+  }
+
+  function showModal(){
+    createModal();
+    const m = document.getElementById('licenseModal');
+    m.classList.add('show');
+
+    const status = getStatus();
+    const box = document.getElementById('licenseStatusBox');
+
+    if(status.state === 'expired' || status.state === 'no-uploads'){
+      box.style.display = 'block';
+      box.className = 'license-status-box license-status-error';
+      box.innerHTML = `<b>${status.message}</b><br><span style="font-size:12px;opacity:.9">برای خرید لایسنس جدید از دکمه‌های پایین استفاده کن</span>`;
+    } else if(status.state === 'no-license' && hasUsedTrial()){
+      box.style.display = 'block';
+      box.className = 'license-status-box license-status-warning';
+      box.innerHTML = `<b>دوره آزمایشی شما به پایان رسیده</b><br><span style="font-size:12px;opacity:.9">برای ادامه، لایسنس خریداری کنید</span>`;
+      document.getElementById('licenseTrialBtn').disabled = true;
+      document.getElementById('licenseTrialBtn').style.opacity = '.4';
+      document.getElementById('licenseTrialBtn').style.cursor = 'not-allowed';
+    } else if(status.state === 'new-user'){
+      document.getElementById('licenseTrialBtn').disabled = false;
+      document.getElementById('licenseTrialBtn').style.opacity = '1';
+      document.getElementById('licenseTrialBtn').style.cursor = 'pointer';
+    }
+  }
+
+  function hideModal(){
+    const m = document.getElementById('licenseModal');
+    if(m) m.classList.remove('show');
+  }
+
+  async function onActivateClick(){
+    const input = document.getElementById('licenseInput');
+    const code = input.value.trim();
+    if(!code){
+      showStatusError('کد لایسنس رو وارد کن');
+      return;
+    }
+
+    const btn = document.getElementById('licenseActivateBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ در حال بررسی...';
+
+    const result = await activateLicense(code);
+
+    btn.disabled = false;
+    btn.textContent = '🔓 فعال‌سازی';
+
+    if(result.error){
+      showStatusError(result.error);
+      return;
+    }
+
+    showStatusSuccess('✅ لایسنس با موفقیت فعال شد!');
+    setTimeout(() => {
+      hideModal();
+      if(typeof window.onLicenseActivated === 'function'){
+        window.onLicenseActivated(result.license);
+      }
+      updateLicenseIndicator();
+    }, 1200);
+  }
+
+  function onTrialClick(){
+    const result = activateTrial();
+    if(result.error){
+      showStatusError(result.error);
+      return;
+    }
+    showStatusSuccess('✅ دوره آزمایشی فعال شد!');
+    setTimeout(() => {
+      hideModal();
+      if(typeof window.onLicenseActivated === 'function'){
+        window.onLicenseActivated(result.license);
+      }
+      updateLicenseIndicator();
+    }, 1200);
+  }
+
+  function showStatusError(msg){
+    const box = document.getElementById('licenseStatusBox');
+    box.style.display = 'block';
+    box.className = 'license-status-box license-status-error';
+    box.innerHTML = escapeHtml(msg);
+  }
+  function showStatusSuccess(msg){
+    const box = document.getElementById('licenseStatusBox');
+    box.style.display = 'block';
+    box.className = 'license-status-box license-status-success';
+    box.innerHTML = escapeHtml(msg);
+  }
+
+  /* ============================================================
+     🟢 نشانگر وضعیت لایسنس (گوشه صفحه)
+  ============================================================ */
+  function updateLicenseIndicator(){
+    let el = document.getElementById('licenseIndicator');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'licenseIndicator';
+      document.body.appendChild(el);
+    }
+
+    const status = getStatus();
+
+    if(status.state === 'active'){
+      const days = status.daysLeft;
+      const upl = status.license.uploadsLeft;
+      const uplTotal = status.license.totalUploads;
+      const plan = status.license.plan;
+
+      const uplDisplay = (uplTotal >= 9999) ? '∞' : `${toFa(upl)} از ${toFa(uplTotal)}`;
+
+      el.className = 'license-indicator active';
+      el.innerHTML = `
+        <div class="li-icon">✅</div>
+        <div class="li-info">
+          <div class="li-plan">${escapeHtml(plan)}</div>
+          <div class="li-meta">
+            <span>📅 ${toFa(days)} روز مونده</span>
+            <span>📊 ${uplDisplay} آپلود</span>
+          </div>
+        </div>
+        <button class="li-btn" onclick="window.License.openManage()">⚙️</button>
+      `;
+    } else if(status.state === 'expired' || status.state === 'no-uploads'){
+      el.className = 'license-indicator danger';
+      el.innerHTML = `
+        <div class="li-icon">⚠️</div>
+        <div class="li-info">
+          <div class="li-plan">${status.state === 'expired' ? 'منقضی شده' : 'اعتبار تموم شده'}</div>
+          <div class="li-meta">
+            <span>${status.message}</span>
+          </div>
+        </div>
+        <button class="li-btn" onclick="window.License.open()">🔐 تمدید</button>
+      `;
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  /* ============================================================
+     ⚙️ مدیریت لایسنس (پنل کاربر)
+  ============================================================ */
+  function openManage(){
+    const status = getStatus();
+    if(status.state !== 'active'){
+      showModal();
+      return;
+    }
+
+    const lic = status.license;
+    const uplTotal = lic.totalUploads >= 9999 ? '∞' : toFa(lic.totalUploads);
+    const uplLeft = lic.totalUploads >= 9999 ? '∞' : toFa(lic.uploadsLeft);
+
+    const html = `
+      <div class="license-modal-overlay show" id="licenseManageModal">
+        <div class="license-modal-box" style="max-width:480px">
+          <div class="license-modal-header">
+            <span class="license-icon">⚙️</span>
+            <h2>اطلاعات لایسنس</h2>
+          </div>
+          <div class="license-modal-body">
+            <div class="license-manage-grid">
+              <div class="lm-row"><span>👤 نام:</span><b>${escapeHtml(lic.name)}</b></div>
+              <div class="lm-row"><span>📦 پلن:</span><b>${escapeHtml(lic.plan)}</b></div>
+              <div class="lm-row"><span>📅 شروع:</span><b>${toFa(lic.startDate)}</b></div>
+              <div class="lm-row"><span>⏰ انقضا:</span><b>${toFa(lic.expireDate)}</b></div>
+              <div class="lm-row"><span>📊 آپلود کل:</span><b>${uplTotal}</b></div>
+              <div class="lm-row"><span>✅ آپلود باقی:</span><b>${uplLeft}</b></div>
+              <div class="lm-row"><span>🔢 استفاده‌شده:</span><b>${toFa(lic.uploadsUsed || 0)}</b></div>
+            </div>
+
+            <div class="license-actions-box">
+              <button id="copyLicenseBtn" class="license-btn-secondary">📋 کپی کد لایسنس</button>
+              <button id="closeManageBtn" class="license-btn-primary">بستن</button>
+            </div>
+
+            <div class="license-contact" style="margin-top:14px">
+              <p style="font-size:12px">برای تمدید یا ارتقا:</p>
+              <div class="license-contact-buttons">
+                <a href="https://t.me/${CONFIG.TELEGRAM}" target="_blank" rel="noopener" class="contact-btn contact-telegram">✈️ تلگرام</a>
+                <a href="https://instagram.com/${CONFIG.INSTAGRAM}" target="_blank" rel="noopener" class="contact-btn contact-instagram">📷 اینستاگرام</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const wrap = document.createElement('div');
+    wrap.innerHTML = html;
+    const modal = wrap.firstElementChild;
+    document.body.appendChild(modal);
+
+    document.getElementById('closeManageBtn').onclick = () => modal.remove();
+    document.getElementById('copyLicenseBtn').onclick = () => {
+      navigator.clipboard.writeText(lic.code).then(() => {
+        const btn = document.getElementById('copyLicenseBtn');
+        btn.textContent = '✅ کپی شد';
+        setTimeout(() => btn.textContent = '📋 کپی کد لایسنس', 1500);
+      });
+    };
+    modal.addEventListener('click', (e) => {
+      if(e.target === modal) modal.remove();
+    });
+  }
+
+  /* ============================================================
+     🌐 API عمومی
+  ============================================================ */
+  window.License = {
+    getStatus,
+    hasLicense: () => {
+      const s = getStatus();
+      return s.state === 'active';
+    },
+    consumeUpload,
+    open: showModal,
+    openManage,
+    updateIndicator: updateLicenseIndicator,
+    activateLicense,
+    activateTrial,
+    clearLicense,
+    _debug: {
+      loadLicense,
+      saveLicense,
+      CONFIG,
+    },
+  };
+
+  /* ============================================================
+     🚀 راه‌اندازی
+  ============================================================ */
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  function init(){
+    const status = getStatus();
+    if(status.state !== 'active'){
+      setTimeout(() => showModal(), 400);
+    } else {
+      updateLicenseIndicator();
+    }
+  }
+
+  console.log('%c🔐 License.js v38 لود شد', 'color:#10b981;font-weight:bold');
+  console.log('%c📷 @ramezani_sadegh1993  |  ✈️ @sadeghchn1372', 'color:#3b82f6');
+
+})();

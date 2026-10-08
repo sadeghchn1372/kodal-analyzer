@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>تحلیلگر صورت‌های مالی کدال</title>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1769e0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="کدال">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <!-- Fonts & Styles -->
+    <link rel="stylesheet" href="styles.css">
+    </head>
+<body>
+<div id="globalTooltip"></div>
+
+<!-- ============================================================
+     مودال ذخیره تحلیل (تب تحلیل شرکت)
+============================================================ -->
+<div id="saveModal">
+  <div class="modal-box">
+    <h3>💾 ذخیره تحلیل</h3>
+    <label>یه اسم برای این تحلیل بنویس:</label>
+    <input id="saveNameInput" type="text" placeholder="مثلاً: تحلیل شرکت الف — دوره ۳ ماهه">
+    <div class="actions">
+      <button id="saveConfirm" class="primary">ذخیره</button>
+      <button id="saveCancel" class="ghost">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     مودال ذخیره مقایسه
+============================================================ -->
+<div id="saveCompareModal">
+  <div class="modal-box">
+    <h3>💾 ذخیره مقایسه</h3>
+    <label>یه اسم برای این مقایسه بنویس:</label>
+    <input id="saveCompareNameInput" type="text" placeholder="مثلاً: مقایسه فولاد vs خودرو vs شپنا">
+    <div class="actions">
+      <button id="saveCompareConfirm" class="primary">ذخیره</button>
+      <button id="saveCompareCancel" class="ghost">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     مودال مشترک افزودن به دیدبان
+============================================================ -->
+<div id="addWatchModal">
+  <div class="modal-box" style="max-width:520px">
+    <h3 id="addWatchTitle">👁️ افزودن به دیدبان</h3>
+    <p id="addWatchSubtitle" style="font-size:12.5px;color:var(--sub);margin:0 0 14px"></p>
+
+    <div class="watch-mode-selector">
+      <label class="watch-mode-option">
+        <input type="radio" name="watchMode" value="existing" id="watchModeExisting">
+        <span>📋 انتخاب از سهم‌های موجود</span>
+      </label>
+      <label class="watch-mode-option">
+        <input type="radio" name="watchMode" value="new" id="watchModeNew" checked>
+        <span>➕ ساخت سهم جدید</span>
+      </label>
+    </div>
+
+    <div id="watchExistingBox" style="display:none;margin-top:12px">
+      <label>سهم مورد نظر:</label>
+      <select id="watchExistingSelect"></select>
+    </div>
+
+    <div id="watchNewBox" style="margin-top:12px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label>اسم نماد</label>
+        <input id="watchNewSymbol" type="text" placeholder="مثلاً: فولاد">
+        <label>صنعت (اختیاری)</label>
+        <input id="watchNewIndustry" type="text" placeholder="مثلاً: فلزات اساسی">
+      </div>
+    </div>
+
+    <div id="watchPeriodBox" style="margin-top:12px">
+      <label id="watchPeriodLabel">دوره</label>
+      <div id="watchPeriodFields"></div>
+    </div>
+
+    <div id="watchAddErr" class="err" style="display:none;margin-top:10px"></div>
+
+    <div class="actions">
+      <button id="addWatchConfirm" class="primary">✅ افزودن به دیدبان</button>
+      <button id="addWatchCancel" class="ghost">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<div id="saveToast"></div>
+
+<div class="wrap">
+
+<div class="main-tabs">
+  <button class="main-tab active" data-maintab="single">📊 تحلیل تک شرکت</button>
+  <button class="main-tab" data-maintab="compare">📈 مقایسه شرکت‌ها</button>
+  <button class="main-tab" data-maintab="watchlist">👁️ دیدبان</button>
+</div>
+
+<!-- ================== تب ۱: تحلیل تک شرکت ================== -->
+<div id="tabSingle" class="tab-panel active">
+
+<div class="card">
+  <div class="topbar">
+    <h1>تحلیلگر صورت‌های مالی کدال <span style="font-size:13px;color:var(--sub);font-weight:400">v40</span></h1>
+    <div class="actions">
+      <button id="pdfBtn" class="ghost" title="خروجی PDF" style="display:none">📄 خروجی PDF</button>
+      <button id="themeBtn" class="ghost" title="تغییر تم">🌙 تم تاریک</button>
+    </div>
+    <p class="sub" style="margin:0">اطلاعات شرکت و فایل صورت مالی رو وارد کن؛ همه نسبت‌ها خودکار محاسبه می‌شن.</p>
+  </div>
+
+<div class="input-section">
+  <div class="input-section-title">
+    <span class="step-badge">۱</span>
+    📈 اطلاعات شرکت
+    <span class="optional-badge">اختیاری — برای نسبت‌های ارزش‌گذاری</span>
+  </div>
+  <div class="market-grid">
+    <div class="market-field">
+      <label>اسم نماد</label>
+      <input id="symbolName" type="text" placeholder="مثلاً: فولاد">
+    </div>
+    <div class="market-field">
+      <label>قیمت هر سهم (ریال)</label>
+      <input id="stockPrice" type="text" inputmode="numeric" placeholder="۵,۲۰۰" class="num-input">
+    </div>
+    <div class="market-field">
+      <label>تعداد سهام</label>
+      <input id="stockCount" type="text" inputmode="numeric" placeholder="۵,۰۰۰,۰۰۰,۰۰۰" class="num-input">
+    </div>
+
+  </div>
+  <div class="market-hint" id="marketHint">💡 اگه قیمت و تعداد سهام رو وارد کنی، تب «ارزش‌گذاری» هم فعال می‌شه.</div>
+</div>
+
+<div class="input-section">
+  <div class="input-section-title">
+    <span class="step-badge">۲</span>
+    📁 فایل صورت مالی (اکسل یا CSV یا HTML)
+  </div>
+  <div id="drop" class="drop">
+    <input id="file" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt">
+    <div class="drop-icon">📂</div>
+    <p id="status" class="drop-text">فایل را اینجا رها کن یا انتخاب کن</p>
+    <div id="periodInfoBox" class="period-info-box" style="display:none">
+      <label>📅 دوره صورت مالی:</label>
+      <span id="periodInfoText" class="period-info-text">—</span>
+    </div>
+    <button id="go" class="primary" disabled>🔍 تحلیل کن</button>
+    <button id="saveBtn" class="ghost" style="display:none" disabled>💾 ذخیره تحلیل</button>
+    <button id="sendToWatchBtn" class="ghost" style="display:none" disabled>👁️ افزودن به دیدبان</button>
+    <div id="err" class="err" style="display:none"></div>
+  </div>
+</div>
+
+</div>
+
+<div class="card">
+<h2>📚 تحلیل‌های ذخیره‌شده <span class="help" data-tip="هر تحلیلی که انجام می‌دی می‌تونی ذخیره کنی.&#10;ذخیره‌سازی خودکار توی مرورگر (localStorage) — با بستن مرورگر نمی‌ره.">?</span></h2>
+<div class="saved-controls">
+  <input id="savedSearch" type="text" placeholder="🔍 جستجو در اسم تحلیل‌ها..." class="saved-search">
+  <select id="savedSort" class="saved-sort">
+    <option value="recent">جدیدترین</option>
+    <option value="oldest">قدیمی‌ترین</option>
+    <option value="starred">ستاره‌دارها</option>
+    <option value="name">بر اساس نام</option>
+  </select>
+</div>
+<div id="savedList" class="saved-list"></div>
+<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+  <button id="downloadAll" class="ghost" disabled>📥 دانلود همه تحلیل‌ها</button>
+  <button id="uploadFile" class="ghost">📤 بارگذاری از فایل</button>
+  <input id="uploadInput" type="file" accept=".json" style="display:none">
+</div>
+</div>
+
+<div id="out" style="display:none">
+<div class="card"><h2>📌 اعداد کلیدی</h2><div id="metrics" class="grid"></div></div>
+
+<div class="card">
+<h2>🎯 امتیاز کلی سلامت مالی <span class="help" data-tip="📖 یه نگاه سریع به سلامت کلی شرکت از ۰ تا ۱۰۰.">?</span></h2>
+<div class="score-wrap">
+  <div id="scoreNum" class="score-num">—</div>
+  <div style="flex:1">
+    <div class="score-label" id="scoreLabel">در حال محاسبه...</div>
+    <div class="score-bar"><div id="scoreFill" class="score-fill" style="width:0%"></div></div>
+  </div>
+</div>
+<div id="scoreText" class="score-text"></div>
+</div>
+
+<div class="card">
+<h2>⚗️ DuPont Analysis <span style="font-size:12px;color:var(--sub);font-weight:400">(تجزیه ROE)</span> <span class="help" data-tip="📖 ROE رو به ۳ بخش تقسیم می‌کنه: حاشیه سود × گردش دارایی × اهرم مالی.">?</span></h2>
+<div id="dupontBox"></div>
+<div id="dupontNote" class="one-line-note"></div>
+</div>
+
+<div class="card">
+<h2>💵 EBITDA و حاشیه EBITDA <span class="help" data-tip="📖 سود قبل از کسر بهره، مالیات و استهلاک.">?</span></h2>
+<div id="ebitdaBox"></div>
+<div id="ebitdaNote" class="one-line-note"></div>
+</div>
+
+<div class="card">
+<h2>🛡️ Altman Z-Score <span style="font-size:12px;color:var(--sub);font-weight:400">(ریسک ورشکستگی)</span> <span class="help" data-tip="📖 فرمول علمی (۱۹۶۸).&#10;🟢 بالای ۲.۹۹ | 🟡 ۱.۸۱ تا ۲.۹۹ | 🔴 زیر ۱.۸۱.">?</span></h2>
+<div id="zscoreBox"></div>
+</div>
+
+<div class="card">
+<h2>📊 نمودارهای تحلیلی <span class="help" data-tip="📖 نمودار میله‌ای و دایره‌ای.">?</span></h2>
+<div class="charts-row">
+  <div class="chart-box">
+    <h3>روند سود و درآمد (B = میلیارد تومان)</h3>
+    <div id="barChart"></div>
+    <div class="legend">
+      <span><i style="background:#1769e0"></i> درآمد</span>
+      <span><i style="background:#f59e0b"></i> سود ناخالص</span>
+      <span><i style="background:#8b5cf6"></i> سود عملیاتی</span>
+      <span><i style="background:#10b981"></i> سود خالص</span>
+    </div>
+  </div>
+  <div class="chart-box">
+    <h3>روند جریان نقد عملیاتی (CFO)</h3>
+    <div id="cfoChart"></div>
+    <div class="legend"><span><i style="background:#0ea5e9"></i> CFO</span></div>
+  </div>
+</div>
+<div class="pie-row">
+  <div class="chart-box"><h3>ترکیب دارایی‌ها</h3><div id="pieAssets"></div></div>
+  <div class="chart-box"><h3>ساختار تأمین مالی</h3><div id="pieFunding"></div></div>
+</div>
+</div>
+
+<div class="card">
+<h2>📈 نسبت‌های مالی <span class="help" data-tip="📖 ۶ دسته نسبت: نقدینگی، اهرم، سودآوری، کارایی، جریان نقد، ارزش‌گذاری.">?</span></h2>
+<div class="tabs">
+<div class="tab active" data-t="liq">نقدینگی</div>
+<div class="tab" data-t="lev">اهرم</div>
+<div class="tab" data-t="prof">سودآوری</div>
+<div class="tab" data-t="eff">کارایی</div>
+<div class="tab" data-t="cf">جریان نقد</div>
+<div class="tab" data-t="val">ارزش‌گذاری</div>
+</div>
+<div id="ratios"></div>
+</div>
+
+<div class="card">
+  <h2>🚨 هشدارهای هوشمند <span class="help" data-tip="📖 هشدارهای خودکار بر اساس تغییرات.">?</span></h2>
+  <div id="alerts"></div>
+  </div>
+  
+  <div class="card">
+  <h2>🧠 تحلیل خودکار <span class="help" data-tip="📖 جمع‌بندی خودکار از نسبت‌های مهم با علامت رنگی.">?</span></h2>
+  <div id="analysis"></div>
+  </div>
+  
+  <div class="card">
+  <h2>📝 جمع‌بندی متنی خودکار <span class="help" data-tip="📖 یه پاراگراف که همه‌چیز رو خلاصه می‌کنه.">?</span>
+  <button id="copySummary" class="ghost" style="margin-right:auto;font-size:12px;padding:5px 12px">📋 کپی خلاصه</button>
+  </h2>
+  <div id="summary" class="summary-box"></div>
+  </div>
+
+</div>
+</div><!-- /tabSingle -->
+
+<!-- ================== تب ۲: مقایسه شرکت‌ها ================== -->
+<div id="tabCompare" class="tab-panel">
+
+<div class="card">
+  <div class="topbar">
+    <h1>📈 مقایسه شرکت‌ها <span style="font-size:13px;color:var(--sub);font-weight:400">v40</span></h1>
+    <p class="sub" style="margin:0">۲ تا ۴ فایل صورت مالی انتخاب کن. برای نسبت‌های ارزش‌گذاری، قیمت و تعداد سهام رو هم وارد کن.</p>
+  </div>
+
+  <div class="input-section">
+    <div class="input-section-title">
+      <span class="step-badge">۱</span>
+      📁 فایل‌های شرکت‌ها (۲ تا ۴ فایل)
+    </div>
+    <div id="cmpDrop" class="drop">
+      <input id="cmpFiles" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt" multiple>
+      <div class="drop-icon">📂</div>
+      <p class="drop-text">فایل‌ها رو اینجا رها کن یا انتخاب کن (چندتایی)</p>
+      <button id="cmpAddBtn" class="ghost">➕ افزودن فایل</button>
+    </div>
+
+    <div id="cmpListWrap" style="margin-top:14px;display:none">
+      <h3 style="margin-bottom:8px">شرکت‌های اضافه‌شده:</h3>
+      <div id="cmpList" class="cmp-list"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button id="cmpGo" class="primary" disabled>🔍 مقایسه کن</button>
+        <button id="cmpSaveBtn" class="ghost" style="display:none" disabled>💾 ذخیره مقایسه</button>
+        <button id="cmpClearBtn" class="ghost">🗑️ پاک کردن همه</button>
+      </div>
+      <div id="cmpErr" class="err" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+<h2>📚 مقایسه‌های ذخیره‌شده <span class="help" data-tip="هر مقایسه‌ای که انجام دادی می‌تونی ذخیره کنی.&#10;توی مرورگر (localStorage) نگه داشته می‌شه.">?</span></h2>
+<div class="saved-controls">
+  <input id="cmpSavedSearch" type="text" placeholder="🔍 جستجو در اسم مقایسه‌ها..." class="saved-search">
+  <select id="cmpSavedSort" class="saved-sort">
+    <option value="recent">جدیدترین</option>
+    <option value="oldest">قدیمی‌ترین</option>
+    <option value="starred">ستاره‌دارها</option>
+    <option value="name">بر اساس نام</option>
+  </select>
+</div>
+<div id="cmpSavedList" class="saved-list"></div>
+<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+  <button id="cmpDownloadAll" class="ghost" disabled>📥 دانلود همه مقایسه‌ها</button>
+  <button id="cmpUploadFile" class="ghost">📤 بارگذاری از فایل</button>
+  <input id="cmpUploadInput" type="file" accept=".json" style="display:none">
+</div>
+</div>
+
+<div id="cmpOut" style="display:none">
+
+  <div class="card">
+    <h2>🎯 امتیاز سلامت مالی شرکت‌ها</h2>
+    <div id="cmpScores" class="cmp-scores"></div>
+  </div>
+
+  <div class="card">
+    <h2>🛡️ Altman Z-Score <span style="font-size:12px;color:var(--sub);font-weight:400">(ریسک ورشکستگی)</span> <span class="help" data-tip="📖 فرمول علمی (۱۹۶۸):&#10;Z = 1.2·X₁ + 1.4·X₂ + 3.3·X₃ + 0.6·X₄ + 1.0·X₅&#10;🟢 بالای ۲.۹۹ | 🟡 ۱.۸۱ تا ۲.۹۹ | 🔴 زیر ۱.۸۱">?</span></h2>
+    <div id="cmpZScore" class="cmp-zscore-wrap"></div>
+  </div>
+
+  <div class="card">
+    <h2>📌 اعداد کلیدی (مقایسه‌ای)</h2>
+    <div id="cmpKeyNumbers" class="cmp-table-wrap"></div>
+  </div>
+
+  <div class="card">
+    <h2>📈 نسبت‌های مالی <span class="help" data-tip="در هر ردیف، بهترین مقدار با 🟢 و بدترین با 🔴 مشخص می‌شه.">?</span></h2>
+    <div class="tabs">
+      <div class="tab active" data-ct="liq">نقدینگی</div>
+      <div class="tab" data-ct="lev">اهرم</div>
+      <div class="tab" data-ct="prof">سودآوری</div>
+      <div class="tab" data-ct="eff">کارایی</div>
+      <div class="tab" data-ct="cf">جریان نقد</div>
+      <div class="tab" data-ct="val">ارزش‌گذاری</div>
+    </div>
+    <div id="cmpRatios" class="cmp-table-wrap"></div>
+  </div>
+
+  <div class="card">
+    <h2>📊 نمودار مقایسه‌ای نسبت‌ها</h2>
+    <div class="chart-box">
+      <div id="cmpBar"></div>
+      <div class="legend" id="cmpBarLegend"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🕸️ نمودار راداری ۶ معیار کلیدی <span class="help" data-tip="۶ معیار نرمال‌شده (۰ تا ۱۰۰):&#10;حاشیه سود خالص، ROE، نسبت جاری،&#10;بدهی/حقوق (معکوس)، کیفیت سود، رشد درآمد.">?</span></h2>
+    <div class="chart-box">
+      <div id="cmpRadar"></div>
+      <div class="legend" id="cmpRadarLegend"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🏆 رتبه‌بندی نهایی</h2>
+    <div id="cmpRanking" class="cmp-table-wrap"></div>
+  </div>
+
+</div><!-- /cmpOut -->
+
+</div><!-- /tabCompare -->
+
+<!-- ================== تب ۳: دیدبان ================== -->
+<div id="tabWatchlist" class="tab-panel">
+
+<div class="card">
+  <div class="topbar">
+    <h1>👁️ دیدبان <span style="font-size:13px;color:var(--sub);font-weight:400">v40</span></h1>
+    <p class="sub" style="margin:0">سهم‌های مورد علاقه‌ات رو از تب «تحلیل تک شرکت» به اینجا اضافه کن.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>📊 سهم‌های تحلیل‌شده <span class="help" data-tip="این سهم‌ها رو از تب «تحلیل تک شرکت» با دکمه 👁️ اضافه کردی.">?</span></h2>
+  <div id="wlAnalysisList" class="wl-list"></div>
+</div>
+
+<div class="card" id="wlChartCard" style="display:none">
+  <h2>📈 مقایسه روند دوره‌ها <span class="help" data-tip="روند پارامتر انتخاب‌شده در دوره‌های مختلف این سهم.">?</span></h2>
+  <div class="wl-chart-selector">
+    <label>سهم:</label>
+    <select id="wlChartSymbolSelect"></select>
+    <label>نسبت:</label>
+    <select id="wlChartRatioSelect"></select>
+  </div>
+  <div class="chart-box">
+    <h3 id="wlChartTitle">📊 روند</h3>
+    <div id="wlChartSingle"></div>
+  </div>
+</div>
+
+<div id="wlDetailOut" style="display:none">
+  <div class="card">
+    <div id="wlDetailBody"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>📥 پشتیبان‌گیری / بازیابی</h2>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button id="wlDownloadBtn" class="ghost">📥 دانلود کل دیدبان</button>
+    <button id="wlUploadBtn" class="ghost">📤 بارگذاری از فایل</button>
+    <input id="wlUploadInput" type="file" accept=".json" style="display:none">
+  </div>
+</div>
+
+</div><!-- /tabWatchlist -->
+
+</div><!-- /wrap -->
+
+<!-- ============================================
+     فوتر کپی‌رایت
+============================================ -->
+<div class="footer-credit">
+  <div class="footer-inner">
+    <div class="footer-text">
+      <span class="footer-label">طراحی و برنامه‌نویسی:</span>
+      <span class="footer-name">صادق رمضانی</span>
+    </div>
+    <div class="footer-links">
+      <a href="https://instagram.com/ramezani_sadegh1993"
+         target="_blank"
+         rel="noopener noreferrer"
+         class="footer-link footer-instagram"
+         title="اینستاگرام: ramezani_sadegh1993">
+        <svg class="footer-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+        </svg>
+        <span class="footer-handle">ramezani_sadegh1993</span>
+      </a>
+      <a href="https://t.me/sadeghchn1372"
+         target="_blank"
+         rel="noopener noreferrer"
+         class="footer-link footer-telegram"
+         title="تلگرام: sadeghchn1372">
+        <svg class="footer-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+          <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+        </svg>
+        <span class="footer-handle">sadeghchn1372</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script src="xlsx.full.min.js"></script>
+<script src="license.js"></script>
+<script src="app.js"></script>
+<script src="compare.js"></script>
+<script src="watchlist.js"></script>
+</body></html>
