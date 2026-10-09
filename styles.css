@@ -4106,3 +4106,23 @@ body.dark .industry-input-section {
     font-size: 11px !important;
   }
 }
+
+/* ============================================================
+   🆕 فاصله کارت‌های ذخیره‌شده از کارت بالاشون
+============================================================ */
+
+/* دسکتاپ */
+#savedCard,
+#industrySavedCard {
+  margin-top: 40px !important;
+  margin-bottom: 10px !important;
+}
+
+/* موبایل — دو برابر */
+@media (max-width: 600px) {
+  #savedCard,
+  #industrySavedCard {
+    margin-top: 80px !important;
+    margin-bottom: 20px !important;
+  }
+}
