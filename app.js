@@ -2208,7 +2208,7 @@ window.restoreFromExternal = function(reportData){
     if(!confirm('اپ به‌روزرسانی می‌شه و کش پاک می‌شه. مطمئنی؟')) return;
 
     btn.disabled = true;
-    btn.textContent = '⏳ در حال پاک کردن...';
+    btn.textContent = '⏳ در حال بررسی آپدیت...';
 
     try{
       // ۱. پاک کردن همه کش‌ها (Cache Storage)
