@@ -2098,3 +2098,101 @@ window.restoreFromExternal = function(reportData){
     showToast('خطا در بازیابی: ' + e.message, true);
   }
 };
+
+/* ============================================================
+   🔽 قابلیت باز/بسته کردن کارت‌ها
+============================================================ */
+(function initCollapsibleCards(){
+  const STORAGE_KEY = 'kodal_collapsed_cards_v1';
+
+  function loadCollapsed(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }catch(e){ return {}; }
+  }
+
+  function saveCollapsed(obj){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+    }catch(e){}
+  }
+
+  function getCardId(card){
+    const h2 = card.querySelector('h2');
+    if(!h2) return null;
+    // از متن سرتیتر به عنوان شناسه استفاده می‌کنیم
+    let text = (h2.textContent || '').trim();
+    // حذف علامت سوال و کاراکترهای اضافه
+    text = text.replace(/\?/g, '').replace(/\s+/g, ' ').slice(0, 60);
+    return text;
+  }
+
+  function applyCollapseState(){
+    const collapsed = loadCollapsed();
+    document.querySelectorAll('.card').forEach(card => {
+      const h2 = card.querySelector('h2');
+      if(!h2) return;
+
+      // فقط h2 که توی کارت هست و توی مودال نیست
+      if(card.closest('#saveModal, #saveCompareModal, #addWatchModal')) return;
+
+      // h2 رو کلیک‌پذیر کن
+      if(!h2.classList.contains('collapsible-h2')){
+        h2.classList.add('collapsible-h2');
+        const icon = document.createElement('span');
+        icon.className = 'collapse-icon';
+        icon.textContent = '▼';
+        h2.insertBefore(icon, h2.firstChild);
+      }
+
+      const id = getCardId(card);
+      if(!id) return;
+
+      // اگه در localStorage بسته ذخیره شده، اعمال کن
+      if(collapsed[id]){
+        card.classList.add('collapsed');
+      } else {
+        card.classList.remove('collapsed');
+      }
+
+      // فقط یه بار event listener اضافه کن
+      if(!h2.dataset.collapseReady){
+        h2.dataset.collapseReady = '1';
+        h2.addEventListener('click', (e) => {
+          // اگه روی دکمه یا لینک کلیک شده، نادیده بگیر
+          if(e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+          if(e.target.closest('button') || e.target.closest('a')) return;
+
+          const isCollapsed = card.classList.toggle('collapsed');
+          const collapsedObj = loadCollapsed();
+          const cardId = getCardId(card);
+          if(cardId){
+            if(isCollapsed){
+              collapsedObj[cardId] = true;
+            } else {
+              delete collapsedObj[cardId];
+            }
+            saveCollapsed(collapsedObj);
+          }
+        });
+      }
+    });
+  }
+
+  // اجرا در بارگذاری اول
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', applyCollapseState);
+  } else {
+    applyCollapseState();
+  }
+
+  // با هر تغییر توی DOM (وقتی تحلیل جدید رندر می‌شه)، دوباره اعمال کن
+  const observer = new MutationObserver(() => {
+    applyCollapseState();
+  });
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+})();
