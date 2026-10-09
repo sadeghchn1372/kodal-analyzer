@@ -61,12 +61,12 @@
   }
 
   /* ---------- رنگ‌ها ---------- */
-  const BASE_COLOR = '#f59e0b';           // رنگ سهم اصلی — نارنجی طلایی
+  const BASE_COLOR = '#f59e0b';
   const PEER_COLORS = ['#1769e0', '#10b981', '#8b5cf6', '#ec4899', '#06b6d4', '#65a30d', '#dc2626', '#0891b2', '#a16207', '#7c3aed'];
 
   /* ---------- State ---------- */
   let BASE = { file: null, parsed: null, symbol: '', industry: '', price: null, shares: null };
-  let PEERS = [];  // [{file, parsed, symbol, price, shares, color, error}]
+  let PEERS = [];
   let INDUSTRY_RESULTS = null;
   let INDUSTRY_SAVED = [];
   const MAX_PEERS = 10;
@@ -160,7 +160,6 @@
       });
     }
 
-    // فایل سهم اصلی
     const baseFileInput = $('baseFile');
     if(baseFileInput){
       baseFileInput.onchange = async (e) => {
@@ -171,7 +170,6 @@
       };
     }
 
-    // drag & drop
     const drop = $('baseDrop');
     if(drop){
       ['dragover', 'dragenter'].forEach(ev => {
@@ -207,7 +205,6 @@
       const maxPer = Math.max(...Object.values(parsed).map(a => a.length));
       parsed._periods = Math.min(Math.max(maxPer, 1), 5);
 
-      // تشخیص دوره
       const detected = detectPeriod(lines);
       parsed._detectedInfo = detected;
       parsed._detectedPeriod = detected.label;
@@ -215,7 +212,6 @@
       BASE.file = file;
       BASE.parsed = parsed;
 
-      // اگه تعداد سهام نذاشته، از سرمایه بگیر
       if(!BASE.shares){
         const cap = parsed.capital?.[0];
         if(cap != null && cap > 0){
@@ -225,14 +221,12 @@
         }
       }
 
-      // اگه نماد خالی، از اسم فایل
       if(!BASE.symbol){
         BASE.symbol = file.name.replace(/\.[^.]+$/, '');
         const symEl = $('baseSymbol');
         if(symEl) symEl.value = BASE.symbol;
       }
 
-      // نمایش فایل
       const info = $('baseFileInfo');
       const nameEl = $('baseFileName');
       if(info && nameEl){
@@ -250,13 +244,6 @@
   }
 
   function detectPeriod(lines){
-    // استفاده از تابع app.js اگه موجود بود
-    if(window.KodalHelpers && window.KodalHelpers.detectPeriodFromLines){
-      try{
-        return window.KodalHelpers.detectPeriodFromLines(lines);
-      }catch(e){}
-    }
-    // fallback ساده
     return { label: null, year: null, months: null };
   }
 
@@ -460,7 +447,6 @@
     }
   }
 
-  /* ---------- drag & drop روی لیست هم‌گروهی‌ها ---------- */
   function bindPeersDrop(){
     const box = $('peersList');
     if(!box) return;
@@ -539,7 +525,6 @@
       cfoToRevenue: H.ratio(v.cfo, v.revenue),
     };
 
-    // Altman Z-Score
     const taZ = v.ta;
     let zscore = null;
     if(taZ != null && taZ !== 0){
@@ -552,7 +537,6 @@
       zscore = 1.2*x1 + 1.4*x2 + 3.3*x3 + 0.6*x4 + 1.0*x5;
     }
 
-    // ارزش‌گذاری
     const MILLION = 1_000_000;
     const netRial = (v.net != null) ? v.net * MILLION : null;
     const eqRial = (v.eq != null) ? v.eq * MILLION : null;
@@ -592,7 +576,6 @@
   }
 
   function runIndustryCompare(){
-    // 🔐 چک لایسنس
     if(window.License){
       const status = window.License.getStatus();
       if(status.state !== 'active'){
@@ -622,7 +605,6 @@
       return;
     }
 
-    // سهم اصلی
     const baseData = extractValues(BASE.parsed, BASE.price, BASE.shares);
     const base = {
       symbol: BASE.symbol || 'سهم اصلی',
@@ -635,7 +617,6 @@
       ...baseData,
     };
 
-    // هم‌گروهی‌ها
     const peers = validPeers.map(p => {
       const data = extractValues(p.parsed, p.price, p.shares);
       return {
@@ -674,14 +655,12 @@
     try{ renderIndustryRanking(); }catch(e){ console.error('renderIndustryRanking:', e); }
   }
 
-  /* ---------- ۴-۱. جایگاه سهم اصلی ---------- */
   function renderBasePosition(){
     const box = $('basePositionSummary');
     if(!box) return;
 
     const { base, peers } = INDUSTRY_RESULTS;
 
-    // معیارهای اصلی برای محاسبه جایگاه
     const criteria = [
       { key: 'netMargin', getter: r => r.r.netMargin, dir: 'higher', label: 'حاشیه سود خالص', fmt: 'pct' },
       { key: 'roe', getter: r => r.r.roe, dir: 'higher', label: 'ROE', fmt: 'pct' },
@@ -693,7 +672,6 @@
 
     const all = [base, ...peers];
 
-    // امتیازدهی
     const scores = all.map(() => 0);
     criteria.forEach(c => {
       const vals = all.map(r => _cmpVal(c.getter(r)));
@@ -713,7 +691,6 @@
       }
     });
 
-    // رتبه سهم اصلی
     const baseScore = scores[0];
     const sortedScores = [...scores].sort((a, b) => b - a);
     const baseRank = sortedScores.indexOf(baseScore) + 1;
@@ -727,7 +704,6 @@
     const posColor = posClass === 'good' ? 'var(--good)' : 'var(--bad)';
     const posLabel = baseRank <= total / 2 ? 'بهتر از میانگین صنعت' : 'ضعیف‌تر از میانگین صنعت';
 
-    // محاسبه درصد
     const betterPct = total > 1 ? (betterThan / (total - 1)) * 100 : 0;
     const worsePct = total > 1 ? (worseThan / (total - 1)) * 100 : 0;
 
@@ -770,7 +746,6 @@
     box.innerHTML = html;
   }
 
-  /* ---------- ۴-۲. امتیاز سلامت ---------- */
   function renderIndustryScores(){
     const box = $('industryScores');
     if(!box) return;
@@ -786,7 +761,6 @@
 
     const baseLvl = H.scoreLevel(baseScore);
 
-    // رتبه سهم اصلی
     const allScores = all.map(x => x.score).filter(s => s != null);
     const sortedScores = [...allScores].sort((a, b) => b - a);
     const rank = baseScore != null ? sortedScores.indexOf(baseScore) + 1 : null;
@@ -833,7 +807,6 @@
     box.innerHTML = html;
   }
 
-  /* ---------- ۴-۳. Altman Z-Score ---------- */
   function renderIndustryZScore(){
     const box = $('industryZScore');
     if(!box) return;
@@ -878,7 +851,6 @@
       `;
     }
 
-    // سهم اصلی + میانگین صنعت
     const peerZ = peers.map(p => p.zscore).filter(z => z != null && isFinite(z));
     const avgZ = avg(peerZ);
 
@@ -901,7 +873,6 @@
       `;
     }
 
-    // بهترین و بدترین
     const bestZ = best(peerZ, 'higher');
     const worstZ = worst(peerZ, 'higher');
     if(bestZ != null){
@@ -934,24 +905,18 @@
     box.innerHTML = html;
   }
 
-  /* ---------- ۴-۴. جدول اصلی: سهم اصلی vs صنعت ---------- */
-  // ۱۲ نسبت اصلی طبق تصمیم کاربر
   const MAIN_RATIOS = [
-    // سودآوری
     { key: 'grossMargin',   label: 'حاشیه سود ناخالص',   getter: r => r.r.grossMargin,   dir: 'higher', fmt: 'pct' },
     { key: 'opMargin',      label: 'حاشیه سود عملیاتی',  getter: r => r.r.opMargin,      dir: 'higher', fmt: 'pct' },
     { key: 'netMargin',     label: 'حاشیه سود خالص',     getter: r => r.r.netMargin,     dir: 'higher', fmt: 'pct' },
     { key: 'roa',           label: 'ROA',                 getter: r => r.r.roa,           dir: 'higher', fmt: 'pct' },
     { key: 'roe',           label: 'ROE',                 getter: r => r.r.roe,           dir: 'higher', fmt: 'pct' },
-    // نقدینگی و اهرم
     { key: 'currentRatio',  label: 'نسبت جاری',           getter: r => r.r.currentRatio,  dir: 'higher', fmt: 'num' },
     { key: 'quickRatio',    label: 'نسبت آنی',            getter: r => r.r.quickRatio,    dir: 'higher', fmt: 'num' },
     { key: 'debtToAsset',   label: 'بدهی به دارایی',      getter: r => r.r.debtToAsset,   dir: 'lower',  fmt: 'pct' },
     { key: 'debtToEquity',  label: 'بدهی به حقوق',        getter: r => r.r.debtToEquity,  dir: 'lower',  fmt: 'num' },
-    // کارایی
     { key: 'assetTurnover', label: 'گردش دارایی',         getter: r => r.r.assetTurnover, dir: 'higher', fmt: 'num' },
     { key: 'dso',           label: 'دوره وصول مطالبات',   getter: r => r.r.dso,           dir: 'lower',  fmt: 'day' },
-    // کیفیت سود
     { key: 'cfoToNet',      label: 'کیفیت سود (CFO/Net)', getter: r => r.r.cfoToNet,      dir: 'higher', fmt: 'num' },
   ];
 
@@ -972,7 +937,6 @@
     const { base, peers } = INDUSTRY_RESULTS;
     const all = [base, ...peers];
 
-    // محاسبه جایگاه سهم اصلی برای هر نسبت
     let html = '<table class="cmp-table industry-table"><thead><tr>';
     html += '<th>نسبت</th>';
     html += `<th style="color:${BASE_COLOR}">🎯 ${base.symbol}</th>`;
@@ -990,7 +954,6 @@
       const bestVal = best(peerVals, ratio.dir);
       const worstVal = worst(peerVals, ratio.dir);
 
-      // محاسبه رتبه
       let rank = null, totalWithBase = null;
       if(baseVal != null && peerVals.length > 0){
         const allVals = [baseVal, ...peerVals];
@@ -999,7 +962,6 @@
         totalWithBase = allVals.length;
       }
 
-      // نمایش جایگاه
       let posHtml = '—';
       if(rank != null){
         const isGood = rank <= totalWithBase / 2;
@@ -1008,7 +970,6 @@
         posHtml = `<span style="color:${posColor};font-weight:700">${posIcon} ${H.toFa(rank)} از ${H.toFa(totalWithBase)}</span>`;
       }
 
-      // مقایسه با میانگین
       let vsAvg = '';
       if(baseVal != null && avgVal != null && avgVal !== 0){
         const diff = ((baseVal - avgVal) / Math.abs(avgVal)) * 100;
@@ -1032,7 +993,6 @@
     box.innerHTML = html;
   }
 
-  /* ---------- ۴-۵. نمودار میله‌ای ---------- */
   function renderIndustryBar(){
     const box = $('industryBar');
     const legendBox = $('industryBarLegend');
@@ -1040,7 +1000,6 @@
 
     const { base, peers } = INDUSTRY_RESULTS;
 
-    // معیارهای مهم (درصدی برای مقیاس‌پذیری)
     const metrics = [
       { key: 'netMargin',    label: 'حاشیه سود خالص', getter: r => r.r.netMargin,    fmt: 'pct' },
       { key: 'roe',          label: 'ROE',             getter: r => r.r.roe,          fmt: 'pct' },
@@ -1054,7 +1013,8 @@
     const groupW = plotW / metrics.length;
 
     const all = [base, ...peers];
-    const totalBarW = all.length * 24 + (all.length - 1) * 3;
+    const barW = Math.min(30, (groupW - 20) / all.length);
+    const totalBarW = all.length * barW + (all.length - 1) * 3;
 
     let svg = `<svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="xMidYMid meet">`;
     const baseY = padT + plotH;
@@ -1071,23 +1031,24 @@
       const groupX = padL + mi * groupW;
       const startX = groupX + (groupW - totalBarW) / 2;
 
-      const vals = all.map(r => m.getter(r)).filter(v => v != null);
-      const maxVal = vals.length ? Math.max(...vals.map(Math.abs)) : 0;
+      const vals = all.map(r => m.getter(r)).filter(v => v != null && isFinite(v));
+      const maxAbs = vals.length ? Math.max(...vals.map(Math.abs)) : 0;
+      if(maxAbs === 0) return;
 
       all.forEach((r, ci) => {
         const val = m.getter(r);
-        if(val == null || maxVal === 0) return;
-        const h = Math.abs(val) / maxVal * plotH;
-        const x = startX + ci * 27;
+        if(val == null || !isFinite(val)) return;
+        const h = Math.abs(val) / maxAbs * plotH;
+        const x = startX + ci * (barW + 3);
         const y = baseY - h;
-        const opacity = r.isBase ? 1 : 0.65;
-        svg += `<rect x="${x}" y="${y}" width="24" height="${h}" fill="${r.color}" rx="3" opacity="${opacity}">
+        const opacity = r.isBase ? 1 : 0.7;
+        svg += `<rect x="${x}" y="${y}" width="${barW}" height="${h}" fill="${r.color}" rx="3" opacity="${opacity}">
                   <title>${r.isBase ? '🎯 ' : ''}${r.symbol} — ${m.label}: ${m.fmt === 'pct' ? H.pct(val) : H.num2(val)}</title>
                 </rect>`;
       });
 
       const cx = groupX + groupW / 2;
-      svg += `<text x="${cx}" y="${baseY + 20}" text-anchor="middle" font-size="11" fill="${_c('chartLabelColor')}">${m.label}</text>`;
+      svg += `<text x="${cx}" y="${baseY + 22}" text-anchor="middle" font-size="12" font-weight="600" fill="${_c('chartLabelColor')}">${m.label}</text>`;
     });
 
     svg += '</svg>';
@@ -1095,12 +1056,11 @@
 
     if(legendBox){
       legendBox.innerHTML = all.map(r =>
-        `<span><i style="background:${r.color};${r.isBase ? 'border:2px solid #f59e0b' : 'opacity:.65'}"></i>${r.isBase ? '🎯 ' : ''}${r.symbol}</span>`
+        `<span><i style="background:${r.color};${r.isBase ? 'border:2px solid #f59e0b' : 'opacity:.7'}"></i>${r.isBase ? '🎯 ' : ''}${r.symbol}</span>`
       ).join('');
     }
   }
 
-  /* ---------- ۴-۶. نمودار راداری ---------- */
   function renderIndustryRadar(){
     const box = $('industryRadar');
     const legendBox = $('industryRadarLegend');
@@ -1200,7 +1160,6 @@
       svg += `<text x="${lx}" y="${ly + 4}" text-anchor="${anchor}" font-size="11.5" font-weight="600" fill="${_c('chartLabelColor')}">${RADAR_METRICS[i].label}</text>`;
     });
 
-    // ابتدا هم‌گروهی‌ها (کم‌رنگ)، سپس سهم اصلی (پررنگ)
     const allSorted = [...peers, base];
 
     allSorted.forEach(r => {
@@ -1234,7 +1193,6 @@
     }
   }
 
-  /* ---------- ۴-۷. رتبه‌بندی نهایی ---------- */
   function renderIndustryRanking(){
     const box = $('industryRanking');
     if(!box) return;
@@ -1273,7 +1231,6 @@
       }
     });
 
-    // ترکیب داده + امتیاز
     const ranked = all.map((r, i) => ({ ...r, totalScore: scores[i] }));
     ranked.sort((a, b) => b.totalScore - a.totalScore);
 
@@ -1377,7 +1334,6 @@
   function snapshotIndustry(){
     const { base, peers } = INDUSTRY_RESULTS;
 
-    // محاسبه آمار صنعت (فقط از هم‌گروهی‌ها — گزینه B)
     const stats = {};
     MAIN_RATIOS.forEach(ratio => {
       const peerVals = peers.map(p => _cmpVal(ratio.getter(p))).filter(v => v != null);
@@ -1393,7 +1349,6 @@
       };
     });
 
-    // محاسبه امتیاز و Z-Score
     const peerScores = peers.map(p => p.score).filter(s => s != null);
     const peerZ = peers.map(p => p.zscore).filter(z => z != null);
 
@@ -1413,7 +1368,6 @@
       symbols: peers.map(p => p.symbol),
       date: H.toFa(new Date().toLocaleString('fa-IR')),
       timestamp: Date.now(),
-      // برای بازیابی کامل
       snapshot: {
         base: {
           symbol: base.symbol,
@@ -1514,7 +1468,6 @@
     const item = INDUSTRY_SAVED[idx];
     if(!item || !item.snapshot) return;
     try{
-      // بازسازی سهم اصلی
       BASE = {
         file: null,
         parsed: JSON.parse(JSON.stringify(item.snapshot.base.parsed)),
@@ -1532,7 +1485,6 @@
         if($('baseFileName')) $('baseFileName').textContent = '(بازیابی‌شده از ذخیره)';
       }
 
-      // بازسازی هم‌گروهی‌ها
       PEERS = item.snapshot.peers.map((p, i) => ({
         file: null,
         parsed: JSON.parse(JSON.stringify(p.parsed)),
@@ -1545,7 +1497,6 @@
       renderPeers();
       updateCompareButton();
 
-      // اجرای مقایسه
       runIndustryCompare();
 
       if(window.showToast) window.showToast('✅ صنعت بازیابی شد');
@@ -1554,7 +1505,6 @@
     }
   };
 
-  /* ---------- بارگذاری/دانلود ---------- */
   function downloadAllIndustries(){
     if(!INDUSTRY_SAVED.length){
       if(window.showToast) window.showToast('لیست خالیه', true);
@@ -1656,11 +1606,9 @@
 
     closeCompareIndustriesModal();
 
-    // نمایش خروجی مقایسه دو صنعت
     const out = $('industryOut');
     if(out) out.style.display = 'block';
 
-    // بخش موقتی
     let existing = document.getElementById('twoIndustriesCompareBox');
     if(existing) existing.remove();
 
@@ -1683,7 +1631,6 @@
         </table>
       </div>`;
 
-    // درج در ابتدای industryOut
     out.insertBefore(box, out.firstChild);
 
     const rows = document.getElementById('twoIndustriesRows');
@@ -1746,7 +1693,6 @@
       };
     }
 
-    // مودال ذخیره صنعت
     const saveConfirm = $('saveIndustryConfirm');
     if(saveConfirm) saveConfirm.onclick = () => {
       const name = ($('saveIndustryNameInput')?.value || '').trim();
@@ -1783,7 +1729,6 @@
       if(e.key === 'Escape') closeSaveIndustryModal();
     });
 
-    // مودال مقایسه دو صنعت
     const cmpConfirm = $('compareIndustryConfirm');
     if(cmpConfirm) cmpConfirm.onclick = runTwoIndustriesCompare;
 
@@ -1795,7 +1740,6 @@
       if(e.target.id === 'compareIndustriesModal') closeCompareIndustriesModal();
     });
 
-    // جستجو و مرتب‌سازی صنایع ذخیره‌شده
     document.addEventListener('input', e => {
       if(e.target.id === 'industrySavedSearch') renderIndustrySaved();
     });
@@ -1820,5 +1764,7 @@
   bindButtons();
   renderPeers();
   renderIndustrySaved();
+
+  console.log('%c📈 compare.js v1.5 لود شد (مقایسه با صنعت)', 'color:#f59e0b;font-weight:bold');
 
 })();
