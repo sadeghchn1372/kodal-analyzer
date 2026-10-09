@@ -4122,7 +4122,7 @@ body.dark .industry-input-section {
 @media (max-width: 600px) {
   #savedCard,
   #industrySavedCard {
-    margin-top: 80px !important;
+    margin-top: 120px !important;
     margin-bottom: 20px !important;
   }
 }
