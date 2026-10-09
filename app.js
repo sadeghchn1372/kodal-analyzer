@@ -2196,3 +2196,50 @@ window.restoreFromExternal = function(reportData){
     subtree: true
   });
 })();
+
+/* ============================================================
+   🔄 دکمه به‌روزرسانی اپ (پاک کردن کش)
+============================================================ */
+(function initRefreshApp(){
+  const btn = $('refreshAppBtn');
+  if(!btn) return;
+
+  btn.onclick = async () => {
+    if(!confirm('اپ به‌روزرسانی می‌شه و کش پاک می‌شه. مطمئنی؟')) return;
+
+    btn.disabled = true;
+    btn.textContent = '⏳ در حال پاک کردن...';
+
+    try{
+      // ۱. پاک کردن همه کش‌ها (Cache Storage)
+      if('caches' in window){
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+        console.log('🗑️ کش‌ها پاک شدن:', cacheNames);
+      }
+
+      // ۲. Unregister کردن Service Worker
+      if('serviceWorker' in navigator){
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(reg => reg.unregister()));
+        console.log('🗑️ Service Worker ها Unregister شدن');
+      }
+
+      // ۳. پاک کردن localStorage فقط اگه کاربر بخواد
+      // (نمی‌کنیم چون تحلیل‌ها و لایسنس توشه)
+
+      // ۴. رفرش سخت با دور زدن کش
+      setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('_t', Date.now());
+        window.location.replace(url.toString());
+      }, 500);
+
+    }catch(err){
+      console.error('خطا در پاک کردن کش:', err);
+      btn.disabled = false;
+      btn.textContent = '🔄 به‌روزرسانی اپ';
+      if(window.showToast) window.showToast('خطا در به‌روزرسانی: ' + err.message, true);
+    }
+  };
+})();
