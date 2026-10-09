@@ -531,21 +531,49 @@ if($('saveModal')) $('saveModal').addEventListener('click', (e) => {
 });
 
 /* ---------- File input (تک شرکت) ---------- */
+function showFileInfo(f){
+  if(!f) return;
+  const info = $('fileInfo');
+  const nameEl = $('fileName');
+  if(info && nameEl){
+    nameEl.textContent = f.name;
+    info.classList.add('active');
+  }
+}
+function hideFileInfo(){
+  const info = $('fileInfo');
+  if(info) info.classList.remove('active');
+}
+
 if($('file')) $('file').onchange = e => {
   file = e.target.files[0];
   $('go').disabled = !file;
   $('saveBtn').disabled = true;
-  $('status').textContent = file ? 'انتخاب شد: ' + file.name : 'فایل را انتخاب کن.';
+  if(file){
+    showFileInfo(file);
+  } else {
+    hideFileInfo();
+  }
   $('err').style.display = 'none';
 };
+
 if($('drop')){
-  ['dragover','dragenter'].forEach(ev => $('drop').addEventListener(ev, e => {e.preventDefault(); $('drop').classList.add('hover')}));
-  ['dragleave','drop'].forEach(ev => $('drop').addEventListener(ev, e => {e.preventDefault(); $('drop').classList.remove('hover')}));
+  ['dragover','dragenter'].forEach(ev => $('drop').addEventListener(ev, e => {
+    e.preventDefault();
+    $('drop').classList.add('hover');
+  }));
+  ['dragleave','drop'].forEach(ev => $('drop').addEventListener(ev, e => {
+    e.preventDefault();
+    $('drop').classList.remove('hover');
+  }));
   $('drop').addEventListener('drop', e => {
-    const f = e.dataTransfer.files[0]; if(!f) return;
-    file = f; $('go').disabled = false;
+    const f = e.dataTransfer.files[0];
+    if(!f) return;
+    file = f;
+    $('go').disabled = false;
     $('saveBtn').disabled = true;
-    $('status').textContent = 'انتخاب شد: ' + f.name;
+    showFileInfo(f);
+    $('err').style.display = 'none';
   });
 }
 

@@ -1,20 +1,20 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
-  <head>
-    <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>تحلیلگر صورت‌های مالی کدال</title>
-    
-    <!-- PWA -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1769e0">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="کدال">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    
-    <!-- Fonts & Styles -->
-    <link rel="stylesheet" href="styles.css">
-    </head>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تحلیلگر صورت‌های مالی کدال</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1769e0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="کدال">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<!-- Fonts & Styles -->
+<link rel="stylesheet" href="styles.css">
+</head>
 <body>
 <div id="globalTooltip"></div>
 
@@ -110,7 +110,7 @@
 
 <div class="card">
   <div class="topbar">
-    <h1>تحلیلگر صورت‌های مالی کدال <span style="font-size:13px;color:var(--sub);font-weight:400">v40</span></h1>
+    <h1>تحلیلگر صورت‌های مالی کدال <span style="font-size:13px;color:var(--sub);font-weight:400">v1.2</span></h1>
     <div class="actions">
       <button id="pdfBtn" class="ghost" title="خروجی PDF" style="display:none">📄 خروجی PDF</button>
       <button id="themeBtn" class="ghost" title="تغییر تم">🌙 تم تاریک</button>
@@ -137,7 +137,6 @@
       <label>تعداد سهام</label>
       <input id="stockCount" type="text" inputmode="numeric" placeholder="۵,۰۰۰,۰۰۰,۰۰۰" class="num-input">
     </div>
-
   </div>
   <div class="market-hint" id="marketHint">💡 اگه قیمت و تعداد سهام رو وارد کنی، تب «ارزش‌گذاری» هم فعال می‌شه.</div>
 </div>
@@ -149,15 +148,26 @@
   </div>
   <div id="drop" class="drop">
     <input id="file" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt">
-    <div class="drop-icon">📂</div>
-    <p id="status" class="drop-text">فایل را اینجا رها کن یا انتخاب کن</p>
+    <span class="drop-icon">📂</span>
+    <p class="drop-text">فایل صورت مالی رو بکش و بذار اینجا</p>
+    <p class="drop-subtext">یا از دکمه زیر برای انتخاب فایل استفاده کن<br>فرمت‌های پشتیبانی‌شده: XLS، XLSX، CSV، HTML</p>
+    <button type="button" class="drop-browse-btn" onclick="document.getElementById('file').click()">
+      📁 انتخاب فایل
+    </button>
+    <p id="status" style="display:none"></p>
+    <div id="fileInfo" class="drop-file-info">
+      <span class="file-icon">✅</span>
+      <span class="file-name" id="fileName"></span>
+    </div>
     <div id="periodInfoBox" class="period-info-box" style="display:none">
       <label>📅 دوره صورت مالی:</label>
       <span id="periodInfoText" class="period-info-text">—</span>
     </div>
-    <button id="go" class="primary" disabled>🔍 تحلیل کن</button>
-    <button id="saveBtn" class="ghost" style="display:none" disabled>💾 ذخیره تحلیل</button>
-    <button id="sendToWatchBtn" class="ghost" style="display:none" disabled>👁️ افزودن به دیدبان</button>
+    <div style="margin-top:14px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+      <button id="go" class="primary" disabled>🔍 تحلیل کن</button>
+      <button id="saveBtn" class="ghost" style="display:none" disabled>💾 ذخیره تحلیل</button>
+      <button id="sendToWatchBtn" class="ghost" style="display:none" disabled>👁️ افزودن به دیدبان</button>
+    </div>
     <div id="err" class="err" style="display:none"></div>
   </div>
 </div>
@@ -254,21 +264,26 @@
 </div>
 
 <div class="card">
-  <h2>🚨 هشدارهای هوشمند <span class="help" data-tip="📖 هشدارهای خودکار بر اساس تغییرات.">?</span></h2>
-  <div id="alerts"></div>
-  </div>
-  
-  <div class="card">
-  <h2>🧠 تحلیل خودکار <span class="help" data-tip="📖 جمع‌بندی خودکار از نسبت‌های مهم با علامت رنگی.">?</span></h2>
-  <div id="analysis"></div>
-  </div>
-  
-  <div class="card">
-  <h2>📝 جمع‌بندی متنی خودکار <span class="help" data-tip="📖 یه پاراگراف که همه‌چیز رو خلاصه می‌کنه.">?</span>
-  <button id="copySummary" class="ghost" style="margin-right:auto;font-size:12px;padding:5px 12px">📋 کپی خلاصه</button>
-  </h2>
-  <div id="summary" class="summary-box"></div>
-  </div>
+<h2>🚨 هشدارهای هوشمند <span class="help" data-tip="📖 هشدارهای خودکار بر اساس تغییرات.">?</span></h2>
+<div id="alerts"></div>
+</div>
+
+<div class="card">
+<h2>🔍 تفسیر متن صورت مالی <span class="help" data-tip="📖 اسکن متن صورت مالی و پیدا کردن عبارت‌های کلیدی مثل «مورد اختلاف»، «قرارداد جدید» و...">?</span></h2>
+<div id="textInsight"></div>
+</div>
+
+<div class="card">
+<h2>🧠 تحلیل خودکار <span class="help" data-tip="📖 جمع‌بندی خودکار از نسبت‌های مهم با علامت رنگی.">?</span></h2>
+<div id="analysis"></div>
+</div>
+
+<div class="card">
+<h2>📝 جمع‌بندی متنی خودکار <span class="help" data-tip="📖 یه پاراگراف که همه‌چیز رو خلاصه می‌کنه.">?</span>
+<button id="copySummary" class="ghost" style="margin-right:auto;font-size:12px;padding:5px 12px">📋 کپی خلاصه</button>
+</h2>
+<div id="summary" class="summary-box"></div>
+</div>
 
 </div>
 </div><!-- /tabSingle -->
@@ -278,7 +293,7 @@
 
 <div class="card">
   <div class="topbar">
-    <h1>📈 مقایسه شرکت‌ها <span style="font-size:13px;color:var(--sub);font-weight:400">v40</span></h1>
+    <h1>📈 مقایسه شرکت‌ها <span style="font-size:13px;color:var(--sub);font-weight:400">v1.2</span></h1>
     <p class="sub" style="margin:0">۲ تا ۴ فایل صورت مالی انتخاب کن. برای نسبت‌های ارزش‌گذاری، قیمت و تعداد سهام رو هم وارد کن.</p>
   </div>
 
@@ -386,7 +401,7 @@
 
 <div class="card">
   <div class="topbar">
-    <h1>👁️ دیدبان <span style="font-size:13px;color:var(--sub);font-weight:400">v40</span></h1>
+    <h1>👁️ دیدبان <span style="font-size:13px;color:var(--sub);font-weight:400">v1.2</span></h1>
     <p class="sub" style="margin:0">سهم‌های مورد علاقه‌ات رو از تب «تحلیل تک شرکت» به اینجا اضافه کن.</p>
   </div>
 </div>
@@ -464,8 +479,24 @@
 </div>
 
 <script src="xlsx.full.min.js"></script>
+<script src="kodal-key.js"></script>
 <script src="license.js"></script>
 <script src="app.js"></script>
 <script src="compare.js"></script>
 <script src="watchlist.js"></script>
+
+<!-- ثبت Service Worker (PWA) -->
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((registration) => {
+        console.log('✅ Service Worker ثبت شد:', registration.scope);
+      })
+      .catch((err) => {
+        console.warn('⚠️ Service Worker ثبت نشد:', err);
+      });
+  });
+}
+</script>
 </body></html>
