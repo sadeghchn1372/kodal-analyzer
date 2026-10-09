@@ -200,7 +200,11 @@ function applyMarketInputs(){
   MARKET.symbol = ($('symbolName')?.value || '').trim();
   MARKET.price = toNum($('stockPrice')?.value);
   MARKET.shares = toNum($('stockCount')?.value);
-  MARKET.periodMonths = Number($('periodType')?.value) || 12;
+  if(PARSED?._detectedInfo?.months){
+    MARKET.periodMonths = PARSED._detectedInfo.months;
+  } else if(!MARKET.periodMonths){
+    MARKET.periodMonths = 12;
+  }
   saveMarketToStorage();
 
   const hint = $('marketHint');
@@ -225,7 +229,6 @@ setTimeout(() => {
   if(MARKET.symbol && $('symbolName')) $('symbolName').value = MARKET.symbol;
   if(MARKET.price && $('stockPrice')) $('stockPrice').value = formatNumberInput(MARKET.price);
   if(MARKET.shares && $('stockCount')) $('stockCount').value = formatNumberInput(MARKET.shares);
-  if($('periodType')) $('periodType').value = MARKET.periodMonths || 12;
   if(MARKET.price && $('marketHint')){
     $('marketHint').textContent = `✅ اطلاعات بازار از قبل ذخیره شده${MARKET.symbol ? ' — '+MARKET.symbol : ''}`;
     $('marketHint').classList.add('active');
@@ -235,7 +238,7 @@ setTimeout(() => {
 attachNumberFormatter($('stockPrice'));
 attachNumberFormatter($('stockCount'));
 
-['symbolName','stockPrice','stockCount','periodType'].forEach(id => {
+['symbolName','stockPrice','stockCount'].forEach(id => {
   const el = $(id);
   if(!el) return;
   let timer;
@@ -392,7 +395,6 @@ window.restoreAnalysis = function(idx){
       if($('symbolName')) $('symbolName').value = MARKET.symbol;
       if($('stockPrice')) $('stockPrice').value = MARKET.price ? formatNumberInput(MARKET.price) : '';
       if($('stockCount')) $('stockCount').value = MARKET.shares ? formatNumberInput(MARKET.shares) : '';
-      if($('periodType')) $('periodType').value = MARKET.periodMonths || 12;
     }
     const infoBox = $('periodInfoBox');
     const infoText = $('periodInfoText');
@@ -729,7 +731,6 @@ function detectPeriodFromLines(lines){
   let detectedMonths = null;
   let detectedDate = null;
 
-  // تابع کمکی: تشخیص دوره از ماه پایان
   function monthToPeriod(moNum){
     if(moNum === 3) return 3;
     if(moNum === 6) return 6;
@@ -737,16 +738,6 @@ function detectPeriodFromLines(lines){
     if(moNum === 12) return 12;
     return null;
   }
-
-  // ============================================================
-  // روش اصلی: دنبال کلیدواژه‌های دوره می‌گردیم و تاریخ بعدشون رو می‌گیریم
-  // ============================================================
-  // کلیدواژه‌ها به ترتیب اولویت:
-  //   1. "دوره منتهی به YYYY/MM/DD"
-  //   2. "سال مالی منتهی به YYYY/MM/DD"
-  //   3. "به تاریخ YYYY/MM/DD"  (صورت وضعیت مالی)
-  //   4. "منتهی به YYYY/MM/DD"
-  //   5. "پایان یافته در YYYY/MM/DD"
 
   const keywordPatterns = [
     /دوره\s*منتهی\s*به\s*(\d{4})\s*[\/\-\.]\s*(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})/i,
@@ -767,19 +758,12 @@ function detectPeriodFromLines(lines){
         detectedYear = String(y);
         detectedDate = `${y}/${String(mo).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
         detectedMonths = monthToPeriod(mo);
-        if(detectedMonths !== null){
-          break; // پیدا شد!
-        }
+        if(detectedMonths !== null) break;
       }
     }
   }
 
-  // ============================================================
-  // اگه کلیدواژه‌ها جواب نداد، از روش قدیمی (بزرگ‌ترین تاریخ) استفاده کن
-  // ولی تاریخ‌های آینده (برآوردی) رو نادیده بگیر
-  // ============================================================
   if(detectedMonths === null){
-    // تمام تاریخ‌ها رو پیدا کن
     const candidates = [];
     const reYMD = /(\d{4})\s*[\/\-\.]\s*(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})/g;
     let m;
@@ -791,11 +775,7 @@ function detectPeriodFromLines(lines){
         candidates.push({ year: y, month: mo, day: d, pos: m.index });
       }
     }
-
-    // مرتب بر اساس موقعیت در متن — اولین تاریخ‌های واقعی بالای صورته
     candidates.sort((a, b) => a.pos - b.pos);
-
-    // اولین تاریخی که ماهش 3/6/9/12 باشه
     for(const c of candidates.slice(0, 8)){
       const p = monthToPeriod(c.month);
       if(p !== null){
@@ -807,9 +787,6 @@ function detectPeriodFromLines(lines){
     }
   }
 
-  // ============================================================
-  // روش پشتیبان: الگوی متنی "X ماهه سال YYYY"
-  // ============================================================
   if(detectedMonths === null){
     const myRx = /(\d{1,2})\s*ماهه\s*(?:سال\s*)?(\d{4})/i;
     const mm = normalized.match(myRx);
@@ -822,18 +799,12 @@ function detectPeriodFromLines(lines){
     }
   }
 
-  // ============================================================
-  // روش پشتیبان: "سال مالی ۱۴۰۳" بدون ماه
-  // ============================================================
   if(detectedYear === null){
     const yRx = /(?:سال\s*مالی|سال\s*منتهی\s*به)\s*(\d{4})/i;
     const ym = normalized.match(yRx);
     if(ym) detectedYear = ym[1];
   }
 
-  // ============================================================
-  // روش پشتیبان: "۶ ماهه" بدون سال
-  // ============================================================
   if(detectedMonths === null){
     if(/(?:۳|3)\s*ماهه/i.test(normalized)) detectedMonths = 3;
     else if(/(?:۶|6)\s*ماهه/i.test(normalized)) detectedMonths = 6;
@@ -841,7 +812,6 @@ function detectPeriodFromLines(lines){
     else if(/(?:۱۲|12)\s*ماهه/i.test(normalized)) detectedMonths = 12;
   }
 
-  // برچسب نهایی
   let label = null;
   if(detectedMonths && detectedYear){
     label = `${toFa(detectedMonths)} ماهه سال ${toFa(detectedYear)}`;
@@ -851,12 +821,7 @@ function detectPeriodFromLines(lines){
     label = `سال مالی ${toFa(detectedYear)}`;
   }
 
-  console.log('🔍 detectPeriodFromLines:', {
-    detectedDate,
-    detectedYear,
-    detectedMonths,
-    label
-  });
+  console.log('🔍 detectPeriodFromLines:', { detectedDate, detectedYear, detectedMonths, label });
 
   return {
     label: label,
@@ -1081,6 +1046,99 @@ function renderDuPont(v){
   if(noteEl) noteEl.innerHTML = note;
 }
 
+/* ---------- کیفیت سود (تفکیک سود عملیاتی) ---------- */
+function renderOperatingQuality(v){
+  const box = $('operatingQualityBox');
+  const noteEl = $('operatingQualityNote');
+  if(!box) return;
+
+  const revenue = v.revenue;
+  const cogs = v.cogs;
+  const opEx = v.opEx;
+  const opProfit = v.opProfit;
+
+  if(revenue == null || opProfit == null){
+    box.innerHTML = '<div class="err" style="display:block">برای محاسبه کیفیت سود، درآمد و سود عملیاتی لازم است.</div>';
+    if(noteEl) noteEl.innerHTML = '';
+    return;
+  }
+
+  const realOpProfit = (cogs != null && opEx != null)
+    ? (revenue - Math.abs(cogs) - Math.abs(opEx))
+    : null;
+
+  const otherInc = (realOpProfit != null) ? (opProfit - realOpProfit) : null;
+
+  const otherShare = (otherInc != null && opProfit !== 0)
+    ? (otherInc / opProfit)
+    : null;
+
+  const otherToRev = (otherInc != null && revenue !== 0)
+    ? (otherInc / revenue)
+    : null;
+
+  let otherClass = 'other';
+  if(otherToRev != null && otherToRev > 0.5) otherClass = 'other bad';
+
+  let html = '<div class="qual-grid">';
+  html += `
+    <div class="qual-box real">
+      <h4>✅ سود عملیاتی خالص</h4>
+      <div class="qual-val">${toman(realOpProfit)}</div>
+      <div class="qual-sub">درآمد − بهای تمام شده − هزینه‌های عملیاتی<br>(فقط از عملیات اصلی)</div>
+    </div>
+    <div class="qual-box ${otherClass}">
+      <h4>${otherToRev != null && otherToRev > 0.3 ? '⚠️' : '📊'} سایر درآمدها</h4>
+      <div class="qual-val">${toman(otherInc)}</div>
+      <div class="qual-sub">سود سهام، فروش دارایی، سود سپرده و...<br>(تکرارپذیری کمتر)</div>
+    </div>
+  `;
+  html += '</div>';
+
+  if(realOpProfit != null && otherInc != null && opProfit !== 0){
+    const total = Math.abs(realOpProfit) + Math.abs(otherInc);
+    if(total > 0){
+      const realPct = (Math.abs(realOpProfit) / total) * 100;
+      const otherPct = (Math.abs(otherInc) / total) * 100;
+
+      html += `
+        <div class="qual-bar-wrap">
+          <div class="qual-bar-title">ترکیب سود عملیاتی (سهم از کل):</div>
+          <div class="qual-bar">
+            <div class="qual-bar-real" style="width:${realPct}%">${toFa(realPct.toFixed(0))}٪</div>
+            <div class="qual-bar-other" style="width:${otherPct}%">${toFa(otherPct.toFixed(0))}٪</div>
+          </div>
+          <div class="qual-legend">
+            <span><i style="background:#10b981"></i> سود عملیاتی خالص</span>
+            <span><i style="background:#f59e0b"></i> سایر درآمدها</span>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  box.innerHTML = html;
+
+  if(!noteEl) return;
+
+  let note = '';
+  if(otherInc == null){
+    note = 'اطلاعات کافی برای تفکیک سود عملیاتی موجود نیست.';
+  } else if(otherToRev != null && otherToRev > 0.5){
+    note = `🚨 <b>هشدار جدی:</b> سایر درآمدها (${toman(otherInc)}) بیش از <b>۵۰٪ درآمد عملیاتی</b> است. یعنی بخش عمده‌ای از سود شرکت از <b>فعالیت اصلی</b> نمیاد. احتمالاً سود سهام شرکت‌های تابعه، فروش دارایی‌ها یا سود سپرده‌های بانکی. این سود <b>پایدار نیست</b> و باید با احتیاط بررسی بشه.`;
+  } else if(otherToRev != null && otherToRev > 0.3){
+    note = `⚠️ <b>توجه:</b> سایر درآمدها (${toman(otherInc)}) حدود <b>${toFa((otherToRev*100).toFixed(0))}٪ درآمد عملیاتی</b> است. بخش قابل توجهی از سود از عملیات اصلی نمیاد. در تحلیل بنیادی، این سود باید جداگانه بررسی بشه.`;
+  } else if(otherToRev != null && otherToRev > 0){
+    note = `✅ بخش عمده سود عملیاتی (${toFa((100 - (otherShare||0)*100).toFixed(0))}٪) از <b>عملیات اصلی</b> میاد که نشون‌دهنده پایداری سود است.`;
+  } else if(otherInc != null && otherInc < 0){
+    note = `📊 سایر درآمدها منفی است (${toman(otherInc)}) که نشان می‌دهد شرکت هزینه‌های غیرعملیاتی داشته. این می‌تونه از فروش دارایی با زیان یا سایر موارد باشه.`;
+  } else {
+    note = 'اطلاعات کافی برای تحلیل کیفیت سود موجود نیست.';
+  }
+
+  noteEl.innerHTML = note;
+}
+
 /* ---------- EBITDA ---------- */
 function renderEBITDA(v){
   const dep = v.deprec, op = v.opProfit;
@@ -1197,6 +1255,10 @@ if($('go')) $('go').onclick = async () => {
     if(!found) throw Error('هیچ قلمی شناسایی نشد.');
     PARSED._detectedInfo = detectPeriodFromLines(lines);
     PARSED._detectedPeriod = PARSED._detectedInfo.label;
+    if(PARSED._detectedInfo.months){
+      MARKET.periodMonths = PARSED._detectedInfo.months;
+      saveMarketToStorage();
+    }
     const maxPer = Math.max(...Object.values(PARSED).map(a => a.length));
     PARSED._periods = Math.min(Math.max(maxPer,1), 5);
     const infoBox = $('periodInfoBox');
@@ -1266,6 +1328,7 @@ function render(ci){
   $('scoreText').style.borderRightColor = lvl.color;
   renderDuPont(v);
   renderEBITDA(v);
+  renderOperatingQuality(v);
   renderZScore(v);
   const periods = PARSED._periods;
   const periodLabels = [];
@@ -1957,6 +2020,9 @@ window.KodalHelpers = {
       cash: val('cash',ci),
       capex: val('capex',ci),
       deprec: val('depreciation',ci),
+      opEx: val('opEx',ci),
+      cogs: val('cogs',ci),
+      otherOpInc: val('otherOpInc',ci),
     };
     const score = calcScore(v);
     return {
@@ -2010,7 +2076,6 @@ window.restoreFromExternal = function(reportData){
       if($('symbolName')) $('symbolName').value = MARKET.symbol;
       if($('stockPrice')) $('stockPrice').value = MARKET.price ? formatNumberInput(MARKET.price) : '';
       if($('stockCount')) $('stockCount').value = MARKET.shares ? formatNumberInput(MARKET.shares) : '';
-      if($('periodType')) $('periodType').value = MARKET.periodMonths || 12;
     }
 
     const infoBox = $('periodInfoBox');

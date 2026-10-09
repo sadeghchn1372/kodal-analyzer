@@ -245,7 +245,7 @@ body.dark .main-tab.active{box-shadow:0 4px 12px rgba(59,130,246,.5)}
 
 .market-grid{
   display:grid;
-  grid-template-columns:1.2fr 1fr 1fr 1fr;
+  grid-template-columns:1.2fr 1fr 1fr;
   gap:10px;
   align-items:end;
 }
@@ -291,43 +291,6 @@ body.dark .market-hint{background:rgba(59,130,246,.1)}
   border-right-color:var(--good);
 }
 
-.drop-icon{
-  font-size:42px;
-  margin-bottom:6px;
-  opacity:.7;
-}
-.drop-text{
-  font-size:13px;
-  color:var(--sub);
-  margin:4px 0 14px;
-}
-
-.period-inline{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  margin:10px 0 14px;
-  padding:8px 14px;
-  background:var(--card);
-  border-radius:10px;
-  border:1px solid var(--line);
-}
-.period-inline label{
-  font-size:13px;
-  color:var(--sub);
-  margin:0;
-}
-.period-inline select{
-  padding:6px 12px;
-  border-radius:8px;
-  border:1px solid var(--line);
-  background:var(--chart-bg);
-  color:var(--txt);
-  font:inherit;
-  cursor:pointer;
-}
-
-/* ============ Period Info Box (دوره صورت مالی) ============ */
 .period-info-box{
   display:inline-flex;
   align-items:center;
@@ -420,6 +383,373 @@ body.dark .dupont-result .val{color:#6ee7b7}
   text-align:center;
 }
 
+/* ============================================
+   🔬 کیفیت سود
+============================================ */
+.qual-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin-top:6px;
+}
+.qual-box{
+  padding:14px 16px;
+  border-radius:12px;
+  background:var(--chart-bg);
+  border:1px solid var(--chart-br);
+}
+.qual-box h4{
+  margin:0 0 10px;
+  font-size:13px;
+  color:var(--sub);
+  font-weight:600;
+}
+.qual-box .qual-val{
+  font-size:22px;
+  font-weight:700;
+  color:var(--txt);
+  direction:rtl;
+  margin-bottom:6px;
+}
+.qual-box .qual-sub{
+  font-size:11.5px;
+  color:var(--sub);
+  line-height:1.7;
+}
+.qual-box.real{
+  border-right:4px solid var(--good);
+}
+.qual-box.real .qual-val{color:var(--good)}
+.qual-box.other{
+  border-right:4px solid var(--warn);
+}
+.qual-box.other .qual-val{color:var(--warn)}
+.qual-box.other.bad{
+  border-right-color:var(--bad);
+}
+.qual-box.other.bad .qual-val{color:var(--bad)}
+
+.qual-bar-wrap{
+  margin-top:14px;
+  padding:14px 16px;
+  background:var(--chart-bg);
+  border-radius:12px;
+  border:1px solid var(--chart-br);
+}
+.qual-bar-title{
+  font-size:12.5px;
+  color:var(--sub);
+  margin-bottom:10px;
+}
+.qual-bar{
+  display:flex;
+  height:24px;
+  border-radius:8px;
+  overflow:hidden;
+  background:var(--chart-br);
+}
+.qual-bar-real{
+  background:linear-gradient(90deg, #10b981, #34d399);
+  transition:width .6s ease;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+}
+.qual-bar-other{
+  background:linear-gradient(90deg, #f59e0b, #fbbf24);
+  transition:width .6s ease;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+}
+.qual-legend{
+  display:flex;
+  gap:16px;
+  margin-top:8px;
+  font-size:12px;
+  color:var(--sub);
+  justify-content:center;
+}
+.qual-legend span{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.qual-legend i{
+  width:11px;
+  height:11px;
+  border-radius:3px;
+  display:inline-block;
+}
+
+/* ============================================
+   🔍 تفسیر متن صورت مالی
+============================================ */
+.text-insight-summary{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+  padding:12px 16px;
+  background:var(--chart-bg);
+  border-radius:12px;
+  border:1px solid var(--chart-br);
+}
+.text-insight-count{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:13px;
+  font-weight:600;
+}
+.text-insight-count.danger{
+  background:rgba(198,40,40,.12);
+  color:#c62828;
+}
+body.dark .text-insight-count.danger{
+  background:rgba(248,113,113,.15);
+  color:#f87171;
+}
+.text-insight-count.warning{
+  background:rgba(234,179,8,.12);
+  color:#a16207;
+}
+body.dark .text-insight-count.warning{
+  background:rgba(251,191,36,.15);
+  color:#fbbf24;
+}
+.text-insight-count.success{
+  background:rgba(16,185,129,.12);
+  color:#16834a;
+}
+body.dark .text-insight-count.success{
+  background:rgba(52,211,153,.15);
+  color:#34d399;
+}
+.text-insight-count.neutral{
+  background:rgba(102,112,133,.12);
+  color:var(--sub);
+}
+
+.text-insight-group{
+  margin-top:14px;
+}
+.text-insight-group-title{
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.text-insight-item{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  padding:10px 14px;
+  border-radius:8px;
+  margin:6px 0;
+  font-size:13px;
+  line-height:1.8;
+  border-right:4px solid var(--blue);
+  background:var(--chart-bg);
+}
+.text-insight-item.danger{
+  border-right-color:var(--bad);
+  background:rgba(198,40,40,.06);
+}
+body.dark .text-insight-item.danger{
+  background:rgba(248,113,113,.08);
+}
+.text-insight-item.warning{
+  border-right-color:var(--warn);
+  background:rgba(234,179,8,.06);
+}
+body.dark .text-insight-item.warning{
+  background:rgba(251,191,36,.08);
+}
+.text-insight-item.success{
+  border-right-color:var(--good);
+  background:rgba(16,185,129,.06);
+}
+body.dark .text-insight-item.success{
+  background:rgba(52,211,153,.08);
+}
+.text-insight-item .ins-icon{
+  font-size:16px;
+  flex-shrink:0;
+  line-height:1.6;
+}
+.text-insight-item .ins-text{
+  flex:1;
+  color:var(--txt);
+}
+.text-insight-item .ins-text b{
+  color:var(--blue);
+  font-weight:700;
+}
+.text-insight-empty{
+  text-align:center;
+  padding:20px;
+  color:var(--sub);
+  font-size:13px;
+}
+
+/* ============================================
+   🔔 هشدارهای تغییرات مهم (دیدبان)
+============================================ */
+.wl-alert-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:11.5px;
+  font-weight:600;
+  cursor:pointer;
+  transition:transform .15s;
+  margin-right:auto;
+}
+.wl-alert-badge:hover{transform:scale(1.05)}
+.wl-alert-badge.danger{
+  background:rgba(198,40,40,.12);
+  color:#c62828;
+  border:1px solid rgba(198,40,40,.3);
+}
+body.dark .wl-alert-badge.danger{
+  background:rgba(248,113,113,.15);
+  color:#f87171;
+  border-color:rgba(248,113,113,.35);
+}
+.wl-alert-badge.warning{
+  background:rgba(234,179,8,.12);
+  color:#a16207;
+  border:1px solid rgba(234,179,8,.3);
+}
+body.dark .wl-alert-badge.warning{
+  background:rgba(251,191,36,.15);
+  color:#fbbf24;
+  border-color:rgba(251,191,36,.35);
+}
+.wl-alert-badge.success{
+  background:rgba(16,185,129,.12);
+  color:#16834a;
+  border:1px solid rgba(16,185,129,.3);
+}
+body.dark .wl-alert-badge.success{
+  background:rgba(52,211,153,.15);
+  color:#34d399;
+  border-color:rgba(52,211,153,.35);
+}
+.wl-alert-badge.neutral{
+  background:rgba(102,112,133,.12);
+  color:var(--sub);
+  border:1px solid rgba(102,112,133,.25);
+}
+.wl-alert-badge .dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:currentColor;
+  flex-shrink:0;
+}
+
+.wl-alert-popup{
+  position:fixed;
+  z-index:999999;
+  background:var(--card);
+  color:var(--txt);
+  border-radius:12px;
+  box-shadow:0 12px 40px rgba(0,0,0,.25);
+  border:1px solid var(--line);
+  padding:14px 16px;
+  max-width:340px;
+  min-width:280px;
+  font-size:12.5px;
+  line-height:1.9;
+}
+.wl-alert-popup h4{
+  margin:0 0 10px;
+  font-size:13.5px;
+  font-weight:700;
+  border-bottom:1px solid var(--line);
+  padding-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.wl-alert-popup ul{
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+.wl-alert-popup li{
+  padding:6px 0;
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  border-bottom:1px dashed var(--line);
+}
+.wl-alert-popup li:last-child{border-bottom:0}
+.wl-alert-popup li .ic{
+  flex-shrink:0;
+  font-size:14px;
+}
+.wl-alert-popup li b{
+  color:var(--txt);
+}
+.wl-alert-popup .num{
+  font-weight:700;
+  direction:ltr;
+  display:inline-block;
+}
+.wl-alert-popup .up{color:#16834a}
+.wl-alert-popup .down{color:#c62828}
+
+/* ============================================
+   📈 نمودار خطی دیدبان
+============================================ */
+.wl-chart-selector{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:14px;
+  padding:10px 14px;
+  background:var(--chart-bg);
+  border-radius:10px;
+  border:1px solid var(--chart-br);
+  flex-wrap:wrap;
+}
+.wl-chart-selector label{
+  font-size:13px;
+  color:var(--sub);
+  font-weight:600;
+}
+.wl-chart-selector select{
+  padding:8px 14px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--card);
+  color:var(--txt);
+  font:inherit;
+  cursor:pointer;
+  min-width:180px;
+}
+.wl-chart-empty{
+  text-align:center;
+  padding:30px;
+  color:var(--sub);
+  font-size:13px;
+}
+
 .saved-list{display:grid;gap:8px;margin-top:10px}
 .saved-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--chart-bg);flex-wrap:wrap}
 .saved-item .name{font-weight:600;flex:1;min-width:180px;display:flex;align-items:center;gap:6px}
@@ -485,7 +815,7 @@ body.dark .dupont-result .val{color:#6ee7b7}
 #saveToast.error{background:#c62828}
 
 /* ============================================================
-   🆕 v39.2: Watch Modal Selector
+   Watch Modal Selector
 ============================================================ */
 .watch-mode-selector{
   display:flex;
@@ -1343,7 +1673,7 @@ body.dark .monthly-notes{
   .input-section-title{color:#000}
   .market-field input,.market-field select{border:1px solid #ddd;background:#fff !important;color:#000 !important}
   .chart-box{page-break-inside:avoid}
-  .analysis-item,.alert,.one-line-note,.zscore-note,.cmp-score-card,.cmp-zscore-card{page-break-inside:avoid}
+  .analysis-item,.alert,.one-line-note,.zscore-note,.cmp-score-card,.cmp-zscore-card,.text-insight-item,.qual-box{page-break-inside:avoid}
   table{page-break-inside:auto}
   tr{page-break-inside:avoid}
   h1{font-size:24px}
@@ -1370,153 +1700,6 @@ body.dark .monthly-notes{
   .wl-card{background:#f9f9f9 !important;border:1px solid #ddd}
 }
 .print-header{display:none}
-
-/* ============================================
-   📈 نمودار خطی دیدبان
-============================================ */
-.wl-chart-selector{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin-bottom:14px;
-  padding:10px 14px;
-  background:var(--chart-bg);
-  border-radius:10px;
-  border:1px solid var(--chart-br);
-}
-.wl-chart-selector label{
-  font-size:13px;
-  color:var(--sub);
-  font-weight:600;
-}
-.wl-chart-selector select{
-  padding:8px 14px;
-  border-radius:8px;
-  border:1px solid var(--line);
-  background:var(--card);
-  color:var(--txt);
-  font:inherit;
-  cursor:pointer;
-  min-width:180px;
-}
-.wl-chart-empty{
-  text-align:center;
-  padding:30px;
-  color:var(--sub);
-  font-size:13px;
-}
-
-/* ============================================
-   🔔 هشدارهای تغییرات مهم (دیدبان)
-============================================ */
-.wl-alert-badge{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:4px 10px;
-  border-radius:20px;
-  font-size:11.5px;
-  font-weight:600;
-  cursor:pointer;
-  transition:transform .15s;
-  margin-right:auto;
-}
-.wl-alert-badge:hover{transform:scale(1.05)}
-.wl-alert-badge.danger{
-  background:rgba(198,40,40,.12);
-  color:#c62828;
-  border:1px solid rgba(198,40,40,.3);
-}
-body.dark .wl-alert-badge.danger{
-  background:rgba(248,113,113,.15);
-  color:#f87171;
-  border-color:rgba(248,113,113,.35);
-}
-.wl-alert-badge.warning{
-  background:rgba(234,179,8,.12);
-  color:#a16207;
-  border:1px solid rgba(234,179,8,.3);
-}
-body.dark .wl-alert-badge.warning{
-  background:rgba(251,191,36,.15);
-  color:#fbbf24;
-  border-color:rgba(251,191,36,.35);
-}
-.wl-alert-badge.success{
-  background:rgba(16,185,129,.12);
-  color:#16834a;
-  border:1px solid rgba(16,185,129,.3);
-}
-body.dark .wl-alert-badge.success{
-  background:rgba(52,211,153,.15);
-  color:#34d399;
-  border-color:rgba(52,211,153,.35);
-}
-.wl-alert-badge.neutral{
-  background:rgba(102,112,133,.12);
-  color:var(--sub);
-  border:1px solid rgba(102,112,133,.25);
-}
-.wl-alert-badge .dot{
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  background:currentColor;
-  flex-shrink:0;
-}
-
-/* پاپ‌آپ هشدارها */
-.wl-alert-popup{
-  position:fixed;
-  z-index:999999;
-  background:var(--card);
-  color:var(--txt);
-  border-radius:12px;
-  box-shadow:0 12px 40px rgba(0,0,0,.25);
-  border:1px solid var(--line);
-  padding:14px 16px;
-  max-width:340px;
-  min-width:280px;
-  font-size:12.5px;
-  line-height:1.9;
-}
-.wl-alert-popup h4{
-  margin:0 0 10px;
-  font-size:13.5px;
-  font-weight:700;
-  border-bottom:1px solid var(--line);
-  padding-bottom:8px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-.wl-alert-popup ul{
-  margin:0;
-  padding:0;
-  list-style:none;
-}
-.wl-alert-popup li{
-  padding:6px 0;
-  display:flex;
-  align-items:flex-start;
-  gap:8px;
-  border-bottom:1px dashed var(--line);
-}
-.wl-alert-popup li:last-child{border-bottom:0}
-.wl-alert-popup li .ic{
-  flex-shrink:0;
-  font-size:14px;
-}
-.wl-alert-popup li b{
-  color:var(--txt);
-}
-.wl-alert-popup .num{
-  font-weight:700;
-  direction:ltr;
-  display:inline-block;
-}
-.wl-alert-popup .up{color:#16834a}
-.wl-alert-popup .down{color:#c62828}
 
 @media(max-width:900px){
   .market-grid{grid-template-columns:1fr 1fr}
@@ -1548,4 +1731,5 @@ body.dark .wl-alert-badge.success{
   .footer-link{justify-content:center;width:100%}
   .monthly-kpi-grid{grid-template-columns:1fr}
   .watch-mode-selector{flex-direction:column}
+  .qual-grid{grid-template-columns:1fr}
 }
