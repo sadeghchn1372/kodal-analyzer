@@ -2545,3 +2545,28 @@ body.dark .industry-peers-section {
     display: block !important;
   }
 }
+/* فیکس مودال‌ها با اولویت درست */
+#saveModal,
+#saveCompareModal,
+#saveMonthlyModal,
+#addWatchModal,
+#saveIndustryModal,
+#compareIndustriesModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 20px;
+}
+
+#saveModal.show,
+#saveCompareModal.show,
+#saveMonthlyModal.show,
+#addWatchModal.show,
+#saveIndustryModal.show,
+#compareIndustriesModal.show {
+  display: flex !important;
+}
