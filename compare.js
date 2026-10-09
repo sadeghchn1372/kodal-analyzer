@@ -1,8 +1,10 @@
 /* ============================================================
-   compare.js — منطق تب «مقایسه با صنعت»  |  v1.5.1
+   compare.js — منطق تب «مقایسه با صنعت»  |  v1.9.0
    وابسته به: app.js (window.KodalHelpers)
-   تغییرات v1.5.1:
-   - حذف نمودار میله‌ای و راداری برای کاهش شلوغی
+   تغییرات v1.9.0:
+   - فیکس باز شدن خودکار تب نتیجه مقایسه
+   - اتصال مستقیم دکمه‌های داخلی به تابع
+   - نمایش خودکار تب «جایگاه سهم» بعد از مقایسه
 ============================================================ */
 
 (function(){
@@ -27,13 +29,13 @@
     return H.toFa(withComma);
   }
 
-  /* ---------- کمک‌کننده: نرمال‌سازی برای مقایسه ---------- */
+  /* ---------- کمک‌کننده: نرمال‌سازی ---------- */
   function _cmpVal(x){
     if(x == null || typeof x !== 'number' || !isFinite(x)) return null;
     return Math.round(x * 1e6) / 1e6;
   }
 
-  /* ---------- میانگین/میانه/انحراف ---------- */
+  /* ---------- میانگین/میانه ---------- */
   function avg(arr){
     const v = arr.filter(x => x != null && isFinite(x));
     if(!v.length) return null;
@@ -58,19 +60,19 @@
 
   /* ---------- رنگ‌ها ---------- */
   const BASE_COLOR = '#f59e0b';
-  const PEER_COLORS = ['#1769e0', '#10b981', '#8b5cf6', '#ec4899', '#06b6d4', '#65a30d', '#dc2626', '#0891b2', '#a16207', '#7c3aed'];
+  const PEER_COLORS = ['#1769e0', '#10b981', '#8b5cf6', '#ec4899', '#06b6d4'];
 
   /* ---------- State ---------- */
   let BASE = { file: null, parsed: null, symbol: '', industry: '', price: null, shares: null };
   let PEERS = [];
   let INDUSTRY_RESULTS = null;
   let INDUSTRY_SAVED = [];
-  const MAX_PEERS = 10;
+  const MAX_PEERS = 5;
 
   const INDUSTRY_STORAGE_KEY = 'kodal_industries_v1';
 
   /* ============================================================
-     Storage: صنایع ذخیره‌شده
+     Storage
   ============================================================ */
   function loadIndustriesFromStorage(){
     try{
@@ -92,7 +94,7 @@
   loadIndustriesFromStorage();
 
   /* ============================================================
-     ۱. سهم اصلی — فرم و فایل
+     ۱. سهم اصلی
   ============================================================ */
   function bindBaseInputs(){
     const symEl = $('baseSymbol');
@@ -198,7 +200,7 @@
       const parsed = H.parseItems(lines);
       const found = Object.keys(parsed).length;
       if(!found) throw new Error('قلمی شناسایی نشد');
-      const maxPer = Math.max(...Object.values(parsed).map(a => a.length));
+      const maxPer = Math.max(...Object.values(parsed).filter(a => Array.isArray(a)).map(a => a.length));
       parsed._periods = Math.min(Math.max(maxPer, 1), 5);
 
       const detected = detectPeriod(lines);
@@ -244,7 +246,7 @@
   }
 
   /* ============================================================
-     ۲. هم‌گروهی‌ها — لیست داینامیک
+     ۲. هم‌گروهی‌ها
   ============================================================ */
   function renderPeers(){
     const box = $('peersList');
@@ -252,12 +254,12 @@
 
     if(!PEERS.length){
       box.innerHTML = `
-        <div class="saved-empty" style="padding:20px;text-align:center;color:var(--sub);font-size:13px;border:2px dashed var(--line);border-radius:12px">
-          هنوز سهم هم‌گروهی اضافه نکردی.<br>
-          روی «➕ افزودن سهم هم‌گروهی» بزن یا فایل‌ها رو بکش و بذار اینجا.
+        <div class="saved-empty" style="padding:16px;text-align:center;color:var(--sub);font-size:12.5px">
+          هنوز سهم هم‌گروهی اضافه نکردی. روی «📁 انتخاب فایل‌ها» بزن یا فایل‌ها رو بکش و بذار اینجا.
         </div>
       `;
       updateCompareButton();
+      updateAddPeerButton();
       return;
     }
 
@@ -306,6 +308,33 @@
     }).join('');
 
     updateCompareButton();
+    updateAddPeerButton();
+  }
+
+  function updateAddPeerButton(){
+    const addBtn2 = $('addPeerBtn2');
+    if(addBtn2){
+      if(PEERS.length >= MAX_PEERS){
+        addBtn2.disabled = true;
+        addBtn2.style.opacity = '0.5';
+        addBtn2.style.cursor = 'not-allowed';
+      } else {
+        addBtn2.disabled = false;
+        addBtn2.style.opacity = '1';
+        addBtn2.style.cursor = 'pointer';
+      }
+    }
+
+    const dropText = document.querySelector('.peers-drop-text');
+    if(dropText){
+      if(PEERS.length >= MAX_PEERS){
+        dropText.textContent = `حداکثر ${H.toFa(MAX_PEERS)} سهم پر شده`;
+      } else if(PEERS.length > 0){
+        dropText.textContent = `${H.toFa(PEERS.length)} از ${H.toFa(MAX_PEERS)} سهم اضافه شد`;
+      } else {
+        dropText.textContent = 'فایل‌های سهم‌های هم‌گروهی';
+      }
+    }
   }
 
   window.indUpdatePeerSymbol = function(idx, value){
@@ -356,14 +385,20 @@
     if(errBox) errBox.style.display = 'none';
 
     const remaining = MAX_PEERS - PEERS.length;
-    const files = Array.from(fileList).slice(0, remaining);
 
-    if(!files.length){
+    if(remaining <= 0){
       if(errBox){
         errBox.style.display = 'block';
         errBox.textContent = `حداکثر ${H.toFa(MAX_PEERS)} سهم هم‌گروهی مجازه.`;
       }
       return;
+    }
+
+    const files = Array.from(fileList).slice(0, remaining);
+
+    if(fileList.length > remaining && errBox){
+      errBox.style.display = 'block';
+      errBox.textContent = `حداکثر ${H.toFa(MAX_PEERS)} سهم هم‌گروهی مجازه. فقط ${H.toFa(remaining)} سهم اضافه شد.`;
     }
 
     for(const f of files){
@@ -389,7 +424,7 @@
         const parsed = H.parseItems(lines);
         const found = Object.keys(parsed).length;
         if(!found) throw new Error('قلمی شناسایی نشد');
-        const maxPer = Math.max(...Object.values(parsed).map(a => a.length));
+        const maxPer = Math.max(...Object.values(parsed).filter(a => Array.isArray(a)).map(a => a.length));
         parsed._periods = Math.min(Math.max(maxPer, 1), 5);
         PEERS[idx].parsed = parsed;
 
@@ -404,68 +439,68 @@
       }
       renderPeers();
     }
-
-    if(fileList.length > remaining && errBox){
-      errBox.style.display = 'block';
-      errBox.textContent = `حداکثر ${H.toFa(MAX_PEERS)} سهم هم‌گروهی مجازه. ${H.toFa(fileList.length - remaining)} فایل نادیده گرفته شد.`;
-    }
-  }
-
-  function createPeerInputRow(){
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.xls,.xlsx,.csv,.html,.htm,.txt';
-    input.multiple = true;
-    return input;
   }
 
   function bindPeersInputs(){
-    const addBtn = $('addPeerBtn');
-    if(addBtn){
-      addBtn.onclick = () => {
-        const input = createPeerInputRow();
-        input.onchange = (e) => {
-          addPeerFiles(e.target.files);
-          e.target.value = '';
-        };
-        input.click();
+    const addBtn2 = $('addPeerBtn2');
+    const peersInput = $('peersFileInput');
+    const peersDrop = $('peersDrop');
+
+    function triggerFileSelect(){
+      if(PEERS.length >= MAX_PEERS){
+        const errBox = $('industryErr');
+        if(errBox){
+          errBox.style.display = 'block';
+          errBox.textContent = `حداکثر ${H.toFa(MAX_PEERS)} سهم هم‌گروهی مجازه.`;
+        }
+        return;
+      }
+      if(peersInput) peersInput.click();
+    }
+
+    if(addBtn2){
+      addBtn2.onclick = (e) => {
+        e.stopPropagation();
+        triggerFileSelect();
       };
     }
 
-    const clearBtn = $('clearPeersBtn');
-    if(clearBtn){
-      clearBtn.onclick = () => {
-        if(!PEERS.length) return;
-        if(!confirm('همه سهم‌های هم‌گروهی پاک شن؟')) return;
-        PEERS = [];
-        renderPeers();
+    if(peersDrop){
+      peersDrop.onclick = (e) => {
+        if(e.target.closest('button')) return;
+        triggerFileSelect();
       };
     }
-  }
 
-  function bindPeersDrop(){
-    const box = $('peersList');
-    if(!box) return;
+    if(peersInput){
+      peersInput.onchange = (e) => {
+        addPeerFiles(e.target.files);
+        e.target.value = '';
+      };
+    }
 
-    ['dragover', 'dragenter'].forEach(ev => {
-      box.addEventListener(ev, e => {
-        e.preventDefault();
-        box.classList.add('hover');
+    if(peersDrop){
+      ['dragover', 'dragenter'].forEach(ev => {
+        peersDrop.addEventListener(ev, e => {
+          e.preventDefault();
+          peersDrop.classList.add('hover');
+        });
       });
-    });
-    ['dragleave', 'drop'].forEach(ev => {
-      box.addEventListener(ev, e => {
-        e.preventDefault();
-        box.classList.remove('hover');
+      ['dragleave', 'drop'].forEach(ev => {
+        peersDrop.addEventListener(ev, e => {
+          e.preventDefault();
+          peersDrop.classList.remove('hover');
+        });
       });
-    });
-    box.addEventListener('drop', (e) => {
-      addPeerFiles(e.dataTransfer.files);
-    });
+      peersDrop.addEventListener('drop', (e) => {
+        e.preventDefault();
+        addPeerFiles(e.dataTransfer.files);
+      });
+    }
   }
 
   /* ============================================================
-     ۳. محاسبه و مقایسه
+     ۳. محاسبه
   ============================================================ */
   function extractValues(parsed, price, shares){
     const ci = 0;
@@ -571,9 +606,15 @@
     btn.disabled = !valid;
   }
 
-  function runIndustryCompare(){
+  /* ============================================================
+     ⭐ اجرای مقایسه — فیکس شده
+  ============================================================ */
+  window.runIndustryCompare = function(){
+    console.log('🎯 runIndustryCompare شروع شد');
+
     if(window.License){
       const status = window.License.getStatus();
+      console.log('🔐 وضعیت لایسنس:', status.state);
       if(status.state !== 'active'){
         window.License.open();
         if(window.showToast) window.showToast('لایسنس فعال نیست یا اعتبار تموم شده', true);
@@ -589,12 +630,15 @@
     }
 
     if(!BASE.parsed){
+      console.log('❌ BASE.parsed خالیه');
       const errBox = $('industryErr');
       if(errBox){ errBox.style.display = 'block'; errBox.textContent = 'اول فایل سهم اصلی رو بارگذاری کن.'; }
       return;
     }
 
     const validPeers = PEERS.filter(p => p.parsed);
+    console.log('👥 تعداد هم‌گروهی معتبر:', validPeers.length);
+
     if(validPeers.length < 2){
       const errBox = $('industryErr');
       if(errBox){ errBox.style.display = 'block'; errBox.textContent = 'حداقل ۲ سهم هم‌گروهی سالم لازمه.'; }
@@ -627,15 +671,49 @@
     });
 
     INDUSTRY_RESULTS = { base, peers };
-    renderIndustryOutput();
+    console.log('📊 نتایج محاسبه شد');
+
+    // نمایش کارت نتیجه
     const out = $('industryOut');
-    if(out) out.style.display = 'block';
+    if(out){
+      out.style.display = 'block';
+      console.log('✅ کارت نتیجه نمایش داده شد');
+    } else {
+      console.error('❌ عنصر industryOut پیدا نشد!');
+      return;
+    }
+
+    // رندر محتوا
+    try{
+      renderIndustryOutput();
+      console.log('✅ محتوا رندر شد');
+    }catch(err){
+      console.error('❌ خطا در رندر:', err);
+    }
+
+    // دکمه ذخیره
     const saveBtn = $('saveIndustryBtn');
     if(saveBtn){
       saveBtn.style.display = 'inline-block';
       saveBtn.disabled = false;
     }
-    window.scrollTo({ top: $('industryOut').offsetTop - 20, behavior: 'smooth' });
+
+    // اسکرول فوری به کارت
+    setTimeout(() => {
+      const top = out.getBoundingClientRect().top + window.pageYOffset - 20;
+      window.scrollTo(0, top);
+    }, 250);
+  };
+
+  // اتصال دکمه به تابع
+  function bindCompareButton(){
+    const btn = $('compareIndustryGo');
+    if(btn){
+      btn.onclick = window.runIndustryCompare;
+      console.log('✅ دکمه «مقایسه با صنعت» وصل شد');
+    } else {
+      console.error('❌ دکمه compareIndustryGo پیدا نشد');
+    }
   }
 
   /* ============================================================
@@ -647,8 +725,31 @@
     try{ renderIndustryZScore(); }catch(e){ console.error('renderIndustryZScore:', e); }
     try{ renderIndustryMainTable(); }catch(e){ console.error('renderIndustryMainTable:', e); }
     try{ renderIndustryRanking(); }catch(e){ console.error('renderIndustryRanking:', e); }
+
+    // ⭐ فعال‌سازی تب اول به صورت خودکار
+    window.indSwitchTab('position');
   }
 
+  /* ============================================================
+     ⭐ سوییچ تب‌های داخلی (داخلی کارت نتیجه مقایسه)
+  ============================================================ */
+  window.indSwitchTab = function(target){
+    const tabs = document.querySelectorAll('#industryOut .inner-tab');
+    const panels = document.querySelectorAll('#industryOut .inner-panel');
+
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+
+    const tab = document.querySelector('#industryOut .inner-tab[data-indinner="' + target + '"]');
+    if(tab) tab.classList.add('active');
+
+    const panel = document.querySelector('#industryOut .inner-panel[data-indpanel="' + target + '"]');
+    if(panel) panel.classList.add('active');
+  };
+
+  /* ============================================================
+     جایگاه سهم اصلی
+  ============================================================ */
   function renderBasePosition(){
     const box = $('basePositionSummary');
     if(!box) return;
@@ -656,12 +757,12 @@
     const { base, peers } = INDUSTRY_RESULTS;
 
     const criteria = [
-      { key: 'netMargin', getter: r => r.r.netMargin, dir: 'higher', label: 'حاشیه سود خالص', fmt: 'pct' },
-      { key: 'roe', getter: r => r.r.roe, dir: 'higher', label: 'ROE', fmt: 'pct' },
-      { key: 'currentRatio', getter: r => r.r.currentRatio, dir: 'higher', label: 'نسبت جاری', fmt: 'num' },
-      { key: 'debtToEquity', getter: r => r.r.debtToEquity, dir: 'lower', label: 'بدهی به حقوق', fmt: 'num' },
-      { key: 'cfoToNet', getter: r => r.r.cfoToNet, dir: 'higher', label: 'کیفیت سود', fmt: 'num' },
-      { key: 'score', getter: r => r.score, dir: 'higher', label: 'امتیاز کلی', fmt: 'num' },
+      { key: 'netMargin', getter: r => r.r.netMargin, dir: 'higher' },
+      { key: 'roe', getter: r => r.r.roe, dir: 'higher' },
+      { key: 'currentRatio', getter: r => r.r.currentRatio, dir: 'higher' },
+      { key: 'debtToEquity', getter: r => r.r.debtToEquity, dir: 'lower' },
+      { key: 'cfoToNet', getter: r => r.r.cfoToNet, dir: 'higher' },
+      { key: 'score', getter: r => r.score, dir: 'higher' },
     ];
 
     const all = [base, ...peers];
@@ -704,33 +805,29 @@
     let html = `
       <div class="base-position-grid">
         <div class="bp-card bp-base">
-          <div class="bp-label">🎯 سهم اصلی</div>
+          <div class="bp-label">  سهم اصلی</div>
           <div class="bp-value" style="color:${BASE_COLOR}">${base.symbol}</div>
-          ${base.industry ? `<div class="bp-sub">صنعت: ${base.industry}</div>` : ''}
         </div>
 
         <div class="bp-card bp-rank">
-          <div class="bp-label">🏆 رتبه در صنعت</div>
+          <div class="bp-label">  رتبه در صنعت</div>
           <div class="bp-value" style="color:${posColor}">
             ${rankPercent} ${H.toFa(baseRank)} از ${H.toFa(total)}
           </div>
-          <div class="bp-sub" style="color:${posColor}">${posLabel}</div>
         </div>
 
         <div class="bp-card bp-better">
-          <div class="bp-label">✅ بهتر از</div>
+          <div class="bp-label">  بهتر از</div>
           <div class="bp-value" style="color:var(--good)">${H.toFa(betterThan)} سهم</div>
-          <div class="bp-sub">${H.toFa(betterPct.toFixed(0))}٪ از هم‌گروهی‌ها</div>
         </div>
 
         <div class="bp-card bp-worse">
-          <div class="bp-label">❌ ضعیف‌تر از</div>
+          <div class="bp-label">  ضعیف‌تر از</div>
           <div class="bp-value" style="color:var(--bad)">${H.toFa(worseThan)} سهم</div>
-          <div class="bp-sub">${H.toFa(worsePct.toFixed(0))}٪ از هم‌گروهی‌ها</div>
         </div>
 
         <div class="bp-card bp-score">
-          <div class="bp-label">📊 امتیاز کل</div>
+          <div class="bp-label">  امتیاز کل</div>
           <div class="bp-value">${H.toFa(baseScore)}</div>
           <div class="bp-sub">از ${H.toFa(totalPossible)} امتیاز ممکن</div>
         </div>
@@ -760,43 +857,39 @@
     const rank = baseScore != null ? sortedScores.indexOf(baseScore) + 1 : null;
 
     let html = `
-      <div class="cmp-score-card" style="border-top-color:${BASE_COLOR}">
-        <div class="symbol">
-          <span class="color-dot" style="background:${BASE_COLOR}"></span>
-          🎯 ${base.symbol}
-        </div>
-        <div class="num" style="color:${baseLvl.color}">${baseScore == null ? '—' : H.toFa(baseScore)}</div>
-        <div class="lvl" style="color:${baseLvl.color}">${baseLvl.label}</div>
-        ${rank ? `<div class="lvl" style="color:var(--sub);font-size:11.5px;margin-top:6px">رتبه ${H.toFa(rank)} از ${H.toFa(allScores.length)}</div>` : ''}
+    <div class="cmp-score-card" style="border-top-color:${BASE_COLOR}">
+      <div class="symbol">
+        <span class="color-dot" style="background:${BASE_COLOR}"></span>
+          ${base.symbol}
       </div>
+      <div class="num" style="color:${baseLvl.color}">${baseScore == null ? '—' : H.toFa(baseScore)}</div>
+      ${rank ? `<div class="lvl" style="color:var(--sub);font-size:11.5px;margin-top:6px">رتبه ${H.toFa(rank)} از ${H.toFa(allScores.length)}</div>` : ''}
+    </div>
 
-      <div class="cmp-score-card" style="border-top-color:#94a3b8">
-        <div class="symbol">
-          <span class="color-dot" style="background:#94a3b8"></span>
-          📊 میانگین صنعت
-        </div>
-        <div class="num" style="color:#94a3b8">${avgScore == null ? '—' : H.toFa(Math.round(avgScore))}</div>
-        <div class="lvl" style="color:#94a3b8">${H.toFa(peers.length)} سهم هم‌گروهی</div>
+    <div class="cmp-score-card" style="border-top-color:#94a3b8">
+      <div class="symbol">
+        <span class="color-dot" style="background:#94a3b8"></span>
+          میانگین صنعت
       </div>
+      <div class="num" style="color:#94a3b8">${avgScore == null ? '—' : H.toFa(Math.round(avgScore))}</div>
+    </div>
 
-      <div class="cmp-score-card" style="border-top-color:#16834a">
-        <div class="symbol">
-          <span class="color-dot" style="background:#16834a"></span>
-          🥇 بهترین صنعت
-        </div>
-        <div class="num" style="color:#16834a">${bestScore == null ? '—' : H.toFa(bestScore)}</div>
-        <div class="lvl" style="color:#16834a">بالاترین امتیاز</div>
+    <div class="cmp-score-card" style="border-top-color:#16834a">
+      <div class="symbol">
+        <span class="color-dot" style="background:#16834a"></span>
+          بهترین صنعت
       </div>
+      <div class="num" style="color:#16834a">${bestScore == null ? '—' : H.toFa(bestScore)}</div>
+    </div>
 
-      <div class="cmp-score-card" style="border-top-color:#c62828">
-        <div class="symbol">
-          <span class="color-dot" style="background:#c62828"></span>
-          📉 بدترین صنعت
-        </div>
-        <div class="num" style="color:#c62828">${worstScore == null ? '—' : H.toFa(worstScore)}</div>
-        <div class="lvl" style="color:#c62828">پایین‌ترین امتیاز</div>
+    <div class="cmp-score-card" style="border-top-color:#c62828">
+      <div class="symbol">
+        <span class="color-dot" style="background:#c62828"></span>
+          بدترین صنعت
       </div>
-    `;
+      <div class="num" style="color:#c62828">${worstScore == null ? '—' : H.toFa(worstScore)}</div>
+    </div>
+  `;
 
     box.innerHTML = html;
   }
@@ -806,7 +899,6 @@
     if(!box) return;
 
     const { base, peers } = INDUSTRY_RESULTS;
-    const all = [base, ...peers];
 
     function zCard(r, isBase){
       const z = r.zscore;
@@ -817,30 +909,25 @@
           <div class="cmp-zscore-card" style="border-top-color:${color}">
             <div class="symbol">
               <span class="color-dot" style="background:${color}"></span>
-              ${isBase ? '🎯 ' : ''}${r.symbol}
+              ${isBase ? '  ' : ''}${r.symbol}
             </div>
             <div class="num" style="color:var(--sub)">—</div>
-            <div class="zone" style="color:var(--sub)">اطلاعات کافی نیست</div>
           </div>
         `;
       }
 
-      let zone, zoneColor;
-      if(z > 2.99){ zone = '🟢 منطقه امن'; zoneColor = '#16834a'; }
-      else if(z >= 1.81){ zone = '🟡 منطقه خاکستری'; zoneColor = '#eab308'; }
-      else { zone = '🔴 منطقه خطر'; zoneColor = '#c62828'; }
-
-      const pos = Math.max(0, Math.min(100, (z / 4) * 100));
+      let zoneColor;
+      if(z > 2.99){ zoneColor = '#16834a'; }
+      else if(z >= 1.81){ zoneColor = '#eab308'; }
+      else { zoneColor = '#c62828'; }
 
       return `
         <div class="cmp-zscore-card" style="border-top-color:${color}">
           <div class="symbol">
             <span class="color-dot" style="background:${color}"></span>
-            ${isBase ? '🎯 ' : ''}${r.symbol}
+            ${isBase ? '  ' : ''}${r.symbol}
           </div>
           <div class="num" style="color:${zoneColor}">${H.num2(z)}</div>
-          <div class="zone" style="color:${zoneColor}">${zone}</div>
-          <div class="bar"><div class="marker" style="left:${pos}%"></div></div>
         </div>
       `;
     }
@@ -851,18 +938,14 @@
     let html = zCard(base, true);
 
     if(avgZ != null){
-      const zoneAvg = avgZ > 2.99 ? '🟢 منطقه امن' : avgZ >= 1.81 ? '🟡 منطقه خاکستری' : '🔴 منطقه خطر';
       const zoneAvgColor = avgZ > 2.99 ? '#16834a' : avgZ >= 1.81 ? '#eab308' : '#c62828';
-      const posAvg = Math.max(0, Math.min(100, (avgZ / 4) * 100));
       html += `
         <div class="cmp-zscore-card" style="border-top-color:#94a3b8">
           <div class="symbol">
             <span class="color-dot" style="background:#94a3b8"></span>
-            📊 میانگین صنعت
+              میانگین صنعت
           </div>
           <div class="num" style="color:${zoneAvgColor}">${H.num2(avgZ)}</div>
-          <div class="zone" style="color:${zoneAvgColor}">${zoneAvg}</div>
-          <div class="bar"><div class="marker" style="left:${posAvg}%"></div></div>
         </div>
       `;
     }
@@ -878,7 +961,6 @@
             🥇 بهترین صنعت
           </div>
           <div class="num" style="color:${zBest}">${H.num2(bestZ)}</div>
-          <div class="zone" style="color:${zBest}">بالاترین Z</div>
         </div>
       `;
     }
@@ -888,10 +970,9 @@
         <div class="cmp-zscore-card" style="border-top-color:#c62828">
           <div class="symbol">
             <span class="color-dot" style="background:#c62828"></span>
-            📉 بدترین صنعت
+              بدترین صنعت
           </div>
           <div class="num" style="color:${zWorst}">${H.num2(worstZ)}</div>
-          <div class="zone" style="color:${zWorst}">پایین‌ترین Z</div>
         </div>
       `;
     }
@@ -929,14 +1010,13 @@
     if(!box) return;
 
     const { base, peers } = INDUSTRY_RESULTS;
-    const all = [base, ...peers];
 
     let html = '<table class="cmp-table industry-table"><thead><tr>';
     html += '<th>نسبت</th>';
-    html += `<th style="color:${BASE_COLOR}">🎯 ${base.symbol}</th>`;
-    html += '<th style="color:#94a3b8">📊 میانگین صنعت</th>';
-    html += '<th style="color:#16834a">🥇 بهترین</th>';
-    html += '<th style="color:#c62828">📉 بدترین</th>';
+    html += `<th style="color:${BASE_COLOR}">  ${base.symbol}</th>`;
+    html += '<th style="color:#94a3b8">  میانگین صنعت</th>';
+    html += '<th style="color:#16834a">  بهترین</th>';
+    html += '<th style="color:#c62828">  بدترین</th>';
     html += '<th>جایگاه سهم اصلی</th>';
     html += '</tr></thead><tbody>';
 
@@ -960,8 +1040,7 @@
       if(rank != null){
         const isGood = rank <= totalWithBase / 2;
         const posColor = isGood ? 'var(--good)' : 'var(--bad)';
-        const posIcon = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
-        posHtml = `<span style="color:${posColor};font-weight:700">${posIcon} ${H.toFa(rank)} از ${H.toFa(totalWithBase)}</span>`;
+        posHtml = `<span style="color:${posColor};font-weight:700">${H.toFa(rank)} از ${H.toFa(totalWithBase)}</span>`;
       }
 
       let vsAvg = '';
@@ -1050,7 +1129,6 @@
 
     ranked.forEach((r) => {
       const rank = rankMap.get(r);
-      const medal = rank === 0 ? '🥇' : rank === 1 ? '🥈' : rank === 2 ? '🥉' : '🎖️';
       const rankClass = rank === 0 ? 'cmp-rank-1' : rank === 1 ? 'cmp-rank-2' : rank === 2 ? 'cmp-rank-3' : '';
       const isBase = r.isBase;
       const rowStyle = isBase
@@ -1058,7 +1136,7 @@
         : '';
 
       html += `<tr style="${rowStyle}">`;
-      html += `<td><span class="cmp-rank-medal">${medal}</span><span class="${rankClass}">${H.toFa(rank + 1)}</span></td>`;
+      html += `<td><span class="${rankClass}">${H.toFa(rank + 1)}</span></td>`;
       html += `<td style="color:${r.color};font-weight:700;text-align:right">${isBase ? '🎯 ' : ''}${r.symbol}</td>`;
       html += `<td style="background:transparent;color:${r.color};font-weight:700">${H.toFa(r.totalScore)}</td>`;
 
@@ -1088,7 +1166,7 @@
       if(winners.length === 1 && maxScore > 0){
         const w = winners[0];
         html = `<div class="one-line-note" style="margin-bottom:12px">
-          🏆 <b>برنده کلی:</b> <span style="color:${w.color};font-weight:700">${w.isBase ? '🎯 ' : ''}${w.symbol}</span>
+            <b>برنده کلی:</b> <span style="color:${w.color};font-weight:700">${w.isBase ? '🎯 ' : ''}${w.symbol}</span>
           با امتیاز <b>${H.toFa(w.totalScore)}</b> از ${H.toFa(totalPossible)}.
         </div>` + html;
       } else if(maxScore === 0){
@@ -1291,7 +1369,7 @@
       renderPeers();
       updateCompareButton();
 
-      runIndustryCompare();
+      window.runIndustryCompare();
 
       if(window.showToast) window.showToast('✅ صنعت بازیابی شد');
     }catch(e){
@@ -1305,7 +1383,7 @@
       return;
     }
     const data = {
-      version: '1.5.1',
+      version: '1.9.0',
       type: 'kodal_industries',
       exportDate: new Date().toISOString(),
       count: INDUSTRY_SAVED.length,
@@ -1400,17 +1478,28 @@
 
     closeCompareIndustriesModal();
 
-    const out = $('industryOut');
-    if(out) out.style.display = 'block';
+    const card = document.getElementById('compareTwoIndustriesCard');
+    if(!card){
+      if(window.showToast) window.showToast('کارت مقایسه دو صنعت پیدا نشد', true);
+      return;
+    }
 
     let existing = document.getElementById('twoIndustriesCompareBox');
     if(existing) existing.remove();
 
     const box = document.createElement('div');
     box.id = 'twoIndustriesCompareBox';
-    box.className = 'card';
-    box.style.borderRight = '4px solid #8b5cf6';
-    box.innerHTML = `<h2>⚖️ مقایسه دو صنعت: <span style="color:#1769e0">${A.name}</span> vs <span style="color:#8b5cf6">${B.name}</span></h2>
+    box.style.marginTop = '18px';
+    box.style.paddingTop = '18px';
+    box.style.borderTop = '1px dashed var(--line)';
+
+    box.innerHTML = `
+      <h3 style="margin:0 0 14px;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span>📊 نتیجه:</span>
+        <span style="color:#1769e0">${A.name}</span>
+        <span style="color:var(--sub)">vs</span>
+        <span style="color:#8b5cf6">${B.name}</span>
+      </h3>
       <div class="cmp-table-wrap">
         <table class="cmp-table">
           <thead>
@@ -1425,7 +1514,7 @@
         </table>
       </div>`;
 
-    out.insertBefore(box, out.firstChild);
+    card.appendChild(box);
 
     const rows = document.getElementById('twoIndustriesRows');
     MAIN_RATIOS.forEach(ratio => {
@@ -1456,7 +1545,11 @@
       `;
     });
 
-    window.scrollTo({ top: out.offsetTop - 20, behavior: 'smooth' });
+    setTimeout(() => {
+      const top = card.getBoundingClientRect().top + window.pageYOffset - 20;
+      window.scrollTo(0, top);
+    }, 100);
+
     if(window.showToast) window.showToast('✅ مقایسه دو صنعت انجام شد');
   }
 
@@ -1464,8 +1557,8 @@
      ۷. اتصال دکمه‌ها
   ============================================================ */
   function bindButtons(){
-    const compareBtn = $('compareIndustryGo');
-    if(compareBtn) compareBtn.onclick = runIndustryCompare;
+    // ⭐ دکمه اصلی مقایسه
+    bindCompareButton();
 
     const saveBtn = $('saveIndustryBtn');
     if(saveBtn) saveBtn.onclick = openSaveIndustryModal;
@@ -1552,13 +1645,24 @@
   /* ============================================================
      Init
   ============================================================ */
-  bindBaseInputs();
-  bindPeersInputs();
-  bindPeersDrop();
-  bindButtons();
-  renderPeers();
-  renderIndustrySaved();
+  function init(){
+    bindBaseInputs();
+    bindPeersInputs();
+    bindButtons();
+    renderPeers();
+    renderIndustrySaved();
 
-  console.log('%c📈 compare.js v1.5.1 لود شد (بدون نمودار)', 'color:#f59e0b;font-weight:bold');
+    // ⭐ اتصال مجدد دکمه‌ها بعد از لود کامل
+    setTimeout(bindCompareButton, 500);
+    setTimeout(bindCompareButton, 1500);
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  console.log('%c📈 compare.js v1.9.0 لود شد', 'color:#f59e0b;font-weight:bold');
 
 })();

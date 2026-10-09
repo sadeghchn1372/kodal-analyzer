@@ -1047,7 +1047,7 @@ body.dark .saved-item .star.off{color:#475569}
   background:rgba(16,185,129,.13);font-weight:700;
   color:var(--good);position:relative;
 }
-.cmp-table td.best-cell::before{content:"🏆 ";font-size:12px}
+.cmp-table td.best-cell::before{content:" ";font-size:12px}
 .cmp-table td.worst-cell{background:rgba(198,40,40,.08);color:var(--bad)}
 .cmp-table tr:hover td{background:var(--hover)}
 .cmp-table tr:hover td.best-cell{background:rgba(16,185,129,.2)}
@@ -2130,6 +2130,11 @@ body.dark .industry-table td.base-col {
   border-top: 4px solid #8b5cf6;
 }
 
+/* ⭐ فاصله ۳۵ پیکسلی بین کارت نتیجه مقایسه و مقایسه دو صنعت */
+#compareTwoIndustriesCard {
+  margin-top: 55px !important;
+}
+
 /* ---------- چاپ (Print) ---------- */
 @media print {
   .industry-base-section,
@@ -2569,4 +2574,1535 @@ body.dark .industry-peers-section {
 #saveIndustryModal.show,
 #compareIndustriesModal.show {
   display: flex !important;
+}
+/* ============================================================
+   🆕 v1.6 — تب‌های داخلی (تحلیل تک شرکت)
+============================================================ */
+
+/* ---------- کانتینر تب‌های داخلی ---------- */
+.inner-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  padding: 6px;
+  background: var(--chart-bg);
+  border-radius: 12px;
+  border: 1px solid var(--chart-br);
+  flex-wrap: wrap;
+}
+
+.inner-tab {
+  padding: 10px 18px;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--sub);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13.5px;
+  border: 0;
+  transition: all .2s ease;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.inner-tab:hover {
+  background: rgba(23,105,224,.08);
+  color: var(--blue);
+}
+
+.inner-tab.active {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(23,105,224,.3);
+}
+
+body.dark .inner-tab.active {
+  box-shadow: 0 3px 10px rgba(59,130,246,.5);
+}
+
+/* ---------- پنل‌های داخلی ---------- */
+.inner-panel {
+  display: none;
+  animation: innerFadeIn .25s ease;
+}
+
+.inner-panel.active {
+  display: block;
+}
+
+@keyframes innerFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- عنوان بخش داخلی ---------- */
+.inner-section-title {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--txt);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.inner-section-title .help {
+  width: 18px;
+  height: 18px;
+  font-size: 11px;
+}
+
+/* ---------- اصلاح فاصله‌ها در تب‌های داخلی ---------- */
+.inner-panel .score-wrap {
+  margin: 6px 0 10px;
+}
+
+.inner-panel .one-line-note {
+  margin-top: 12px;
+}
+
+.inner-panel .chart-box {
+  margin-top: 8px;
+}
+
+.inner-panel .charts-row,
+.inner-panel .pie-row {
+  margin-top: 8px;
+}
+
+/* ---------- ریسپانسیو تب‌های داخلی ---------- */
+@media (max-width: 800px) {
+  .inner-tabs {
+    padding: 5px;
+    gap: 4px;
+  }
+  .inner-tab {
+    padding: 9px 12px;
+    font-size: 12.5px;
+  }
+}
+
+@media (max-width: 600px) {
+  .inner-tabs {
+    justify-content: center;
+  }
+  .inner-tab {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
+    padding: 9px 8px;
+    font-size: 12px;
+  }
+  .inner-section-title {
+    font-size: 14px;
+  }
+}
+
+/* ---------- چاپ (Print) ---------- */
+@media print {
+  .inner-tabs {
+    display: none !important;
+  }
+  .inner-panel {
+    display: block !important;
+    page-break-inside: avoid;
+  }
+}
+/* ============================================================
+   🆕 v1.6 — کارت‌های متریک نگاه سریع (داشبورد امتیازی)
+============================================================ */
+
+.quick-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* ---------- کارت متریک ---------- */
+.qm-card {
+  position: relative;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--chart-bg);
+  border: 1px solid var(--chart-br);
+  border-right: 4px solid var(--line);
+  transition: transform .18s ease, box-shadow .18s ease;
+  cursor: default;
+}
+
+.qm-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,.08);
+}
+
+body.dark .qm-card:hover {
+  box-shadow: 0 8px 20px rgba(0,0,0,.4);
+}
+
+/* ---------- آیکون ---------- */
+.qm-icon {
+  display: none;
+}
+
+/* ---------- عنوان ---------- */
+.qm-label {
+  font-size: 12.5px;
+  color: var(--sub);
+  font-weight: 600;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+/* ---------- عدد اصلی ---------- */
+.qm-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--txt);
+  direction: ltr;
+  text-align: right;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- تغییر (فلش + درصد) ---------- */
+.qm-change {
+  font-size: 13px;
+  font-weight: 600;
+  direction: rtl;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.qm-change span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* ---------- رنگ‌های وضعیت ---------- */
+
+/* سبز — خوب */
+.qm-card.qm-good {
+  border-right-color: var(--good);
+  background: linear-gradient(135deg, rgba(16,185,129,.06), var(--chart-bg));
+}
+body.dark .qm-card.qm-good {
+  background: linear-gradient(135deg, rgba(52,211,153,.1), var(--chart-bg));
+}
+.qm-change .qm-good,
+.qm-card.qm-good .qm-value {
+  color: var(--good);
+}
+
+/* قرمز — بد */
+.qm-card.qm-bad {
+  border-right-color: var(--bad);
+  background: linear-gradient(135deg, rgba(198,40,40,.06), var(--chart-bg));
+}
+body.dark .qm-card.qm-bad {
+  background: linear-gradient(135deg, rgba(248,113,113,.1), var(--chart-bg));
+}
+.qm-change .qm-bad,
+.qm-card.qm-bad .qm-value {
+  color: var(--bad);
+}
+
+/* خاکستری — بی‌تغییر */
+.qm-change .qm-neutral {
+  color: var(--sub);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+/* کارت خالی (بدون داده) */
+.qm-card.qm-empty {
+  opacity: .65;
+}
+.qm-card.qm-empty .qm-value {
+  color: var(--sub);
+}
+
+/* ---------- رنگ‌بندی آیکون هر کارت ---------- */
+.qm-card.qm-good .qm-icon,
+.qm-card.qm-bad .qm-icon {
+  filter: drop-shadow(0 2px 4px currentColor);
+  opacity: .95;
+}
+
+/* ---------- ریسپانسیو ---------- */
+@media (max-width: 600px) {
+  .quick-metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .qm-card {
+    padding: 14px 16px;
+  }
+  .qm-value {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 400px) {
+  .qm-value {
+    font-size: 20px;
+  }
+  .qm-label {
+    font-size: 12px;
+  }
+}
+
+/* ---------- چاپ (Print) ---------- */
+@media print {
+  .quick-metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .qm-card {
+    background: #f9f9f9 !important;
+    border: 1px solid #ddd !important;
+    border-right-width: 4px !important;
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  .qm-card.qm-good {
+    border-right-color: #16834a !important;
+  }
+  .qm-card.qm-bad {
+    border-right-color: #c62828 !important;
+  }
+}
+/* ============================================================
+   🆕 v1.7 — DuPont Analysis (نسخه داستانی)
+============================================================ */
+
+/* ---------- Hero: ROE نهایی ---------- */
+.dupont-hero {
+  text-align: center;
+  padding: 20px 16px 16px;
+  background: linear-gradient(135deg, var(--chart-bg), var(--card));
+  border-radius: 14px;
+  margin-bottom: 18px;
+  border: 1px solid var(--chart-br);
+}
+
+.dupont-hero-label {
+  font-size: 12.5px;
+  color: var(--sub);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.dupont-hero-num {
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1;
+  direction: rtl;
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dupont-hero-level {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+/* ---------- نوار طیف ROE ---------- */
+.dupont-scale {
+  margin: 0 auto;
+  max-width: 420px;
+}
+
+.dupont-scale-bar {
+  position: relative;
+  display: flex;
+  height: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--chart-br);
+  margin-bottom: 8px;
+}
+
+.dupont-scale-zone {
+  height: 100%;
+  transition: opacity .2s;
+}
+
+.zone-bad       { background: #ef4444; }
+.zone-warn      { background: #f59e0b; }
+.zone-neutral   { background: #eab308; }
+.zone-good      { background: #22c55e; }
+.zone-excellent { background: #16834a; }
+
+.dupont-scale-marker {
+  position: absolute;
+  top: -5px;
+  width: 6px;
+  height: 22px;
+  background: var(--txt);
+  border-radius: 3px;
+  border: 2px solid var(--card);
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+  transition: left .6s ease;
+  transform: translateX(-50%);
+}
+
+.dupont-scale-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--sub);
+  direction: rtl;
+  padding: 0 4px;
+}
+
+/* ---------- عوامل (نمودار میله‌ای) ---------- */
+.dupont-factors {
+  margin-bottom: 18px;
+}
+
+.dupont-factors-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--txt);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.dupont-factor {
+  margin-bottom: 14px;
+}
+
+.dupont-factor-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+  margin-bottom: 6px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dupont-factor-name {
+  color: var(--sub);
+  font-weight: 600;
+}
+
+.dupont-factor-value {
+  font-weight: 700;
+  direction: rtl;
+  font-variant-numeric: tabular-nums;
+}
+
+.dupont-factor-bar {
+  height: 10px;
+  background: var(--chart-br);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.dupont-factor-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width .8s ease;
+}
+
+/* ---------- داستان مشکل ---------- */
+.dupont-story {
+  padding: 14px 16px;
+  background: var(--chart-bg);
+  border-radius: 12px;
+  border-right: 4px solid var(--blue);
+  font-size: 13.5px;
+  line-height: 1.9;
+  color: var(--txt);
+}
+
+.dupont-story-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.dupont-story-icon {
+  font-size: 18px;
+}
+
+.dupont-story-text {
+  margin-bottom: 10px;
+}
+
+.dupont-story-suggestion {
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+  font-size: 12.5px;
+  color: var(--sub);
+}
+
+.dupont-story-suggestion b {
+  color: var(--blue);
+}
+
+/* ---------- ریسپانسیو ---------- */
+@media (max-width: 600px) {
+  .dupont-hero-num {
+    font-size: 34px;
+  }
+  .dupont-hero-level {
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+  .dupont-scale-ticks {
+    font-size: 9.5px;
+  }
+  .dupont-factor-head {
+    font-size: 12px;
+  }
+  .dupont-story {
+    font-size: 12.5px;
+    line-height: 1.8;
+  }
+}
+
+/* ---------- چاپ ---------- */
+@media print {
+  .dupont-hero {
+    background: #f9f9f9 !important;
+    border: 1px solid #ddd;
+  }
+  .dupont-scale-marker {
+    background: #000 !important;
+    border-color: #fff !important;
+  }
+  .dupont-story {
+    background: #f9f9f9 !important;
+  }
+  .dupont-factor-fill {
+    /* رنگ در چاپ */
+  }
+}
+/* ============================================================
+   🆕 v1.7 — EBITDA (نسخه داستانی)
+============================================================ */
+
+/* ---------- Hero: EBITDA نهایی ---------- */
+.ebitda-hero {
+  text-align: center;
+  padding: 20px 16px 16px;
+  background: linear-gradient(135deg, var(--chart-bg), var(--card));
+  border-radius: 14px;
+  margin-bottom: 18px;
+  border: 1px solid var(--chart-br);
+}
+
+.ebitda-hero-label {
+  font-size: 12.5px;
+  color: var(--sub);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.ebitda-hero-num {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  direction: ltr;
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ebitda-hero-level {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+/* ---------- نوار طیف EBITDA ---------- */
+.ebitda-scale {
+  margin: 0 auto;
+  max-width: 420px;
+}
+
+.ebitda-scale-bar {
+  position: relative;
+  display: flex;
+  height: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--chart-br);
+  margin-bottom: 8px;
+}
+
+.ebitda-scale-zone {
+  height: 100%;
+  transition: opacity .2s;
+}
+
+.ebitda-scale-marker {
+  position: absolute;
+  top: -5px;
+  width: 6px;
+  height: 22px;
+  background: var(--txt);
+  border-radius: 3px;
+  border: 2px solid var(--card);
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+  transition: left .6s ease;
+  transform: translateX(-50%);
+}
+
+.ebitda-scale-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--sub);
+  direction: rtl;
+  padding: 0 4px;
+}
+
+/* ---------- Breakdown: نمودار میله‌ای ---------- */
+.ebitda-breakdown {
+  margin-bottom: 18px;
+}
+
+.ebitda-breakdown-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--txt);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ebitda-item {
+  margin-bottom: 14px;
+}
+
+.ebitda-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+  margin-bottom: 6px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ebitda-item-name {
+  color: var(--sub);
+  font-weight: 600;
+}
+
+.ebitda-item-value {
+  font-weight: 700;
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
+}
+
+.ebitda-item-bar {
+  height: 10px;
+  background: var(--chart-br);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ebitda-item-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width .8s ease;
+}
+
+/* ---------- جمع کل ---------- */
+.ebitda-total {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 2px solid var(--line);
+}
+
+.ebitda-total-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13.5px;
+  margin-bottom: 6px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ebitda-total-name {
+  color: var(--txt);
+  font-weight: 700;
+}
+
+.ebitda-total-value {
+  font-weight: 800;
+  font-size: 15px;
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
+}
+
+.ebitda-total-bar {
+  height: 12px;
+  background: var(--chart-br);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ebitda-total-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width .8s ease;
+}
+
+/* ---------- داستان ---------- */
+.ebitda-story {
+  padding: 14px 16px;
+  background: var(--chart-bg);
+  border-radius: 12px;
+  border-right: 4px solid var(--blue);
+  font-size: 13.5px;
+  line-height: 1.9;
+  color: var(--txt);
+}
+
+.ebitda-story-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.ebitda-story-icon {
+  font-size: 18px;
+}
+
+.ebitda-story-text {
+  margin-bottom: 10px;
+}
+
+.ebitda-story-suggestion {
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+  font-size: 12.5px;
+  color: var(--sub);
+}
+
+.ebitda-story-suggestion b {
+  color: var(--blue);
+}
+
+/* ---------- ریسپانسیو ---------- */
+@media (max-width: 600px) {
+  .ebitda-hero-num {
+    font-size: 32px;
+  }
+  .ebitda-hero-level {
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+  .ebitda-scale-ticks {
+    font-size: 9.5px;
+  }
+  .ebitda-item-head,
+  .ebitda-total-head {
+    font-size: 12px;
+  }
+  .ebitda-story {
+    font-size: 12.5px;
+    line-height: 1.8;
+  }
+}
+
+/* ---------- چاپ ---------- */
+@media print {
+  .ebitda-hero {
+    background: #f9f9f9 !important;
+    border: 1px solid #ddd;
+  }
+  .ebitda-scale-marker {
+    background: #000 !important;
+    border-color: #fff !important;
+  }
+  .ebitda-story {
+    background: #f9f9f9 !important;
+  }
+}
+/* ============================================================
+   🆕 v1.7 — Accordion هوشمند (تحلیل جامع)
+============================================================ */
+
+/* ---------- کارت Accordion ---------- */
+.acc-card {
+  background: var(--chart-bg);
+  border: 1px solid var(--chart-br);
+  border-radius: 14px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: box-shadow .2s ease, border-color .2s ease;
+}
+
+.acc-card:hover {
+  border-color: var(--blue);
+  box-shadow: 0 3px 12px rgba(23,105,224,.08);
+}
+
+body.dark .acc-card:hover {
+  box-shadow: 0 3px 12px rgba(59,130,246,.15);
+}
+
+/* کارت باز */
+.acc-card.acc-open {
+  border-color: var(--blue);
+  box-shadow: 0 4px 16px rgba(23,105,224,.12);
+}
+
+body.dark .acc-card.acc-open {
+  box-shadow: 0 4px 16px rgba(59,130,246,.2);
+}
+
+/* ---------- Header (کلیک‌پذیر) ---------- */
+.acc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s ease;
+  flex-wrap: wrap;
+}
+
+.acc-header:hover {
+  background: rgba(23,105,224,.04);
+}
+
+body.dark .acc-header:hover {
+  background: rgba(59,130,246,.08);
+}
+
+.acc-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.acc-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.acc-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--txt);
+  line-height: 1.4;
+}
+
+.acc-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ---------- خلاصه (عدد کنار عنوان) ---------- */
+.acc-summary {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--sub);
+  direction: rtl;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(102,112,133,.1);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  transition: all .2s ease;
+}
+
+.acc-summary.acc-summary-good {
+  background: rgba(16,185,129,.15);
+  color: var(--good);
+}
+
+.acc-summary.acc-summary-warn {
+  background: rgba(234,179,8,.15);
+  color: #a16207;
+}
+
+body.dark .acc-summary.acc-summary-warn {
+  color: #fbbf24;
+}
+
+.acc-summary.acc-summary-bad {
+  background: rgba(198,40,40,.15);
+  color: var(--bad);
+}
+
+/* ---------- فلش ---------- */
+.acc-arrow {
+  font-size: 12px;
+  color: var(--sub);
+  transition: transform .3s ease;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.acc-card.acc-open .acc-arrow {
+  transform: rotate(180deg);
+  color: var(--blue);
+}
+
+/* ---------- Body (محتوا) ---------- */
+.acc-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .4s ease, padding .3s ease, opacity .3s ease;
+  opacity: 0;
+  padding: 0 16px;
+}
+
+.acc-card.acc-open .acc-body {
+  max-height: 5000px;
+  opacity: 1;
+  padding: 4px 16px 18px;
+  border-top: 1px solid var(--line);
+  margin-top: 4px;
+}
+
+/* ---------- تنظیم فاصله‌ها داخل Accordion ---------- */
+.acc-body .score-wrap {
+  margin: 8px 0 10px;
+}
+
+.acc-body .score-num {
+  font-size: 42px;
+}
+
+.acc-body #dupontBox,
+.acc-body #ebitdaBox,
+.acc-body #zscoreBox {
+  margin-top: 8px;
+}
+
+.acc-body .one-line-note {
+  margin-top: 12px;
+}
+
+/* ---------- حذف margin بالای عنوان‌های قبلی ---------- */
+.acc-body > h3:first-child {
+  margin-top: 0;
+}
+
+/* ---------- ریسپانسیو ---------- */
+@media (max-width: 600px) {
+  .acc-header {
+    padding: 12px 14px;
+    gap: 8px;
+  }
+  .acc-icon {
+    font-size: 18px;
+  }
+  .acc-title {
+    font-size: 13px;
+  }
+  .acc-summary {
+    font-size: 12px;
+    padding: 3px 8px;
+  }
+  .acc-body {
+    padding: 0 14px;
+  }
+  .acc-card.acc-open .acc-body {
+    padding: 4px 14px 16px;
+  }
+  .acc-body .score-num {
+    font-size: 34px;
+  }
+}
+
+/* ---------- چاپ ---------- */
+@media print {
+  .acc-card {
+    border: 1px solid #ddd !important;
+    page-break-inside: avoid;
+    margin-bottom: 8px;
+  }
+  .acc-card .acc-body {
+    max-height: none !important;
+    opacity: 1 !important;
+    padding: 8px 12px 12px !important;
+    display: block !important;
+  }
+  .acc-header {
+    background: #f5f5f5 !important;
+    cursor: default;
+  }
+  .acc-arrow {
+    display: none !important;
+  }
+}
+/* ============================================================
+   🆕 v1.7.3 — فاصله کارت تحلیل‌های ذخیره‌شده
+============================================================ */
+
+#savedCard {
+  margin-top: 90px !important;
+}
+
+/* فاصله در موبایل کمی کمتر */
+@media (max-width: 600px) {
+  #savedCard {
+    margin-top: 75px !important;
+  }
+}
+/* ============================================================
+   🆕 v1.7.5 — دراپ‌زون افقی سهم اصلی
+============================================================ */
+
+.base-drop-horizontal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border: 2px dashed #98a2b3;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--chart-bg), var(--card));
+  transition: .25s ease;
+  flex-wrap: wrap;
+  position: relative;
+  cursor: pointer;
+}
+
+.base-drop-horizontal:hover {
+  border-color: var(--blue);
+  background: linear-gradient(135deg, rgba(23,105,224,.05), var(--card));
+  box-shadow: 0 6px 18px rgba(23,105,224,.1);
+}
+
+.base-drop-horizontal.hover {
+  background: rgba(23,105,224,.08);
+  border-color: var(--blue);
+  border-style: solid;
+  box-shadow: 0 8px 24px rgba(23,105,224,.18);
+}
+
+.base-drop-horizontal input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------- سمت چپ: آیکون + متن ---------- */
+.base-drop-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.base-drop-icon {
+  font-size: 26px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.06));
+  transition: transform .3s ease;
+}
+
+.base-drop-horizontal:hover .base-drop-icon {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+.base-drop-text {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--txt);
+  line-height: 1.5;
+}
+
+/* ---------- سمت راست: دکمه + نام فایل ---------- */
+.base-drop-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+@media (min-width: 701px) {
+  .base-drop-right {
+    justify-content: flex-end;
+  }
+}
+
+.base-file-info-inline {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(16,185,129,.1);
+  border: 1px solid rgba(16,185,129,.3);
+  color: var(--good);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.base-file-info-inline.active {
+  display: inline-flex;
+}
+
+.base-file-info-inline .file-name {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: ltr;
+}
+
+/* ---------- ریسپانسیو ---------- */
+@media (max-width: 700px) {
+  .base-drop-horizontal {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .base-drop-left {
+    justify-content: center;
+    text-align: center;
+  }
+  .base-drop-right {
+    justify-content: center;
+  }
+  .base-file-info-inline .file-name {
+    max-width: 130px;
+  }
+}
+/* ============================================================
+   🆕 v1.7.5 — دراپ‌زون افقی هم‌گروهی‌ها
+============================================================ */
+
+.peers-drop-horizontal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border: 2px dashed #98a2b3;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--chart-bg), var(--card));
+  transition: .25s ease;
+  flex-wrap: wrap;
+  position: relative;
+  cursor: pointer;
+}
+
+.peers-drop-horizontal:hover {
+  border-color: var(--blue);
+  background: linear-gradient(135deg, rgba(23,105,224,.05), var(--card));
+  box-shadow: 0 6px 18px rgba(23,105,224,.1);
+}
+
+.peers-drop-horizontal.hover {
+  background: rgba(23,105,224,.08);
+  border-color: var(--blue);
+  border-style: solid;
+  box-shadow: 0 8px 24px rgba(23,105,224,.18);
+}
+
+/* سمت چپ: آیکون + متن */
+.peers-drop-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 220px;
+}
+
+.peers-drop-icon {
+  font-size: 28px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.06));
+  transition: transform .3s ease;
+}
+
+.peers-drop-horizontal:hover .peers-drop-icon {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+.peers-drop-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--txt);
+  line-height: 1.5;
+}
+
+.peers-drop-hint {
+  font-size: 11.5px;
+  color: var(--sub);
+  font-weight: 400;
+}
+
+/* سمت راست: دکمه + شمارنده */
+.peers-drop-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* روی موبایل هم درست باشه */
+@media (min-width: 701px) {
+  .peers-drop-right {
+    justify-content: flex-end;
+  }
+}
+
+.peers-count-badge {
+  padding: 6px 14px;
+  border-radius: 10px;
+  background: rgba(102,112,133,.15);
+  color: var(--sub);
+  font-size: 13px;
+  font-weight: 700;
+  direction: rtl;
+  font-variant-numeric: tabular-nums;
+  transition: .2s;
+}
+
+.peers-count-badge.has-some {
+  background: rgba(23,105,224,.12);
+  color: var(--blue);
+}
+
+.peers-count-badge.full {
+  background: rgba(198,40,40,.12);
+  color: var(--bad);
+}
+
+/* ---------- ریسپانسیو ---------- */
+@media (max-width: 700px) {
+  .peers-drop-horizontal {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px;
+  }
+  .peers-drop-left {
+    justify-content: center;
+    text-align: center;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .peers-drop-right {
+    justify-content: center;
+  }
+  .peers-drop-icon {
+    font-size: 24px;
+  }
+  .peers-drop-hint {
+    display: none;
+  }
+}
+/* ============================================================
+   🆕 v1.7.7 — کارت واحد ورود اطلاعات
+============================================================ */
+
+.industry-input-section {
+  border-right: 4px solid #f59e0b;
+  background: linear-gradient(135deg, rgba(245,158,11,.04), var(--chart-bg));
+}
+body.dark .industry-input-section {
+  background: linear-gradient(135deg, rgba(245,158,11,.08), var(--chart-bg));
+}
+
+/* ---------- زیربخش‌ها ---------- */
+.industry-sub-section {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+
+.industry-sub-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.industry-sub-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--txt);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.sub-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.industry-sub-section:first-of-type .sub-badge {
+  background: #f59e0b;
+}
+
+/* ---------- ریسپانسیو ---------- */
+@media (max-width: 700px) {
+  .industry-sub-section {
+    padding: 12px;
+  }
+  .industry-sub-title {
+    font-size: 12.5px;
+  }
+}
+/* ============================================================
+   🆕 v1.8.1 — فاصله کارت صنایع ذخیره‌شده
+============================================================ */
+
+#industrySavedCard {
+  margin-top: 90px !important;
+}
+
+@media (max-width: 600px) {
+  #industrySavedCard {
+    margin-top: 75px !important;
+  }
+}
+/* ============================================================
+   🆕 کوچک‌تر کردن کارت‌های ذخیره‌شده (تحلیل‌ها و صنایع) — نسخه کوچیک‌تر
+============================================================ */
+
+/* کارت تحلیل‌های ذخیره‌شده */
+#savedCard {
+  padding: 10px 12px !important;
+  box-shadow: 0 1px 6px #0001 !important;
+  opacity: 0.85;
+  border-radius: 12px !important;
+}
+
+#savedCard h2 {
+  font-size: 13px !important;
+  margin-bottom: 6px !important;
+  gap: 5px !important;
+}
+
+#savedCard h2 .help {
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 10px !important;
+}
+
+#savedCard .saved-controls {
+  gap: 5px !important;
+  margin-bottom: 8px !important;
+}
+
+#savedCard .saved-search,
+#savedCard .saved-sort {
+  padding: 5px 8px !important;
+  font-size: 11.5px !important;
+  border-radius: 7px !important;
+}
+
+#savedCard .saved-list {
+  gap: 5px !important;
+}
+
+#savedCard .saved-item {
+  padding: 6px 9px !important;
+  gap: 6px !important;
+  border-radius: 8px !important;
+}
+
+#savedCard .saved-item .name {
+  font-size: 11.5px !important;
+  min-width: 110px !important;
+  gap: 4px !important;
+}
+
+#savedCard .saved-item .date {
+  font-size: 10px !important;
+}
+
+#savedCard .saved-item button {
+  padding: 3px 8px !important;
+  font-size: 10px !important;
+  border-radius: 6px !important;
+}
+
+#savedCard .saved-item .star {
+  font-size: 15px !important;
+}
+
+#savedCard .saved-item .edit-name {
+  font-size: 11px !important;
+}
+
+#savedCard #downloadAll,
+#savedCard #uploadFile {
+  padding: 4px 10px !important;
+  font-size: 11px !important;
+  border-radius: 7px !important;
+}
+
+#savedCard .saved-empty {
+  font-size: 11px !important;
+  padding: 8px !important;
+}
+
+#savedCard > div:last-child {
+  gap: 6px !important;
+  margin-top: 8px !important;
+}
+
+/* ============================================================
+   کارت مقایسه‌های قبلی سهم و صنعت
+============================================================ */
+
+#industrySavedCard {
+  padding: 10px 12px !important;
+  box-shadow: 0 1px 6px #0001 !important;
+  opacity: 0.85;
+  border-radius: 12px !important;
+}
+
+#industrySavedCard h2 {
+  font-size: 13px !important;
+  margin-bottom: 6px !important;
+  gap: 5px !important;
+}
+
+#industrySavedCard h2 .help {
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 10px !important;
+}
+
+#industrySavedCard .saved-controls {
+  gap: 5px !important;
+  margin-bottom: 8px !important;
+}
+
+#industrySavedCard .saved-search,
+#industrySavedCard .saved-sort {
+  padding: 5px 8px !important;
+  font-size: 11.5px !important;
+  border-radius: 7px !important;
+}
+
+#industrySavedCard .saved-list {
+  gap: 5px !important;
+}
+
+#industrySavedCard .saved-item {
+  padding: 6px 9px !important;
+  gap: 6px !important;
+  border-radius: 8px !important;
+}
+
+#industrySavedCard .saved-item .name {
+  font-size: 11.5px !important;
+  min-width: 110px !important;
+  gap: 4px !important;
+}
+
+#industrySavedCard .saved-item .date {
+  font-size: 10px !important;
+}
+
+#industrySavedCard .saved-item button {
+  padding: 3px 8px !important;
+  font-size: 10px !important;
+  border-radius: 6px !important;
+}
+
+#industrySavedCard .saved-item .star {
+  font-size: 15px !important;
+}
+
+#industrySavedCard .saved-item .edit-name {
+  font-size: 11px !important;
+}
+
+#industrySavedCard #industryDownloadAll,
+#industrySavedCard #industryUploadFile {
+  padding: 4px 10px !important;
+  font-size: 11px !important;
+  border-radius: 7px !important;
+}
+
+#industrySavedCard .saved-empty {
+  font-size: 11px !important;
+  padding: 8px !important;
+}
+
+#industrySavedCard > div:last-child {
+  gap: 6px !important;
+  margin-top: 8px !important;
+}
+
+/* فاصله بالای کارت‌ها */
+#savedCard,
+#industrySavedCard {
+  margin-top: 40px !important;
+  margin-bottom: 10px !important;
+}
+
+/* در موبایل هم کوچیک‌تر */
+@media (max-width: 600px) {
+  #savedCard,
+  #industrySavedCard {
+    margin-top: 30px !important;
+    padding: 9px !important;
+  }
+  #savedCard h2,
+  #industrySavedCard h2 {
+    font-size: 12px !important;
+  }
+  #savedCard .saved-item,
+  #industrySavedCard .saved-item {
+    padding: 5px 7px !important;
+  }
+  #savedCard .saved-item .name,
+  #industrySavedCard .saved-item .name {
+    font-size: 11px !important;
+  }
 }

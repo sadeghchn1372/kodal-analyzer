@@ -3,7 +3,6 @@ const $ = id => document.getElementById(id);
 const fa2en = s => String(s).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
                        .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
 
-/* ---------- تبدیل اعداد به فارسی ---------- */
 const FA_DIGITS = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
 function toFa(input){
   if(input == null) return input;
@@ -32,9 +31,6 @@ function toNum(x){
   const n = Number(s);
   return Number.isFinite(n) ? (neg ? -n : n) : null;
 }
-
-/* ---------- فرمت اعداد ---------- */
-const money = x => x==null ? '—' : toFa(x.toLocaleString('en-US',{maximumFractionDigits:0}));
 
 const toman = x => {
   if(x == null) return '—';
@@ -65,7 +61,6 @@ function extractNumbers(line){
   return matches.map(toNum).filter(v => v !== null);
 }
 
-/* ---------- فرمت اعداد ورودی ---------- */
 function formatNumberInput(value){
   const clean = fa2en(String(value)).replace(/[^\d]/g, '');
   if(!clean) return '';
@@ -95,7 +90,6 @@ function attachNumberFormatter(inputEl){
   });
 }
 
-/* ---------- Global Tooltip ---------- */
 (function initHelpTooltip(){
   const tooltip = document.getElementById('globalTooltip');
   if(!tooltip) return;
@@ -151,7 +145,6 @@ function attachNumberFormatter(inputEl){
   window.addEventListener('resize', () => { if(tooltip.classList.contains('show')) hide(); });
 })();
 
-/* ---------- State ---------- */
 let file = null, PARSED = null;
 let MARKET = {
   symbol: '',
@@ -160,7 +153,6 @@ let MARKET = {
   periodMonths: 12,
 };
 
-/* ---------- Theme ---------- */
 let CURRENT_THEME = 'light';
 function applyTheme(theme){
   CURRENT_THEME = theme;
@@ -176,7 +168,6 @@ if($('themeBtn')) $('themeBtn').onclick = () => {
   applyTheme(CURRENT_THEME === 'dark' ? 'light' : 'dark');
 };
 
-/* ---------- Market Input ---------- */
 function loadMarketFromStorage(){
   try{
     const raw = localStorage.getItem('kodal_market');
@@ -262,7 +253,6 @@ attachNumberFormatter($('stockCount'));
   });
 });
 
-/* ---------- Saved (localStorage) ---------- */
 const STORAGE_KEY = 'kodal_analyses_v1';
 let STORAGE_AVAILABLE = false;
 
@@ -478,7 +468,6 @@ if($('uploadInput')) $('uploadInput').onchange = (e) => {
 
 renderSaved();
 
-/* ---------- Toast ---------- */
 function showToast(msg, isError){
   const t = $('saveToast');
   if(!t) return;
@@ -490,7 +479,6 @@ function showToast(msg, isError){
 }
 window.showToast = showToast;
 
-/* ---------- Save Modal ---------- */
 function openSaveModal(){
   if(!PARSED){ showToast('اول یه فایل رو تحلیل کن!', true); return; }
   const defaultName = (MARKET.symbol ? MARKET.symbol + ' — ' : '') + toFa(new Date().toLocaleString('fa-IR'));
@@ -532,7 +520,6 @@ if($('saveModal')) $('saveModal').addEventListener('click', (e) => {
   if(e.target.id === 'saveModal') closeSaveModal();
 });
 
-/* ---------- File input (تک شرکت) ---------- */
 function showFileInfo(f){
   if(!f) return;
   const info = $('fileInfo');
@@ -579,7 +566,6 @@ if($('drop')){
   });
 }
 
-/* ---------- File parser ---------- */
 async function getLines(f){
   const buf = await f.arrayBuffer();
   const head = new TextDecoder('utf-8').decode(new Uint8Array(buf).slice(0, 800)).toLowerCase();
@@ -626,7 +612,6 @@ async function getLines(f){
   return lines;
 }
 
-/* ---------- Item detection ---------- */
 const LABELS = {
   revenue:          [/درامدهای\s*عملیاتی/, /درامد\s*عملیاتی/, /فروش\s*خالص/, /عملیات\s*در\s*حال\s*تداوم.*درامد/, /درامد\s*حاصل\s*از\s*فروش/],
   cogs:             [/بهای?\s*تمام\s*شده\s*درامد/, /بهای?\s*تمام\s*شده/, /بهای?\s*تمام\s*شده\s*کالای\s*فروش/],
@@ -718,7 +703,6 @@ function extractBestValues(nums, periods, preferLargest){
   return filtered.slice(0, periods);
 }
 
-/* ---------- تشخیص دوره صورت مالی از محتوای فایل ---------- */
 function detectPeriodFromLines(lines){
   const text = lines.join(' ');
   const normalized = fa2en(text)
@@ -821,13 +805,7 @@ function detectPeriodFromLines(lines){
     label = `سال مالی ${toFa(detectedYear)}`;
   }
 
-  console.log('🔍 detectPeriodFromLines:', { detectedDate, detectedYear, detectedMonths, label });
-
-  return {
-    label: label,
-    year: detectedYear,
-    months: detectedMonths,
-  };
+  return { label, year: detectedYear, months: detectedMonths };
 }
 
 function parseItems(lines){
@@ -888,7 +866,6 @@ const HINTS = {
   'EV/EBITDA': 'ارزش شرکت به EBITDA: زیر ۶ ارزنده، بالای ۱۲ گرون.',
 };
 
-/* ---------- SVG Charts ---------- */
 function chartTextColor(){ return document.body.classList.contains('dark') ? '#94a3b8' : '#64748b'; }
 function chartLineColor(){ return document.body.classList.contains('dark') ? '#334155' : '#e2e8f0'; }
 function chartBaseColor(){ return document.body.classList.contains('dark') ? '#475569' : '#cbd5e1'; }
@@ -970,7 +947,6 @@ function buildPieChart(slices){
   return `<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><div style="flex:0 0 200px">${svg}</div><div>${legend}</div></div>`;
 }
 
-/* ---------- Score ---------- */
 function calcScore(v){
   let score = 0, total = 0;
   const cr = ratio(v.ca, v.cl);
@@ -994,59 +970,178 @@ function scoreLevel(s){
   if(s >= 35) return {label:'ضعیف', color:'#f59e0b', text:'وضعیت مالی ضعیف است.'};
   return {label:'پرریسک', color:'#c62828', text:'وضعیت پرریسک است.'};
 }
-
-/* ---------- DuPont ---------- */
+/* ============================================================
+   DuPont Analysis — نسخه داستانی
+============================================================ */
 function renderDuPont(v){
   const nm = ratio(v.net, v.revenue);
   const at = ratio(v.revenue, v.ta);
   const em = ratio(v.ta, v.eq);
   const roe = ratio(v.net, v.eq);
 
+  const box = $('dupontBox');
   const noteEl = $('dupontNote');
+  if(!box) return;
 
-  if(nm == null || at == null || em == null){
+  if(nm == null || at == null || em == null || roe == null){
     const items = [['درآمد', v.revenue],['سود خالص', v.net],['جمع دارایی‌ها', v.ta],['حقوق مالکانه', v.eq]];
     const missing = items.filter(x => x[1] == null).map(x => x[0]);
-    $('dupontBox').innerHTML = `<div class="err" style="display:block">اطلاعات کافی برای DuPont نیست.<br><b>اقلام ناموجود:</b> ${missing.length ? missing.join('، ') : 'همه موجودن'}</div>`;
+    box.innerHTML = `<div class="err" style="display:block">
+      اطلاعات کافی برای تحلیل بازدهی نیست.<br>
+      <b>اقلام ناموجود:</b> ${missing.length ? missing.join('، ') : 'همه موجودن'}
+    </div>`;
     if(noteEl) noteEl.innerHTML = '';
     return;
   }
 
-  $('dupontBox').innerHTML = `
-    <div class="dupont">
-      <div class="dupont-box"><span class="lbl">حاشیه سود خالص</span><span class="val">${pct(nm)}</span></div>
-      <div class="dupont-op">×</div>
-      <div class="dupont-box"><span class="lbl">گردش دارایی</span><span class="val">${num2(at)}</span></div>
-      <div class="dupont-op">×</div>
-      <div class="dupont-box"><span class="lbl">اهرم مالی</span><span class="val">${num2(em)}</span></div>
-      <div class="dupont-op">=</div>
-      <div class="dupont-box dupont-result"><span class="lbl">ROE</span><span class="val">${pct(roe)}</span></div>
+  let roeLevel, roeColor, roeLabel;
+  if(roe < 0){ roeLevel = 'bad'; roeColor = '#c62828'; roeLabel = 'زیان‌ده'; }
+  else if(roe < 0.05){ roeLevel = 'bad'; roeColor = '#c62828'; roeLabel = 'خیلی ضعیف'; }
+  else if(roe < 0.10){ roeLevel = 'warn'; roeColor = '#f59e0b'; roeLabel = 'ضعیف'; }
+  else if(roe < 0.15){ roeLevel = 'neutral'; roeColor = '#eab308'; roeLabel = 'متوسط'; }
+  else if(roe < 0.25){ roeLevel = 'good'; roeColor = '#22c55e'; roeLabel = 'خوب'; }
+  else { roeLevel = 'excellent'; roeColor = '#16834a'; roeLabel = 'عالی'; }
+
+  const roePos = Math.max(0, Math.min(100, (roe / 0.40) * 100));
+
+  let nmScore, nmColor, nmLabel;
+  if(nm < 0.05){ nmScore = Math.max(5, (nm / 0.05) * 25); nmColor = '#c62828'; nmLabel = 'ضعیف'; }
+  else if(nm < 0.10){ nmScore = 25 + ((nm - 0.05) / 0.05) * 25; nmColor = '#f59e0b'; nmLabel = 'متوسط'; }
+  else if(nm < 0.20){ nmScore = 50 + ((nm - 0.10) / 0.10) * 30; nmColor = '#eab308'; nmLabel = 'خوب'; }
+  else { nmScore = Math.min(100, 80 + ((nm - 0.20) / 0.20) * 20); nmColor = '#16834a'; nmLabel = 'عالی'; }
+
+  let atScore, atColor, atLabel;
+  if(at < 0.1){ atScore = Math.max(3, (at / 0.1) * 15); atColor = '#c62828'; atLabel = 'خیلی ضعیف'; }
+  else if(at < 0.3){ atScore = 15 + ((at - 0.1) / 0.2) * 20; atColor = '#ef4444'; atLabel = 'ضعیف'; }
+  else if(at < 0.7){ atScore = 35 + ((at - 0.3) / 0.4) * 30; atColor = '#f59e0b'; atLabel = 'متوسط'; }
+  else if(at < 1.5){ atScore = 65 + ((at - 0.7) / 0.8) * 25; atColor = '#22c55e'; atLabel = 'خوب'; }
+  else { atScore = Math.min(100, 90 + ((at - 1.5) / 1) * 10); atColor = '#16834a'; atLabel = 'عالی'; }
+
+  let emScore, emColor, emLabel;
+  if(em < 1.5){ emScore = 70; emColor = '#22c55e'; emLabel = 'محافظه‌کارانه'; }
+  else if(em < 2.5){ emScore = 90; emColor = '#16834a'; emLabel = 'متعادل'; }
+  else if(em < 4){ emScore = 60; emColor = '#f59e0b'; emLabel = 'اهرم بالا'; }
+  else { emScore = 30; emColor = '#c62828'; emLabel = 'پرخطر'; }
+
+  let problemText = '';
+  let problemIcon = '';
+  let problemTitle = '';
+  let problemSuggestion = '';
+
+  const nmGood = nm >= 0.10;
+  const atGood = at >= 0.3;
+
+  if(roe >= 0.15){
+    problemIcon = '✅';
+    problemTitle = 'وضعیت عالی';
+    problemText = `شرکت از نظر بازدهی سهامدار در وضعیت <b>خوبی</b> قرار داره. ترکیب سودآوری، فروش و ساختار مالی متعادله.`;
+    problemSuggestion = `این روند رو حفظ کنه، بازدهی پایدار خواهد داشت.`;
+  } else if(!atGood && (nmGood || at < 0.1)){
+    problemIcon = '🚨';
+    problemTitle = 'مشکل اصلی: دارایی‌های بی‌استفاده';
+    problemText = `شرکت دارایی‌های زیادی داره ولی <b>نمی‌تونه باهاشون فروش بسازه</b>. گردش دارایی فقط <b>${num2(at)}</b> است، یعنی به ازای هر ۱ تومان دارایی فقط <b>${num2(at)} تومان</b> فروش ساخته می‌شه.`;
+    problemSuggestion = `فروش دارایی‌های بی‌استفاده یا افزایش تولید/فروش.`;
+  } else if(!nmGood && nm >= 0){
+    problemIcon = '⚠️';
+    problemTitle = 'مشکل اصلی: حاشیه سود کم';
+    problemText = `شرکت داره زیاد می‌فروشه ولی <b>از هر ۱۰۰ تومان فروش فقط ${toFa((nm*100).toFixed(1))} تومان سود می‌کنه</b>. مثل سوپرمارکتی که حاشیه سود کمی داره.`;
+    problemSuggestion = `افزایش قیمت فروش یا کاهش هزینه‌های عملیاتی.`;
+  } else if(em >= 4){
+    problemIcon = '⚠️';
+    problemTitle = 'مشکل اصلی: وابستگی به بدهی';
+    problemText = `بخش قابل توجهی از سود شرکت از <b>پول قرض (بدهی)</b> میاد، نه از خود کسب‌وکار. اهرم مالی <b>${num2(em)}</b> نشان می‌ده شرکت داره ریسک می‌کنه.`;
+    problemSuggestion = `کاهش بدهی یا افزایش سرمایه از سهامداران.`;
+  } else if(roe < 0.05){
+    problemIcon = '🚨';
+    problemTitle = 'بازدهی خیلی ضعیف';
+    problemText = `بازدهی این شرکت برای سهامدار <b>${pct(roe)}</b> است که خیلی ضعیفه. حتی <b>سود بانکی (۲۰-۲۵٪)</b> بیشتر از اینه. یعنی پول سهامدار عملاً داره <b>هدر می‌ره</b>.`;
+    problemSuggestion = `بررسی جدی ساختار کسب‌وکار. سهامداران باید بازنگری کنن.`;
+  } else {
+    problemIcon = '🟡';
+    problemTitle = 'وضعیت متوسط';
+    problemText = `شرکت نه عالی است نه فاجعه. ترکیب عوامل نشون می‌ده بازدهی در محدوده <b>${roeLabel}</b> قرار داره.`;
+    problemSuggestion = `بهبود یکی از سه عامل (سودآوری، فروش، یا بدهی) می‌تونه بازدهی رو بهتر کنه.`;
+  }
+
+  const html = `
+    <div class="dupont-hero">
+      <div class="dupont-hero-label">بازدهی سهامدار (ROE)</div>
+      <div class="dupont-hero-num" style="color:${roeColor}">${pct(roe)}</div>
+      <div class="dupont-hero-level" style="color:${roeColor}">${roeLabel}</div>
+
+      <div class="dupont-scale">
+        <div class="dupont-scale-bar">
+          <div class="dupont-scale-zone zone-bad" style="width:25%"></div>
+          <div class="dupont-scale-zone zone-warn" style="width:12.5%"></div>
+          <div class="dupont-scale-zone zone-neutral" style="width:12.5%"></div>
+          <div class="dupont-scale-zone zone-good" style="width:25%"></div>
+          <div class="dupont-scale-zone zone-excellent" style="width:25%"></div>
+          <div class="dupont-scale-marker" style="left:${roePos}%"></div>
+        </div>
+        <div class="dupont-scale-ticks">
+          <span>۰٪</span>
+          <span>۵٪</span>
+          <span>۱۰٪</span>
+          <span>۱۵٪</span>
+          <span>۲۵٪</span>
+          <span>۴۰٪+</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dupont-factors">
+      <div class="dupont-factors-title">  این بازدهی از کجا میاد؟</div>
+
+      <div class="dupont-factor">
+        <div class="dupont-factor-head">
+          <span class="dupont-factor-name">  سودآوری</span>
+          <span class="dupont-factor-value" style="color:${nmColor}">${pct(nm)} — ${nmLabel}</span>
+        </div>
+        <div class="dupont-factor-bar">
+          <div class="dupont-factor-fill" style="width:${nmScore}%;background:${nmColor}"></div>
+        </div>
+      </div>
+
+      <div class="dupont-factor">
+        <div class="dupont-factor-head">
+          <span class="dupont-factor-name">  گردش دارایی</span>
+          <span class="dupont-factor-value" style="color:${atColor}">${num2(at)} — ${atLabel}</span>
+        </div>
+        <div class="dupont-factor-bar">
+          <div class="dupont-factor-fill" style="width:${atScore}%;background:${atColor}"></div>
+        </div>
+      </div>
+
+      <div class="dupont-factor">
+        <div class="dupont-factor-head">
+          <span class="dupont-factor-name">⚖️ اهرم مالی</span>
+          <span class="dupont-factor-value" style="color:${emColor}">${num2(em)} — ${emLabel}</span>
+        </div>
+        <div class="dupont-factor-bar">
+          <div class="dupont-factor-fill" style="width:${emScore}%;background:${emColor}"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dupont-story" style="border-right-color:${roeColor}">
+      <div class="dupont-story-title">
+        <span class="dupont-story-icon">${problemIcon}</span>
+        <b>${problemTitle}</b>
+      </div>
+      <div class="dupont-story-text">${problemText}</div>
+      <div class="dupont-story-suggestion">
+        <b>💡 پیشنهاد:</b> ${problemSuggestion}
+      </div>
     </div>
   `;
 
-  let note = '';
-  const nmHigh = nm > 0.15;
-  const atHigh = at > 0.8;
-  const emHigh = em > 3;
-
-  if(nmHigh && atHigh){
-    note = '🌟 شرکت هم محصولش رو گرون می‌فروشه (سود بالا)، هم سریع می‌فروشه (گردش بالا). این یعنی کسب‌وکار قوی.';
-  } else if(nmHigh && !atHigh){
-    note = '💰 شرکت محصول گرون می‌فروشه و سود خوبی می‌گیره، ولی فروشش کمه. مثل فروشگاه‌های لوکس.';
-  } else if(!nmHigh && atHigh){
-    note = '🚀 شرکت با سود کم ولی فروش زیاد پول درمیاره. مثل سوپرمارکت‌ها که حاشیه سود کمی دارن ولی فروششون زیاده.';
-  } else {
-    note = '😐 نه سود خوبی داره نه فروش سریعی. باید بررسی کنی چرا شرکت سود نمی‌سازه.';
-  }
-
-  if(emHigh && roe != null){
-    note += ' ⚠️ نکته: یه بخشی از سود شرکت از پول قرض (بدهی) میاد، نه از خود کسب‌وکار.';
-  }
-
-  if(noteEl) noteEl.innerHTML = note;
+  box.innerHTML = html;
+  if(noteEl) noteEl.innerHTML = '';
 }
 
-/* ---------- کیفیت سود (تفکیک سود عملیاتی) ---------- */
+/* ============================================================
+   کیفیت سود
+============================================================ */
 function renderOperatingQuality(v){
   const box = $('operatingQualityBox');
   const noteEl = $('operatingQualityNote');
@@ -1068,14 +1163,8 @@ function renderOperatingQuality(v){
     : null;
 
   const otherInc = (realOpProfit != null) ? (opProfit - realOpProfit) : null;
-
-  const otherShare = (otherInc != null && opProfit !== 0)
-    ? (otherInc / opProfit)
-    : null;
-
-  const otherToRev = (otherInc != null && revenue !== 0)
-    ? (otherInc / revenue)
-    : null;
+  const otherShare = (otherInc != null && opProfit !== 0) ? (otherInc / opProfit) : null;
+  const otherToRev = (otherInc != null && revenue !== 0) ? (otherInc / revenue) : null;
 
   let otherClass = 'other';
   if(otherToRev != null && otherToRev > 0.5) otherClass = 'other bad';
@@ -1125,13 +1214,13 @@ function renderOperatingQuality(v){
   if(otherInc == null){
     note = 'اطلاعات کافی برای تفکیک سود عملیاتی موجود نیست.';
   } else if(otherToRev != null && otherToRev > 0.5){
-    note = `🚨 <b>هشدار جدی:</b> سایر درآمدها (${toman(otherInc)}) بیش از <b>۵۰٪ درآمد عملیاتی</b> است. یعنی بخش عمده‌ای از سود شرکت از <b>فعالیت اصلی</b> نمیاد. احتمالاً سود سهام شرکت‌های تابعه، فروش دارایی‌ها یا سود سپرده‌های بانکی. این سود <b>پایدار نیست</b> و باید با احتیاط بررسی بشه.`;
+    note = `🚨 <b>هشدار جدی:</b> سایر درآمدها (${toman(otherInc)}) بیش از <b>۵۰٪ درآمد عملیاتی</b> است. یعنی بخش عمده‌ای از سود شرکت از <b>فعالیت اصلی</b> نمیاد.`;
   } else if(otherToRev != null && otherToRev > 0.3){
-    note = `⚠️ <b>توجه:</b> سایر درآمدها (${toman(otherInc)}) حدود <b>${toFa((otherToRev*100).toFixed(0))}٪ درآمد عملیاتی</b> است. بخش قابل توجهی از سود از عملیات اصلی نمیاد. در تحلیل بنیادی، این سود باید جداگانه بررسی بشه.`;
+    note = `⚠️ <b>توجه:</b> سایر درآمدها (${toman(otherInc)}) حدود <b>${toFa((otherToRev*100).toFixed(0))}٪ درآمد عملیاتی</b> است.`;
   } else if(otherToRev != null && otherToRev > 0){
     note = `✅ بخش عمده سود عملیاتی (${toFa((100 - (otherShare||0)*100).toFixed(0))}٪) از <b>عملیات اصلی</b> میاد که نشون‌دهنده پایداری سود است.`;
   } else if(otherInc != null && otherInc < 0){
-    note = `📊 سایر درآمدها منفی است (${toman(otherInc)}) که نشان می‌دهد شرکت هزینه‌های غیرعملیاتی داشته. این می‌تونه از فروش دارایی با زیان یا سایر موارد باشه.`;
+    note = `📊 سایر درآمدها منفی است (${toman(otherInc)}) که نشان می‌دهد شرکت هزینه‌های غیرعملیاتی داشته.`;
   } else {
     note = 'اطلاعات کافی برای تحلیل کیفیت سود موجود نیست.';
   }
@@ -1139,45 +1228,135 @@ function renderOperatingQuality(v){
   noteEl.innerHTML = note;
 }
 
-/* ---------- EBITDA ---------- */
+/* ============================================================
+   EBITDA — نسخه داستانی
+============================================================ */
 function renderEBITDA(v){
-  const dep = v.deprec, op = v.opProfit;
-  const ebitda = (op != null) ? (op + (dep != null ? Math.abs(dep) : 0)) : null;
-  const margin = ratio(ebitda, v.revenue);
-  let html = '<div class="grid">';
-  html += `<div class="metric"><span>حاشیه EBITDA</span><b>${pct(margin)}</b></div>`;
-  html += `<div class="metric"><span>EBITDA</span><b>${toman(ebitda)}</b></div>`;
-  html += `<div class="metric"><span>سود عملیاتی</span><b>${toman(op)}</b></div>`;
-  html += `<div class="metric"><span>استهلاک</span><b>${toman(dep)}</b></div>`;
-  html += '</div>';
-  $('ebitdaBox').innerHTML = html;
+  const dep = v.deprec;
+  const op = v.opProfit;
+  const revenue = v.revenue;
 
+  const box = $('ebitdaBox');
   const noteEl = $('ebitdaNote');
-  if(!noteEl) return;
+  if(!box) return;
 
-  let note = '';
+  if(op == null){
+    box.innerHTML = `<div class="err" style="display:block">
+      برای محاسبه EBITDA، <b>سود عملیاتی</b> در فایل لازم است.
+    </div>`;
+    if(noteEl) noteEl.innerHTML = '';
+    return;
+  }
+
+  const depVal = (dep != null) ? Math.abs(dep) : 0;
+  const ebitda = op + depVal;
+  const margin = ratio(ebitda, revenue);
+
+  let marginColor, marginLabel;
+  let marginPos = 0;
+
   if(margin == null){
-    note = 'اطلاعات کافی برای محاسبه EBITDA نیست.';
-  } else if(margin > 0.25){
-    note = `💚 حاشیه EBITDA ${pct(margin)} — سودآوری نقدی قوی. شرکت از هر ۱۰۰ تومان فروش، ${toFa((margin*100).toFixed(0))} تومان سود نقدی قبل از استهلاک می‌سازد.`;
-  } else if(margin > 0.15){
-    note = `💚 حاشیه EBITDA ${pct(margin)} — سودآوری نقدی مناسب.`;
-  } else if(margin > 0.08){
-    note = `🟡 حاشیه EBITDA ${pct(margin)} — سودآوری نقدی متوسط.`;
-  } else if(margin > 0){
-    note = `⚠️ حاشیه EBITDA ${pct(margin)} — پایین؛ ساختار هزینه‌ها سنگین است.`;
+    marginColor = '#94a3b8'; marginLabel = 'نامشخص'; marginPos = 0;
+  } else if(margin < 0){
+    marginColor = '#c62828'; marginLabel = 'ضرر'; marginPos = 0;
+  } else if(margin < 0.05){
+    marginColor = '#c62828'; marginLabel = 'ضعیف'; marginPos = (margin / 0.05) * 20;
+  } else if(margin < 0.10){
+    marginColor = '#ef4444'; marginLabel = 'متوسط'; marginPos = 20 + ((margin - 0.05) / 0.05) * 20;
+  } else if(margin < 0.20){
+    marginColor = '#f59e0b'; marginLabel = 'خوب'; marginPos = 40 + ((margin - 0.10) / 0.10) * 30;
+  } else if(margin < 0.30){
+    marginColor = '#22c55e'; marginLabel = 'عالی'; marginPos = 70 + ((margin - 0.20) / 0.10) * 15;
   } else {
-    note = `🚨 حاشیه EBITDA منفی — شرکت حتی قبل از استهلاک هم ضرر می‌دهد.`;
+    marginColor = '#16834a'; marginLabel = 'فوق‌العاده'; marginPos = Math.min(100, 85 + ((margin - 0.30) / 0.20) * 15);
+  }
+  marginPos = Math.max(0, Math.min(100, marginPos));
+
+  let storyIcon, storyTitle, storyText, storySuggestion;
+
+  if(margin == null){
+    storyIcon = '⚠️';
+    storyTitle = 'حاشیه EBITDA قابل محاسبه نیست';
+    storyText = `برای محاسبه حاشیه EBITDA، <b>درآمد عملیاتی</b> در فایل لازم است.`;
+    storySuggestion = `فایل صورت مالی رو با ستون درآمد دوباره بارگذاری کن.`;
+  } else if(margin < 0){
+    storyIcon = '🚨';
+    storyTitle = 'شرکت ضرر می‌ده';
+    storyText = `EBITDA منفی یعنی شرکت حتی <b>قبل از استهلاک</b> هم ضرر می‌ده. یعنی هزینه‌های عملیاتی از درآمد بیشتره.`;
+    storySuggestion = `بررسی جدی ساختار هزینه‌ها و افزایش قیمت فروش.`;
+  } else if(margin < 0.05){
+    storyIcon = '⚠️';
+    storyTitle = 'حاشیه سود نقدی ضعیف';
+    storyText = `شرکت از هر ۱۰۰ تومان فروش، فقط <b>${toFa((margin*100).toFixed(1))} تومان</b> سود نقدی می‌سازه. با این حاشیه، اگه هزینه‌های غیرمنتظره بیاد، شرکت به مشکل می‌خوره.`;
+    storySuggestion = `کاهش هزینه‌ها یا افزایش قیمت فروش.`;
+  } else if(margin < 0.10){
+    storyIcon = '🟡';
+    storyTitle = 'حاشیه سود نقدی متوسط';
+    storyText = `شرکت از هر ۱۰۰ تومان فروش، <b>${toFa((margin*100).toFixed(1))} تومان</b> سود نقدی می‌سازه. این محدوده برای شرکت‌های سرمایه‌بر (مثل فولاد و پتروشیمی) قابل قبوله.`;
+    storySuggestion = `تلاش برای بهبود حاشیه سود از طریق کاهش هزینه یا افزایش قیمت.`;
+  } else if(margin < 0.20){
+    storyIcon = '✅';
+    storyTitle = 'حاشیه سود نقدی خوب';
+    storyText = `شرکت از هر ۱۰۰ تومان فروش، <b>${toFa((margin*100).toFixed(1))} تومان</b> سود نقدی می‌سازه. یعنی حتی با احتساب استهلاک سنگین، شرکت همچنان سودآور می‌مونه.`;
+    storySuggestion = `این روند رو حفظ کنه، شرکت پایدار خواهد بود.`;
+  } else {
+    storyIcon = '🌟';
+    storyTitle = 'حاشیه سود نقدی عالی';
+    storyText = `شرکت از هر ۱۰۰ تومان فروش، <b>${toFa((margin*100).toFixed(1))} تومان</b> سود نقدی می‌سازه. این یعنی کسب‌وکار قوی با قدرت نقدی بالا.`;
+    storySuggestion = `شرکت پول نقد خوبی تولید می‌کنه. برای ارزش‌گذاری از EV/EBITDA استفاده کن.`;
   }
 
   if(dep == null){
-    note += ' (استهلاک در فایل نبود؛ فقط با سود عملیاتی حساب شد.)';
+    storyText += `<br><br><span style="color:var(--warn);font-size:12px">⚠️ توجه: استهلاک در فایل پیدا نشد. محاسبه فقط با سود عملیاتی انجام شده و EBITDA تقریبی‌ست.</span>`;
   }
 
-  noteEl.innerHTML = note;
+  const html = `
+    <div class="ebitda-hero">
+      <div class="ebitda-hero-label">EBITDA — سود نقدی قبل از استهلاک</div>
+      <div class="ebitda-hero-num" style="color:${marginColor}">${toman(ebitda)}</div>
+      <div class="ebitda-hero-level" style="color:${marginColor}">
+        حاشیه: ${margin == null ? '—' : pct(margin)} — ${marginLabel}
+      </div>
+
+      <div class="ebitda-scale">
+        <div class="ebitda-scale-bar">
+          <div class="ebitda-scale-zone zone-bad" style="width:20%"></div>
+          <div class="ebitda-scale-zone zone-warn" style="width:20%"></div>
+          <div class="ebitda-scale-zone zone-neutral" style="width:30%"></div>
+          <div class="ebitda-scale-zone zone-good" style="width:15%"></div>
+          <div class="ebitda-scale-zone zone-excellent" style="width:15%"></div>
+          <div class="ebitda-scale-marker" style="left:${marginPos}%"></div>
+        </div>
+        <div class="ebitda-scale-ticks">
+          <span>۰٪</span>
+          <span>۵٪</span>
+          <span>۱۰٪</span>
+          <span>۲۰٪</span>
+          <span>۳۰٪</span>
+          <span>۵۰٪+</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ebitda-story" style="border-right-color:${marginColor}">
+      <div class="ebitda-story-title">
+        <span class="ebitda-story-icon">${storyIcon}</span>
+        <b>${storyTitle}</b>
+      </div>
+      <div class="ebitda-story-text">${storyText}</div>
+      <div class="ebitda-story-suggestion">
+        <b>💡 پیشنهاد:</b> ${storySuggestion}
+      </div>
+    </div>
+  `;
+
+  box.innerHTML = html;
+  if(noteEl) noteEl.innerHTML = '';
 }
 
-/* ---------- Z-Score ---------- */
+/* ============================================================
+   Altman Z-Score
+============================================================ */
 function renderZScore(v){
   const ta = v.ta;
   if(ta == null || ta === 0){
@@ -1222,7 +1401,259 @@ function renderZScore(v){
   `;
 }
 
-/* ---------- Main ---------- */
+/* ============================================================
+   نگاه سریع — متریک‌های تفسیرشده
+============================================================ */
+function renderQuickMetrics(){
+  const box = document.getElementById('quickMetrics');
+  if(!box) return;
+  if(!PARSED) return;
+
+  const METRICS = [
+    { key: 'revenue',     label: 'درآمد عملیاتی',     dir: 'higher' },
+    { key: 'grossProfit', label: 'سود ناخالص',         dir: 'higher' },
+    { key: 'opProfit',    label: 'سود عملیاتی',        dir: 'higher' },
+    { key: 'netProfit',   label: 'سود خالص',           dir: 'higher' },
+    { key: 'totalAssets', label: 'جمع دارایی‌ها',      dir: 'higher' },
+    { key: 'totalLiab',   label: 'جمع بدهی‌ها',        dir: 'lower'  },
+    { key: 'equity',      label: 'حقوق مالکانه',       dir: 'higher' },
+    { key: 'cfo',         label: 'جریان نقد عملیاتی',  dir: 'higher' },
+  ];
+
+  function fmtB(x){
+    if(x == null || !isFinite(x)) return '—';
+    const b = x / 10000;
+    if(Math.abs(b) >= 1){
+      return toFa(Math.round(b).toLocaleString('en-US')) + ' B';
+    }
+    const m = Math.round(x / 10);
+    return toFa(m.toLocaleString('en-US')) + ' M';
+  }
+
+  function renderCard(m){
+    const curr = PARSED[m.key]?.[0] ?? null;
+    const prev = PARSED[m.key]?.[1] ?? null;
+
+    if(curr == null){
+      return `
+        <div class="qm-card qm-empty">
+          <div class="qm-label">${m.label}</div>
+          <div class="qm-value">—</div>
+          <div class="qm-change qm-neutral">اطلاعات موجود نیست</div>
+        </div>
+      `;
+    }
+
+    let changeHtml = '<span class="qm-neutral">─ بی‌تغییر</span>';
+    let cardClass = '';
+
+    if(prev != null && prev !== 0){
+      const change = (curr - prev) / Math.abs(prev);
+      const pctChange = Math.abs(change * 100);
+      const isUp = change > 0.005;
+      const isDown = change < -0.005;
+
+      if(!isUp && !isDown){
+        changeHtml = '<span class="qm-neutral">─ بی‌تغییر</span>';
+        cardClass = '';
+      } else {
+        const arrow = isUp ? '▲' : '▼';
+        const sign = isUp ? '+' : '−';
+        const pctText = toFa(pctChange.toFixed(1)) + '٪';
+
+        let isGood;
+        if(m.dir === 'higher'){
+          isGood = isUp;
+        } else {
+          isGood = isDown;
+        }
+
+        const colorClass = isGood ? 'qm-good' : 'qm-bad';
+        changeHtml = `<span class="${colorClass}">${arrow} ${sign}${pctText}</span>`;
+        cardClass = colorClass;
+      }
+    } else if(prev == null){
+      changeHtml = '<span class="qm-neutral">— بدون مقایسه</span>';
+    }
+
+    return `
+      <div class="qm-card ${cardClass}">
+        <div class="qm-label">${m.label}</div>
+        <div class="qm-value">${fmtB(curr)}</div>
+        <div class="qm-change">${changeHtml}</div>
+      </div>
+    `;
+  }
+
+  box.innerHTML = METRICS.map(renderCard).join('');
+}
+
+/* ============================================================
+   Accordion هوشمند — تحلیل جامع
+============================================================ */
+(function initAccordion(){
+  function bind(){
+    const cards = document.querySelectorAll('#out .acc-card');
+    if(!cards.length) return;
+
+    cards.forEach(card => {
+      const header = card.querySelector('.acc-header');
+      if(!header) return;
+      if(header.dataset.accBound) return;
+      header.dataset.accBound = '1';
+
+      header.addEventListener('click', (e) => {
+        if(e.target.closest('.help')) return;
+
+        const isOpen = card.classList.contains('acc-open');
+        cards.forEach(c => c.classList.remove('acc-open'));
+        if(!isOpen) card.classList.add('acc-open');
+      });
+    });
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', bind);
+  } else {
+    bind();
+  }
+
+  const observer = new MutationObserver(() => bind());
+  observer.observe(document.body, { childList: true, subtree: true });
+})();
+
+/* ============================================================
+   پر کردن اعداد خلاصه Accordion
+============================================================ */
+function updateAccordionSummaries(v){
+  // ۱. امتیاز
+  const scoreEl = document.getElementById('accScoreSummary');
+  if(scoreEl){
+    const sc = calcScore(v);
+    if(sc == null){ scoreEl.textContent = '—'; scoreEl.className = 'acc-summary'; }
+    else {
+      const lvl = scoreLevel(sc);
+      scoreEl.textContent = toFa(sc) + ' — ' + lvl.label;
+      scoreEl.className = 'acc-summary';
+      if(sc >= 65) scoreEl.classList.add('acc-summary-good');
+      else if(sc >= 50) scoreEl.classList.add('acc-summary-warn');
+      else scoreEl.classList.add('acc-summary-bad');
+    }
+  }
+
+  // ۲. DuPont
+  const dupontEl = document.getElementById('accDupontSummary');
+  if(dupontEl){
+    const roe = ratio(v.net, v.eq);
+    if(roe == null){ dupontEl.textContent = '—'; dupontEl.className = 'acc-summary'; }
+    else {
+      let label, cls;
+      if(roe < 0){ label = 'زیان‌ده'; cls = 'acc-summary-bad'; }
+      else if(roe < 0.05){ label = 'خیلی ضعیف'; cls = 'acc-summary-bad'; }
+      else if(roe < 0.10){ label = 'ضعیف'; cls = 'acc-summary-warn'; }
+      else if(roe < 0.15){ label = 'متوسط'; cls = 'acc-summary-warn'; }
+      else if(roe < 0.25){ label = 'خوب'; cls = 'acc-summary-good'; }
+      else { label = 'عالی'; cls = 'acc-summary-good'; }
+      dupontEl.textContent = pct(roe) + ' — ' + label;
+      dupontEl.className = 'acc-summary ' + cls;
+    }
+  }
+
+  // ۳. EBITDA
+  const ebitdaEl = document.getElementById('accEbitdaSummary');
+  if(ebitdaEl){
+    const op = v.opProfit;
+    const dep = v.deprec;
+    if(op == null){ ebitdaEl.textContent = '—'; ebitdaEl.className = 'acc-summary'; }
+    else {
+      const depVal = (dep != null) ? Math.abs(dep) : 0;
+      const ebitda = op + depVal;
+      const margin = ratio(ebitda, v.revenue);
+      if(margin == null){ ebitdaEl.textContent = 'بدون درآمد'; ebitdaEl.className = 'acc-summary'; }
+      else {
+        let label, cls;
+        if(margin < 0){ label = 'ضرر'; cls = 'acc-summary-bad'; }
+        else if(margin < 0.05){ label = 'ضعیف'; cls = 'acc-summary-bad'; }
+        else if(margin < 0.10){ label = 'متوسط'; cls = 'acc-summary-warn'; }
+        else if(margin < 0.20){ label = 'خوب'; cls = 'acc-summary-good'; }
+        else { label = 'عالی'; cls = 'acc-summary-good'; }
+        ebitdaEl.textContent = pct(margin) + ' — ' + label;
+        ebitdaEl.className = 'acc-summary ' + cls;
+      }
+    }
+  }
+
+  // ۴. Z-Score
+  const zEl = document.getElementById('accZscoreSummary');
+  if(zEl){
+    const ta = v.ta;
+    if(ta == null || ta === 0){ zEl.textContent = '—'; zEl.className = 'acc-summary'; }
+    else {
+      const wc = (v.ca != null && v.cl != null) ? (v.ca - v.cl) : null;
+      const x1 = wc != null ? wc / ta : 0;
+      const x2 = v.re != null ? v.re / ta : 0;
+      const x3 = v.opProfit != null ? v.opProfit / ta : 0;
+      const x4 = v.eq != null ? v.eq / Math.max(v.tl || 0, 1) : 0;
+      const x5 = v.revenue != null ? v.revenue / ta : 0;
+      const z = 1.2*x1 + 1.4*x2 + 3.3*x3 + 0.6*x4 + 1.0*x5;
+      let label, cls;
+      if(z > 2.99){ label = 'امن'; cls = 'acc-summary-good'; }
+      else if(z >= 1.81){ label = 'خاکستری'; cls = 'acc-summary-warn'; }
+      else { label = 'خطر'; cls = 'acc-summary-bad'; }
+      zEl.textContent = num2(z) + ' — ' + label;
+      zEl.className = 'acc-summary ' + cls;
+    }
+  }
+
+  // ۵. کیفیت سود
+  const qualityEl = document.getElementById('accQualitySummary');
+  if(qualityEl){
+    const revenue = v.revenue;
+    const opProfit = v.opProfit;
+    const cogs = v.cogs;
+    const opEx = v.opEx;
+
+    if(revenue == null || opProfit == null){
+      qualityEl.textContent = '—';
+      qualityEl.className = 'acc-summary';
+    } else {
+      const realOpProfit = (cogs != null && opEx != null)
+        ? (revenue - Math.abs(cogs) - Math.abs(opEx))
+        : null;
+      const otherInc = (realOpProfit != null) ? (opProfit - realOpProfit) : null;
+      const otherToRev = (otherInc != null && revenue !== 0) ? (otherInc / revenue) : null;
+
+      if(otherToRev == null){
+        qualityEl.textContent = '—';
+        qualityEl.className = 'acc-summary';
+      } else {
+        let label, cls;
+        if(otherToRev < 0){
+          label = 'سود جانبی منفی ⚠️';
+          cls = 'acc-summary-warn';
+        } else if(otherToRev > 0.5){
+          label = 'بیش از نیمی از سود، از عملیات اصلی نیست 🔴';
+          cls = 'acc-summary-bad';
+        } else if(otherToRev > 0.3){
+          label = 'بخش قابل توجهی سود جانبی است ⚠️';
+          cls = 'acc-summary-warn';
+        } else if(otherToRev > 0.15){
+          label = 'بخش کمی از سود جانبی است';
+          cls = 'acc-summary-warn';
+        } else {
+          label = 'سود پایدار از عملیات اصلی ✅';
+          cls = 'acc-summary-good';
+        }
+        qualityEl.textContent = label;
+        qualityEl.className = 'acc-summary ' + cls;
+      }
+    }
+  }
+}
+
+/* ============================================================
+   Main
+============================================================ */
 const PERIOD_NAMES = ['دوره جاری','دوره مشابه سال قبل','سال مالی قبل','دوره ۴','دوره ۵'];
 window.PERIOD_NAMES = PERIOD_NAMES;
 
@@ -1253,14 +1684,14 @@ if($('go')) $('go').onclick = async () => {
     PARSED = parseItems(lines);
     const found = Object.keys(PARSED).length;
     if(!found) throw Error('هیچ قلمی شناسایی نشد.');
+    const maxPer = Math.max(...Object.values(PARSED).filter(a => Array.isArray(a)).map(a => a.length));
+    PARSED._periods = Math.min(Math.max(maxPer,1), 5);
     PARSED._detectedInfo = detectPeriodFromLines(lines);
     PARSED._detectedPeriod = PARSED._detectedInfo.label;
     if(PARSED._detectedInfo.months){
       MARKET.periodMonths = PARSED._detectedInfo.months;
       saveMarketToStorage();
     }
-    const maxPer = Math.max(...Object.values(PARSED).map(a => a.length));
-    PARSED._periods = Math.min(Math.max(maxPer,1), 5);
     const infoBox = $('periodInfoBox');
     const infoText = $('periodInfoText');
     if(infoBox && infoText){
@@ -1308,16 +1739,10 @@ function render(ci){
     cfo: val('cfo',ci), cfi: val('cfi',ci), cff: val('cff',ci), capex: val('capex',ci),
     deprec: val('depreciation',ci),
   };
-  $('metrics').innerHTML = [
-    ['درآمد عملیاتی', toman(v.revenue)],
-    ['سود ناخالص',   toman(v.gross)],
-    ['سود عملیاتی',  toman(v.opProfit)],
-    ['سود خالص',      toman(v.net)],
-    ['جمع دارایی‌ها',  toman(v.ta)],
-    ['جمع بدهی‌ها',    toman(v.tl)],
-    ['حقوق مالکانه',  toman(v.eq)],
-    ['جریان نقد عملیاتی', toman(v.cfo)],
-  ].map(([k,val]) => `<div class="metric"><span>${k}</span><b>${val}</b></div>`).join('');
+
+  renderQuickMetrics();
+  updateAccordionSummaries(v);
+
   const sc = calcScore(v);
   const lvl = scoreLevel(sc);
   $('scoreNum').textContent = sc == null ? '—' : toFa(sc);
@@ -1330,26 +1755,40 @@ function render(ci){
   renderEBITDA(v);
   renderOperatingQuality(v);
   renderZScore(v);
+
   const periods = PARSED._periods;
   const periodLabels = [];
   for(let i=0;i<periods;i++) periodLabels.push(PERIOD_NAMES[i]||('دوره '+(i+1)));
-  $('barChart').innerHTML = buildBarChart([
-    {name:'درآمد', color:'#1769e0', values: (PARSED.revenue||[]).slice(0,periods)},
-    {name:'سود ناخالص', color:'#f59e0b', values: (PARSED.grossProfit||[]).slice(0,periods)},
-    {name:'سود عملیاتی', color:'#8b5cf6', values: (PARSED.opProfit||[]).slice(0,periods)},
-    {name:'سود خالص', color:'#10b981', values: (PARSED.netProfit||[]).slice(0,periods)},
-  ], periodLabels);
-  $('cfoChart').innerHTML = buildBarChart([
-    {name:'CFO', color:'#0ea5e9', values: (PARSED.cfo||[]).slice(0,periods)},
-  ], periodLabels);
-  $('pieAssets').innerHTML = buildPieChart([
-    {label:'دارایی جاری', value: v.ca, color:'#10b981'},
-    {label:'دارایی غیرجاری', value: v.nonCA, color:'#ef4444'},
-  ]);
-  $('pieFunding').innerHTML = buildPieChart([
-    {label:'بدهی‌ها', value: v.tl, color:'#ef4444'},
-    {label:'حقوق مالکانه', value: v.eq, color:'#10b981'},
-  ]);
+
+  const barBox = document.getElementById('barChart');
+  if(barBox){
+    barBox.innerHTML = buildBarChart([
+      {name:'درآمد', color:'#1769e0', values: (PARSED.revenue||[]).slice(0,periods)},
+      {name:'سود ناخالص', color:'#f59e0b', values: (PARSED.grossProfit||[]).slice(0,periods)},
+      {name:'سود عملیاتی', color:'#8b5cf6', values: (PARSED.opProfit||[]).slice(0,periods)},
+      {name:'سود خالص', color:'#10b981', values: (PARSED.netProfit||[]).slice(0,periods)},
+    ], periodLabels);
+  }
+  const cfoBox = document.getElementById('cfoChart');
+  if(cfoBox){
+    cfoBox.innerHTML = buildBarChart([
+      {name:'CFO', color:'#0ea5e9', values: (PARSED.cfo||[]).slice(0,periods)},
+    ], periodLabels);
+  }
+  const pieAssets = document.getElementById('pieAssets');
+  if(pieAssets){
+    pieAssets.innerHTML = buildPieChart([
+      {label:'دارایی جاری', value: v.ca, color:'#10b981'},
+      {label:'دارایی غیرجاری', value: v.nonCA, color:'#ef4444'},
+    ]);
+  }
+  const pieFunding = document.getElementById('pieFunding');
+  if(pieFunding){
+    pieFunding.innerHTML = buildPieChart([
+      {label:'بدهی‌ها', value: v.tl, color:'#ef4444'},
+      {label:'حقوق مالکانه', value: v.eq, color:'#10b981'},
+    ]);
+  }
 
   const MILLION = 1_000_000;
   const periodMonths = MARKET.periodMonths || 12;
@@ -1460,19 +1899,19 @@ function render(ci){
     if(nm > 1){
       type = 'good';
       label = `${pct(nm)} — عالی (نکته: بیشتر از فروش)`;
-      hint = `حاشیه سود ${faNm}٪ یعنی از هر ۱۰۰ تومان فروش، ${faNm} تومان سود ساخته شده. این عدد بالای ۱۰۰٪ غیرعادی‌ست و معمولاً یعنی شرکت سود زیادی از «سرمایه‌گذاری‌ها» یا «سایر درآمدها» (نه فروش) به دست آورده.`;
+      hint = `حاشیه سود ${faNm}٪ یعنی از هر ۱۰۰ تومان فروش، ${faNm} تومان سود ساخته شده.`;
     } else if(nm > 0.2){
       type = 'good';
       label = `${pct(nm)} — قوی`;
-      hint = `از هر ۱۰۰ تومان فروش، ${faNm} تومان سود خالص می‌مونه. این یعنی شرکت محصولاتش رو با سود خوبی می‌فروشه.`;
+      hint = `از هر ۱۰۰ تومان فروش، ${faNm} تومان سود خالص می‌مونه.`;
     } else if(nm > 0.08){
       type = 'good';
       label = `${pct(nm)} — متعارف`;
-      hint = `از هر ۱۰۰ تومان فروش، ${faNm} تومان سود خالص می‌مونه. این محدوده معمولیه.`;
+      hint = `از هر ۱۰۰ تومان فروش، ${faNm} تومان سود خالص می‌مونه.`;
     } else {
       type = 'warn';
       label = `${pct(nm)} — پایین`;
-      hint = `از هر ۱۰۰ تومان فروش، ${faNm} تومان سود خالص می‌مونه. یعنی هزینه‌های شرکت نسبت به فروشش زیاده.`;
+      hint = `از هر ۱۰۰ تومان فروش، ${faNm} تومان سود خالص می‌مونه.`;
     }
     A.push({t:type, x:`حاشیه سود خالص ${label}.`, hint});
   }
@@ -1483,15 +1922,15 @@ function render(ci){
     if(cr < 1){
       type = 'bad';
       label = `${num2(cr)} < ۱ — ریسک نقدینگی`;
-      hint = `نسبت جاری ${num2(cr)} یعنی بدهی کوتاه‌مدت شرکت بیشتر از دارایی کوتاه‌مدتشه. ممکنه نتونه بدهی‌های این ماه و ماه بعدش رو بده.`;
+      hint = `نسبت جاری ${num2(cr)} یعنی بدهی کوتاه‌مدت شرکت بیشتر از دارایی کوتاه‌مدتشه.`;
     } else if(cr < 2){
       type = 'good';
       label = `${num2(cr)} — قابل قبول`;
-      hint = `شرکت دارایی کوتاه‌مدتش از بدهی کوتاه‌مدتش بیشتره. یعنی پول کافی برای پرداخت بدهی‌های نزدیک داره.`;
+      hint = `شرکت دارایی کوتاه‌مدتش از بدهی کوتاه‌مدتش بیشتره.`;
     } else {
       type = 'good';
       label = `${num2(cr)} — مناسب`;
-      hint = `شرکت بیش از ۲ برابر بدهی کوتاه‌مدتش، دارایی کوتاه‌مدت داره. یعنی نقدینگی خیلی خوبی داره.`;
+      hint = `شرکت بیش از ۲ برابر بدهی کوتاه‌مدتش، دارایی کوتاه‌مدت داره.`;
     }
     A.push({t:type, x:`نسبت جاری ${label}.`, hint});
   }
@@ -1502,15 +1941,15 @@ function render(ci){
     if(de > 2){
       type = 'bad';
       label = `${num2(de)} — اهرم بالا`;
-      hint = `شرکت بیش از ۲ برابر سرمایه سهامداران، بدهی داره. یعنی ریسک مالیش بالاست و به بانک‌ها وابسته‌ست.`;
+      hint = `شرکت بیش از ۲ برابر سرمایه سهامداران، بدهی داره.`;
     } else if(de > 1){
       type = 'warn';
       label = `${num2(de)} — متعادل`;
-      hint = `بدهی شرکت ۱ تا ۲ برابر سرمایه سهامدارانه. یعنی هم از پول خودش استفاده می‌کنه هم از وام.`;
+      hint = `بدهی شرکت ۱ تا ۲ برابر سرمایه سهامدارانه.`;
     } else {
       type = 'good';
       label = `${num2(de)} — محافظه‌کارانه`;
-      hint = `بدهی شرکت کمتر از سرمایه سهامدارانه. یعنی بیشتر با پول خودش کار می‌کنه، نه با وام.`;
+      hint = `بدهی شرکت کمتر از سرمایه سهامدارانه.`;
     }
     A.push({t:type, x:`بدهی/حقوق ${label}.`, hint});
   }
@@ -1522,19 +1961,19 @@ function render(ci){
     if(roe > 1){
       type = 'good';
       label = `${pct(roe)} — فوق‌العاده`;
-      hint = `از هر ۱۰۰ تومان پول سهامداران، ${faRoe} تومان سود ساخته شده. این عدد بالای ۱۰۰٪ نشون می‌ده شرکت بازدهی فوق‌العاده‌ای داره (یا سرمایه‌ش کمه و سودش زیاده).`;
+      hint = `از هر ۱۰۰ تومان پول سهامداران، ${faRoe} تومان سود ساخته شده.`;
     } else if(roe > 0.2){
       type = 'good';
       label = `${pct(roe)} — قوی`;
-      hint = `از هر ۱۰۰ تومان پول سهامداران، ${faRoe} تومان سود ساخته شده. یعنی شرکت پول سهامداران رو خیلی خوب به کار می‌گیره.`;
+      hint = `از هر ۱۰۰ تومان پول سهامداران، ${faRoe} تومان سود ساخته شده.`;
     } else if(roe > 0.1){
       type = 'good';
       label = `${pct(roe)} — متوسط`;
-      hint = `از هر ۱۰۰ تومان پول سهامداران، ${faRoe} تومان سود ساخته شده. یعنی بازدهی معمولی داره.`;
+      hint = `از هر ۱۰۰ تومان پول سهامداران، ${faRoe} تومان سود ساخته شده.`;
     } else {
       type = 'warn';
       label = `${pct(roe)} — پایین`;
-      hint = `از هر ۱۰۰ تومان پول سهامداران، ${faRoe} تومان سود ساخته شده. یعنی شرکت پول سهامداران رو خوب به کار نمی‌گیره.`;
+      hint = `از هر ۱۰۰ تومان پول سهامداران، ${faRoe} تومان سود ساخته شده.`;
     }
     A.push({t:type, x:`ROE ${label}.`, hint});
   }
@@ -1546,15 +1985,15 @@ function render(ci){
     if(cq < 0.5){
       type = 'bad';
       label = `${num2(cq)} — کیفیت پایین`;
-      hint = `از سود دفتری شرکت، ${faCq}٪ به پول نقد تبدیل شده (کمتر از نصف). یعنی سود روی کاغذه — احتمالاً فروش نسیه یا انبار زیاد داره.`;
+      hint = `از سود دفتری شرکت، ${faCq}٪ به پول نقد تبدیل شده.`;
     } else if(cq < 1){
       type = 'warn';
       label = `${num2(cq)} — متوسط`;
-      hint = `از سود دفتری شرکت، ${faCq}٪ به پول نقد تبدیل شده. یعنی سود نسبتاً واقعیه ولی همه‌ش نقد نشده.`;
+      hint = `از سود دفتری شرکت، ${faCq}٪ به پول نقد تبدیل شده.`;
     } else {
       type = 'good';
       label = `${num2(cq)} — مطلوب`;
-      hint = `سود شرکت کاملاً به پول نقد تبدیل شده (یا حتی بیشتر). یعنی سود دفتری، پول نقد واقعی هم هست.`;
+      hint = `سود شرکت کاملاً به پول نقد تبدیل شده.`;
     }
     A.push({t:type, x:`CFO/Net ${label}.`, hint});
   }
@@ -1564,15 +2003,15 @@ function render(ci){
     if(pe < 5){
       type = 'good';
       label = `${num2(pe)} — ارزنده`;
-      hint = `قیمت سهام کمتر از ۵ برابر سودشه. یعنی بازار سهام رو ارزون می‌دونه — فرصت خرید.`;
+      hint = `قیمت سهام کمتر از ۵ برابر سودشه.`;
     } else if(pe < 12){
       type = 'good';
       label = `${num2(pe)} — متعارف`;
-      hint = `قیمت سهام ۵ تا ۱۲ برابر سودشه. این محدوده معمولیه — نه ارزون نه گرون.`;
+      hint = `قیمت سهام ۵ تا ۱۲ برابر سودشه.`;
     } else {
       type = 'warn';
       label = `${num2(pe)} — گرون`;
-      hint = `قیمت سهام بیش از ۱۲ برابر سودشه. یعنی بازار انتظار رشد زیادی داره یا سهام گرون معامله می‌شه.`;
+      hint = `قیمت سهام بیش از ۱۲ برابر سودشه.`;
     }
     A.push({t:type, x:`P/E ${label}.`, hint});
   }
@@ -1734,25 +2173,24 @@ if($('pdfBtn')) $('pdfBtn').onclick = () => {
 
 window.addEventListener('beforeprint', updatePrintHeader);
 
-/* ============================================================
-   Main Tabs Switcher
-============================================================ */
+function switchMainTab(target){
+  document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const tab = document.querySelector('.main-tab[data-maintab="' + target + '"]');
+  if(tab) tab.classList.add('active');
+  const panelId = target === 'compare' ? 'tabCompare'
+                : target === 'watchlist' ? 'tabWatchlist'
+                : 'tabSingle';
+  const panel = document.getElementById(panelId);
+  if(panel) panel.classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+window.switchMainTab = switchMainTab;
+
 document.querySelectorAll('.main-tab').forEach(tab => {
-  tab.onclick = () => {
-    const target = tab.dataset.maintab;
-    document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    const panelId = target === 'compare' ? 'tabCompare'
-                  : target === 'watchlist' ? 'tabWatchlist'
-                  : 'tabSingle';
-    const panel = document.getElementById(panelId);
-    if(panel) panel.classList.add('active');
-    window.scrollTo({top: 0, behavior: 'smooth'});
-  };
+  tab.onclick = () => switchMainTab(tab.dataset.maintab);
 });
 
-/* ---------- Export helpers for compare.js / watchlist.js ---------- */
 window.KodalHelpers = {
   getLines,
   parseItems,
@@ -1773,9 +2211,6 @@ window.KodalHelpers = {
   chartLabelColor,
 };
 
-/* ============================================================
-   👁️ ارسال به دیدبان (برای تب تحلیل شرکت)
-============================================================ */
 (function initSendToWatch(){
   const btn = document.getElementById('sendToWatchBtn');
   if(!btn) return;
@@ -1850,10 +2285,7 @@ window.KodalHelpers = {
     if(document.getElementById('watchNewSymbol')) document.getElementById('watchNewSymbol').value = symbolToCheck;
     if(document.getElementById('watchNewIndustry')) document.getElementById('watchNewIndustry').value = '';
 
-    const periodLabel = document.getElementById('watchPeriodLabel');
     const periodFields = document.getElementById('watchPeriodFields');
-    if(periodLabel) periodLabel.textContent = '📊 دوره و سال صورت مالی (استخراج خودکار از فایل)';
-
     const detectedYear = PARSED?._detectedInfo?.year || '';
     const detectedMonths = PARSED?._detectedInfo?.months || '';
 
@@ -1863,59 +2295,12 @@ window.KodalHelpers = {
           <div style="padding:12px 14px;background:rgba(16,185,129,.1);border-radius:10px;border-right:4px solid var(--good);font-size:13px;line-height:1.9">
             <div>📅 <b>دوره:</b> ${toFa(detectedMonths)} ماهه</div>
             <div>📆 <b>سال:</b> ${toFa(detectedYear)}</div>
-            <div style="font-size:11.5px;color:var(--sub);margin-top:6px">این اطلاعات از خود فایل صورت مالی استخراج شد.</div>
           </div>
           <input type="hidden" id="watchPeriod" value="${detectedMonths}">
           <input type="hidden" id="watchYear" value="${detectedYear}">
         `;
-      } else if(detectedYear && !detectedMonths){
-        periodFields.innerHTML = `
-          <div style="padding:10px 12px;background:rgba(245,158,11,.1);border-radius:10px;border-right:4px solid #f59e0b;font-size:12.5px;margin-bottom:8px">
-            ⚠️ ماه دوره در فایل پیدا نشد — لطفاً انتخاب کن.
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div style="display:flex;flex-direction:column;gap:4px">
-              <label style="font-size:12px;color:var(--sub)">دوره</label>
-              <select id="watchPeriod" style="padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--chart-bg);color:var(--txt);font:inherit">
-                <option value="3">۳ ماهه</option>
-                <option value="6">۶ ماهه</option>
-                <option value="9">۹ ماهه</option>
-                <option value="12" selected>سالانه (۱۲ ماهه)</option>
-              </select>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:4px">
-              <label style="font-size:12px;color:var(--sub)">سال</label>
-              <input id="watchYear" type="text" value="${toFa(detectedYear)}" readonly style="padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--chart-bg);color:var(--txt);font:inherit;opacity:.7">
-            </div>
-          </div>
-        `;
-      } else if(!detectedYear && detectedMonths){
-        periodFields.innerHTML = `
-          <div style="padding:10px 12px;background:rgba(245,158,11,.1);border-radius:10px;border-right:4px solid #f59e0b;font-size:12.5px;margin-bottom:8px">
-            ⚠️ سال در فایل پیدا نشد — لطفاً انتخاب کن.
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div style="display:flex;flex-direction:column;gap:4px">
-              <label style="font-size:12px;color:var(--sub)">دوره</label>
-              <input id="watchPeriod" type="text" value="${toFa(detectedMonths)}" readonly style="padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--chart-bg);color:var(--txt);font:inherit;opacity:.7">
-            </div>
-            <div style="display:flex;flex-direction:column;gap:4px">
-              <label style="font-size:12px;color:var(--sub)">سال</label>
-              <select id="watchYear" style="padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--chart-bg);color:var(--txt);font:inherit">
-                <option value="1402">۱۴۰۲</option>
-                <option value="1403">۱۴۰۳</option>
-                <option value="1404">۱۴۰۴</option>
-                <option value="1405" selected>۱۴۰۵</option>
-                <option value="1406">۱۴۰۶</option>
-              </select>
-            </div>
-          </div>
-        `;
       } else {
         periodFields.innerHTML = `
-          <div style="padding:10px 12px;background:rgba(198,40,40,.1);border-radius:10px;border-right:4px solid var(--bad);font-size:12.5px;margin-bottom:8px">
-            ⚠️ دوره و سال در فایل پیدا نشد — لطفاً انتخاب کن.
-          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div style="display:flex;flex-direction:column;gap:4px">
               <label style="font-size:12px;color:var(--sub)">دوره</label>
@@ -1923,7 +2308,7 @@ window.KodalHelpers = {
                 <option value="3">۳ ماهه</option>
                 <option value="6">۶ ماهه</option>
                 <option value="9">۹ ماهه</option>
-                <option value="12" selected>سالانه (۱۲ ماهه)</option>
+                <option value="12" selected>سالانه</option>
               </select>
             </div>
             <div style="display:flex;flex-direction:column;gap:4px">
@@ -2049,9 +2434,6 @@ window.KodalHelpers = {
   }
 })();
 
-/* ============================================================
-   بازیابی تحلیل از دیدبان (external)
-============================================================ */
 window.restoreFromExternal = function(reportData){
   try{
     if(!reportData) return;
@@ -2099,9 +2481,6 @@ window.restoreFromExternal = function(reportData){
   }
 };
 
-/* ============================================================
-   🔽 قابلیت باز/بسته کردن کارت‌ها
-============================================================ */
 (function initCollapsibleCards(){
   const STORAGE_KEY = 'kodal_collapsed_cards_v1';
 
@@ -2121,9 +2500,7 @@ window.restoreFromExternal = function(reportData){
   function getCardId(card){
     const h2 = card.querySelector('h2');
     if(!h2) return null;
-    // از متن سرتیتر به عنوان شناسه استفاده می‌کنیم
     let text = (h2.textContent || '').trim();
-    // حذف علامت سوال و کاراکترهای اضافه
     text = text.replace(/\?/g, '').replace(/\s+/g, ' ').slice(0, 60);
     return text;
   }
@@ -2134,10 +2511,8 @@ window.restoreFromExternal = function(reportData){
       const h2 = card.querySelector('h2');
       if(!h2) return;
 
-      // فقط h2 که توی کارت هست و توی مودال نیست
-      if(card.closest('#saveModal, #saveCompareModal, #addWatchModal')) return;
+      if(card.closest('#saveModal, #saveCompareModal, #addWatchModal, #saveIndustryModal, #compareIndustriesModal')) return;
 
-      // h2 رو کلیک‌پذیر کن
       if(!h2.classList.contains('collapsible-h2')){
         h2.classList.add('collapsible-h2');
         const icon = document.createElement('span');
@@ -2149,18 +2524,15 @@ window.restoreFromExternal = function(reportData){
       const id = getCardId(card);
       if(!id) return;
 
-      // اگه در localStorage بسته ذخیره شده، اعمال کن
       if(collapsed[id]){
         card.classList.add('collapsed');
       } else {
         card.classList.remove('collapsed');
       }
 
-      // فقط یه بار event listener اضافه کن
       if(!h2.dataset.collapseReady){
         h2.dataset.collapseReady = '1';
         h2.addEventListener('click', (e) => {
-          // اگه روی دکمه یا لینک کلیک شده، نادیده بگیر
           if(e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
           if(e.target.closest('button') || e.target.closest('a')) return;
 
@@ -2180,14 +2552,12 @@ window.restoreFromExternal = function(reportData){
     });
   }
 
-  // اجرا در بارگذاری اول
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', applyCollapseState);
   } else {
     applyCollapseState();
   }
 
-  // با هر تغییر توی DOM (وقتی تحلیل جدید رندر می‌شه)، دوباره اعمال کن
   const observer = new MutationObserver(() => {
     applyCollapseState();
   });
@@ -2197,9 +2567,6 @@ window.restoreFromExternal = function(reportData){
   });
 })();
 
-/* ============================================================
-   🔄 دکمه به‌روزرسانی اپ (پاک کردن کش)
-============================================================ */
 (function initRefreshApp(){
   const btn = $('refreshAppBtn');
   if(!btn) return;
@@ -2211,24 +2578,18 @@ window.restoreFromExternal = function(reportData){
     btn.textContent = '⏳ در حال بررسی آپدیت...';
 
     try{
-      // ۱. پاک کردن همه کش‌ها (Cache Storage)
       if('caches' in window){
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map(name => caches.delete(name)));
         console.log('🗑️ کش‌ها پاک شدن:', cacheNames);
       }
 
-      // ۲. Unregister کردن Service Worker
       if('serviceWorker' in navigator){
         const registrations = await navigator.serviceWorker.getRegistrations();
         await Promise.all(registrations.map(reg => reg.unregister()));
         console.log('🗑️ Service Worker ها Unregister شدن');
       }
 
-      // ۳. پاک کردن localStorage فقط اگه کاربر بخواد
-      // (نمی‌کنیم چون تحلیل‌ها و لایسنس توشه)
-
-      // ۴. رفرش سخت با دور زدن کش
       setTimeout(() => {
         const url = new URL(window.location.href);
         url.searchParams.set('_t', Date.now());
@@ -2243,3 +2604,112 @@ window.restoreFromExternal = function(reportData){
     }
   };
 })();
+
+(function initInnerTabs(){
+  function bind(){
+    const tabs = document.querySelectorAll('#out .inner-tab');
+    const panels = document.querySelectorAll('#out .inner-panel');
+
+    if(!tabs.length) return;
+
+    tabs.forEach(tab => {
+      if(tab.dataset.innerBound) return;
+      tab.dataset.innerBound = '1';
+
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.inner;
+        if(!target) return;
+
+        tabs.forEach(t => t.classList.remove('active'));
+        panels.forEach(p => p.classList.remove('active'));
+
+        tab.classList.add('active');
+        const panel = document.querySelector(`#out .inner-panel[data-innerpanel="${target}"]`);
+        if(panel) panel.classList.add('active');
+
+        if(target === 'charts'){
+          setTimeout(() => {
+            if(window.PARSED && typeof window.__rebuildCharts === 'function'){
+              window.__rebuildCharts();
+            }
+          }, 50);
+        }
+
+        const card = tab.closest('.card');
+        if(card){
+          const cardTop = card.getBoundingClientRect().top + window.pageYOffset - 20;
+          window.scrollTo({ top: cardTop, behavior: 'smooth' });
+        }
+      });
+    });
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', bind);
+  } else {
+    bind();
+  }
+
+  const observer = new MutationObserver(() => {
+    bind();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+
+})();
+
+window.__rebuildCharts = function(){
+  if(!PARSED) return;
+
+  try{
+    const ci = 0;
+    const v = {
+      ca: val('currentAssets', ci),
+      nonCA: val('nonCurrentAssets', ci),
+      tl: val('totalLiab', ci),
+      eq: val('equity', ci),
+    };
+
+    const periods = PARSED._periods || 3;
+    const periodLabels = [];
+    for(let i = 0; i < periods; i++){
+      periodLabels.push(PERIOD_NAMES[i] || ('دوره ' + (i+1)));
+    }
+
+    const barBox = document.getElementById('barChart');
+    if(barBox){
+      barBox.innerHTML = buildBarChart([
+        {name:'درآمد', color:'#1769e0', values: (PARSED.revenue||[]).slice(0,periods)},
+        {name:'سود ناخالص', color:'#f59e0b', values: (PARSED.grossProfit||[]).slice(0,periods)},
+        {name:'سود عملیاتی', color:'#8b5cf6', values: (PARSED.opProfit||[]).slice(0,periods)},
+        {name:'سود خالص', color:'#10b981', values: (PARSED.netProfit||[]).slice(0,periods)},
+      ], periodLabels);
+    }
+
+    const cfoBox = document.getElementById('cfoChart');
+    if(cfoBox){
+      cfoBox.innerHTML = buildBarChart([
+        {name:'CFO', color:'#0ea5e9', values: (PARSED.cfo||[]).slice(0,periods)},
+      ], periodLabels);
+    }
+
+    const pieAssets = document.getElementById('pieAssets');
+    if(pieAssets){
+      pieAssets.innerHTML = buildPieChart([
+        {label:'دارایی جاری', value: v.ca, color:'#10b981'},
+        {label:'دارایی غیرجاری', value: v.nonCA, color:'#ef4444'},
+      ]);
+    }
+
+    const pieFunding = document.getElementById('pieFunding');
+    if(pieFunding){
+      pieFunding.innerHTML = buildPieChart([
+        {label:'بدهی‌ها', value: v.tl, color:'#ef4444'},
+        {label:'حقوق مالکانه', value: v.eq, color:'#10b981'},
+      ]);
+    }
+  }catch(e){
+    console.error('خطا در بازسازی نمودارها:', e);
+  }
+};
+
+console.log('%c🎯 app.js v1.7.2 لود شد', 'color:#1769e0;font-weight:bold');
