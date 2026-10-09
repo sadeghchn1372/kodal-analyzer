@@ -4126,3 +4126,49 @@ body.dark .industry-input-section {
     margin-bottom: 20px !important;
   }
 }
+/* ============================================================
+   🆕 کارت پشتیبان‌گیری دیدبان — هم‌اندازه کارت‌های ذخیره‌شده
+============================================================ */
+
+#wlBackupCard {
+  padding: 10px 12px !important;
+  box-shadow: 0 1px 6px #0001 !important;
+  opacity: 0.85;
+  border-radius: 12px !important;
+  margin-top: 40px !important;
+  margin-bottom: 10px !important;
+}
+
+#wlBackupCard h2 {
+  font-size: 13px !important;
+  margin-bottom: 6px !important;
+  gap: 5px !important;
+}
+
+#wlBackupCard h2 .help {
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 10px !important;
+}
+
+#wlBackupCard #wlDownloadBtn,
+#wlBackupCard #wlUploadBtn {
+  padding: 4px 10px !important;
+  font-size: 11px !important;
+  border-radius: 7px !important;
+}
+
+#wlBackupCard > div {
+  gap: 6px !important;
+}
+
+@media (max-width: 600px) {
+  #wlBackupCard {
+    margin-top: 120px !important;
+    margin-bottom: 20px !important;
+    padding: 9px !important;
+  }
+  #wlBackupCard h2 {
+    font-size: 12px !important;
+  }
+}
