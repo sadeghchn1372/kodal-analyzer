@@ -1786,3 +1786,762 @@ body.dark .monthly-notes{
   .card h2.collapsible-h2 .collapse-icon{display:none !important}
   .card h2.collapsible-h2{padding-left:0 !important;cursor:default !important}
 }
+/* ============================================================
+   🆕 v1.5 — مقایسه با صنعت
+============================================================ */
+
+/* ---------- کادر سهم اصلی ---------- */
+.industry-base-section {
+  border-right: 4px solid #f59e0b;
+  background: linear-gradient(135deg, rgba(245,158,11,.05), var(--chart-bg));
+}
+.industry-base-section .input-section-title {
+  color: #d97706;
+}
+body.dark .industry-base-section {
+  background: linear-gradient(135deg, rgba(245,158,11,.1), var(--chart-bg));
+}
+
+.base-symbol-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+/* ---------- کادر هم‌گروهی‌ها ---------- */
+.industry-peers-section {
+  border-right: 4px solid #1769e0;
+  background: linear-gradient(135deg, rgba(23,105,224,.05), var(--chart-bg));
+}
+.industry-peers-section .input-section-title {
+  color: #1769e0;
+}
+body.dark .industry-peers-section {
+  background: linear-gradient(135deg, rgba(23,105,224,.1), var(--chart-bg));
+}
+
+.peers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 60px;
+  padding: 6px;
+  border-radius: 12px;
+  transition: background .2s, box-shadow .2s;
+}
+.peers-list.hover {
+  background: rgba(23,105,224,.08);
+  box-shadow: 0 0 0 2px rgba(23,105,224,.3) inset;
+}
+
+/* ---------- آیتم هم‌گروهی ---------- */
+.peer-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  flex-wrap: wrap;
+  transition: box-shadow .15s;
+}
+.peer-item:hover {
+  box-shadow: 0 3px 10px rgba(0,0,0,.06);
+}
+
+.peer-item .color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.peer-item .symbol-input {
+  flex: 1;
+  min-width: 90px;
+  max-width: 130px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--chart-bg);
+  color: var(--txt);
+  font: inherit;
+  font-weight: 600;
+  direction: rtl;
+}
+.peer-item .symbol-input:focus {
+  outline: 2px solid var(--blue);
+  border-color: var(--blue);
+}
+
+.peer-item .price-input,
+.peer-item .shares-input {
+  width: 130px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--chart-bg);
+  color: var(--txt);
+  font: inherit;
+  direction: rtl;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.peer-item .price-input:focus,
+.peer-item .shares-input:focus {
+  outline: 2px solid var(--blue);
+  border-color: var(--blue);
+}
+
+.peer-item .field-label {
+  font-size: 11.5px;
+  color: var(--sub);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.peer-item .remove-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  color: var(--bad);
+  border: 1px solid var(--bad);
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-right: auto;
+  transition: background .15s;
+}
+.peer-item .remove-btn:hover {
+  background: rgba(198,40,40,.1);
+}
+
+.peer-item .file-info {
+  font-size: 11.5px;
+  color: var(--sub);
+  direction: ltr;
+  flex-basis: 100%;
+  padding-right: 24px;
+}
+
+/* ---------- دکمه‌های اقدام ---------- */
+.industry-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+}
+
+/* ---------- خلاصه جایگاه سهم اصلی ---------- */
+.base-position-summary {
+  margin-top: 6px;
+}
+
+.base-position-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.bp-card {
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--chart-bg);
+  border: 1px solid var(--chart-br);
+  text-align: center;
+  transition: transform .15s;
+  border-top: 4px solid var(--blue);
+}
+.bp-card:hover {
+  transform: translateY(-2px);
+}
+
+.bp-card .bp-label {
+  font-size: 12px;
+  color: var(--sub);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.bp-card .bp-value {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  direction: rtl;
+}
+
+.bp-card .bp-sub {
+  font-size: 11.5px;
+  color: var(--sub);
+  margin-top: 6px;
+  line-height: 1.6;
+}
+
+.bp-card.bp-base {
+  border-top-color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245,158,11,.08), var(--chart-bg));
+}
+
+.bp-card.bp-rank {
+  border-top-color: #8b5cf6;
+}
+
+.bp-card.bp-better {
+  border-top-color: #16834a;
+}
+
+.bp-card.bp-worse {
+  border-top-color: #c62828;
+}
+
+.bp-card.bp-score {
+  border-top-color: #1769e0;
+}
+
+/* ---------- جدول اصلی صنعت ---------- */
+.industry-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  min-width: 720px;
+}
+.industry-table th {
+  background: var(--table-head);
+  color: var(--sub);
+  font-weight: 600;
+  font-size: 12.5px;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--line);
+  text-align: center;
+  white-space: nowrap;
+}
+.industry-table th:first-child {
+  text-align: right;
+}
+.industry-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+  color: var(--txt);
+}
+.industry-table td:first-child {
+  text-align: right;
+  font-weight: 600;
+  color: var(--sub);
+  background: var(--chart-bg);
+  font-size: 13px;
+}
+.industry-table tr:hover td {
+  background: var(--hover);
+}
+
+/* ---------- رنگ ستون سهم اصلی ---------- */
+.industry-table th.base-col,
+.industry-table td.base-col {
+  background: rgba(245,158,11,.08);
+}
+body.dark .industry-table th.base-col,
+body.dark .industry-table td.base-col {
+  background: rgba(245,158,11,.12);
+}
+
+/* ---------- ریسپانسیو ---------- */
+@media (max-width: 900px) {
+  .base-symbol-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .peer-item .price-input,
+  .peer-item .shares-input {
+    width: 110px;
+  }
+}
+
+@media (max-width: 640px) {
+  .base-symbol-grid {
+    grid-template-columns: 1fr;
+  }
+  .peer-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .peer-item .symbol-input,
+  .peer-item .price-input,
+  .peer-item .shares-input {
+    width: 100%;
+    max-width: none;
+  }
+  .peer-item .remove-btn {
+    margin-right: 0;
+    align-self: flex-end;
+  }
+  .base-position-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- دکمه کوچک دراپ ---------- */
+.drop.drop-small {
+  padding: 14px 16px;
+  margin-top: 14px;
+}
+.drop.drop-small .drop-icon {
+  font-size: 30px;
+  margin-bottom: 4px;
+}
+.drop.drop-small .drop-text {
+  font-size: 13px;
+  margin: 2px 0 8px;
+}
+.drop.drop-small .drop-browse-btn {
+  padding: 8px 16px;
+  font-size: 12.5px;
+}
+
+/* ---------- بهبود نمایش زنگ‌های آمار ---------- */
+.industry-summary-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px dashed var(--line);
+  font-size: 13px;
+}
+.industry-summary-line:last-child {
+  border-bottom: 0;
+}
+.industry-summary-line .lbl {
+  color: var(--sub);
+}
+.industry-summary-line .val {
+  font-weight: 700;
+  direction: ltr;
+}
+
+/* ---------- کارت دو صنعت ---------- */
+#twoIndustriesCompareBox h2 {
+  font-size: 16px;
+  margin-bottom: 14px;
+}
+#twoIndustriesCompareBox {
+  border-top: 4px solid #8b5cf6;
+}
+
+/* ---------- چاپ (Print) ---------- */
+@media print {
+  .industry-base-section,
+  .industry-peers-section,
+  .industry-actions,
+  .peers-list,
+  #addPeerBtn,
+  #clearPeersBtn {
+    display: none !important;
+  }
+  #industryOut {
+    display: block !important;
+  }
+}
+/* ============================================================
+   🆕 v1.5 — مقایسه با صنعت
+============================================================ */
+
+/* ---------- فیکس مودال‌های جدید ---------- */
+#saveIndustryModal,
+#compareIndustriesModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 20px;
+}
+#saveIndustryModal.show,
+#compareIndustriesModal.show {
+  display: flex;
+}
+
+#saveIndustryModal .modal-box,
+#compareIndustriesModal .modal-box {
+  background: var(--card);
+  color: var(--txt);
+  border-radius: 16px;
+  padding: 22px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,.4);
+}
+
+#saveIndustryModal h3,
+#compareIndustriesModal h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+#saveIndustryModal label,
+#compareIndustriesModal label {
+  font-size: 13px;
+  color: var(--sub);
+  display: block;
+  margin-bottom: 6px;
+}
+
+#saveIndustryModal input,
+#compareIndustriesModal input,
+#compareIndustriesModal select {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--chart-bg);
+  color: var(--txt);
+  font: inherit;
+  direction: rtl;
+  box-sizing: border-box;
+}
+
+#saveIndustryModal input:focus,
+#compareIndustriesModal input:focus,
+#compareIndustriesModal select:focus {
+  outline: 2px solid var(--blue);
+  outline-offset: 0;
+  border-color: var(--blue);
+}
+
+#saveIndustryModal .actions,
+#compareIndustriesModal .actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* ---------- کادر سهم اصلی ---------- */
+.industry-base-section {
+  border-right: 4px solid #f59e0b;
+  background: linear-gradient(135deg, rgba(245,158,11,.05), var(--chart-bg));
+}
+.industry-base-section .input-section-title {
+  color: #d97706;
+}
+body.dark .industry-base-section {
+  background: linear-gradient(135deg, rgba(245,158,11,.1), var(--chart-bg));
+}
+
+.base-symbol-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+/* ---------- کادر هم‌گروهی‌ها ---------- */
+.industry-peers-section {
+  border-right: 4px solid #1769e0;
+  background: linear-gradient(135deg, rgba(23,105,224,.05), var(--chart-bg));
+}
+.industry-peers-section .input-section-title {
+  color: #1769e0;
+}
+body.dark .industry-peers-section {
+  background: linear-gradient(135deg, rgba(23,105,224,.1), var(--chart-bg));
+}
+
+.peers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 60px;
+  padding: 6px;
+  border-radius: 12px;
+  transition: background .2s, box-shadow .2s;
+}
+.peers-list.hover {
+  background: rgba(23,105,224,.08);
+  box-shadow: 0 0 0 2px rgba(23,105,224,.3) inset;
+}
+
+/* ---------- آیتم هم‌گروهی ---------- */
+.peer-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  flex-wrap: wrap;
+  transition: box-shadow .15s;
+}
+.peer-item:hover {
+  box-shadow: 0 3px 10px rgba(0,0,0,.06);
+}
+
+.peer-item .color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.peer-item .symbol-input {
+  flex: 1;
+  min-width: 90px;
+  max-width: 130px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--chart-bg);
+  color: var(--txt);
+  font: inherit;
+  font-weight: 600;
+  direction: rtl;
+}
+.peer-item .symbol-input:focus {
+  outline: 2px solid var(--blue);
+  border-color: var(--blue);
+}
+
+.peer-item .price-input,
+.peer-item .shares-input {
+  width: 130px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--chart-bg);
+  color: var(--txt);
+  font: inherit;
+  direction: rtl;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.peer-item .price-input:focus,
+.peer-item .shares-input:focus {
+  outline: 2px solid var(--blue);
+  border-color: var(--blue);
+}
+
+.peer-item .field-label {
+  font-size: 11.5px;
+  color: var(--sub);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.peer-item .remove-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  color: var(--bad);
+  border: 1px solid var(--bad);
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-right: auto;
+  transition: background .15s;
+}
+.peer-item .remove-btn:hover {
+  background: rgba(198,40,40,.1);
+}
+
+.peer-item .file-info {
+  font-size: 11.5px;
+  color: var(--sub);
+  direction: ltr;
+  flex-basis: 100%;
+  padding-right: 24px;
+}
+
+/* ---------- دکمه‌های اقدام ---------- */
+.industry-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+}
+
+/* ---------- خلاصه جایگاه سهم اصلی ---------- */
+.base-position-summary {
+  margin-top: 6px;
+}
+
+.base-position-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.bp-card {
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--chart-bg);
+  border: 1px solid var(--chart-br);
+  text-align: center;
+  transition: transform .15s;
+  border-top: 4px solid var(--blue);
+}
+.bp-card:hover {
+  transform: translateY(-2px);
+}
+
+.bp-card .bp-label {
+  font-size: 12px;
+  color: var(--sub);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.bp-card .bp-value {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  direction: rtl;
+}
+
+.bp-card .bp-sub {
+  font-size: 11.5px;
+  color: var(--sub);
+  margin-top: 6px;
+  line-height: 1.6;
+}
+
+.bp-card.bp-base {
+  border-top-color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245,158,11,.08), var(--chart-bg));
+}
+
+.bp-card.bp-rank {
+  border-top-color: #8b5cf6;
+}
+
+.bp-card.bp-better {
+  border-top-color: #16834a;
+}
+
+.bp-card.bp-worse {
+  border-top-color: #c62828;
+}
+
+.bp-card.bp-score {
+  border-top-color: #1769e0;
+}
+
+/* ---------- جدول اصلی صنعت ---------- */
+.industry-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  min-width: 720px;
+}
+.industry-table th {
+  background: var(--table-head);
+  color: var(--sub);
+  font-weight: 600;
+  font-size: 12.5px;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--line);
+  text-align: center;
+  white-space: nowrap;
+}
+.industry-table th:first-child {
+  text-align: right;
+}
+.industry-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+  color: var(--txt);
+}
+.industry-table td:first-child {
+  text-align: right;
+  font-weight: 600;
+  color: var(--sub);
+  background: var(--chart-bg);
+  font-size: 13px;
+}
+.industry-table tr:hover td {
+  background: var(--hover);
+}
+
+/* ---------- دکمه کوچک دراپ ---------- */
+.drop.drop-small {
+  padding: 14px 16px;
+  margin-top: 14px;
+}
+.drop.drop-small .drop-icon {
+  font-size: 30px;
+  margin-bottom: 4px;
+}
+.drop.drop-small .drop-text {
+  font-size: 13px;
+  margin: 2px 0 8px;
+}
+.drop.drop-small .drop-browse-btn {
+  padding: 8px 16px;
+  font-size: 12.5px;
+}
+
+/* ---------- کارت دو صنعت ---------- */
+#twoIndustriesCompareBox h2 {
+  font-size: 16px;
+  margin-bottom: 14px;
+}
+#twoIndustriesCompareBox {
+  border-top: 4px solid #8b5cf6;
+}
+
+/* ---------- ریسپانسیو ---------- */
+@media (max-width: 900px) {
+  .base-symbol-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .peer-item .price-input,
+  .peer-item .shares-input {
+    width: 110px;
+  }
+}
+
+@media (max-width: 640px) {
+  .base-symbol-grid {
+    grid-template-columns: 1fr;
+  }
+  .peer-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .peer-item .symbol-input,
+  .peer-item .price-input,
+  .peer-item .shares-input {
+    width: 100%;
+    max-width: none;
+  }
+  .peer-item .remove-btn {
+    margin-right: 0;
+    align-self: flex-end;
+  }
+  .base-position-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- چاپ (Print) ---------- */
+@media print {
+  .industry-base-section,
+  .industry-peers-section,
+  .industry-actions,
+  .peers-list,
+  #addPeerBtn,
+  #clearPeersBtn {
+    display: none !important;
+  }
+  #industryOut {
+    display: block !important;
+  }
+}

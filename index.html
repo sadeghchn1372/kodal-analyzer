@@ -21,7 +21,7 @@
 <!-- ============================================================
      مودال ذخیره تحلیل (تب تحلیل شرکت)
 ============================================================ -->
-<div id="saveModal">
+<div id="saveModal" style="display:none">
   <div class="modal-box">
     <h3>💾 ذخیره تحلیل</h3>
     <label>یه اسم برای این تحلیل بنویس:</label>
@@ -34,16 +34,46 @@
 </div>
 
 <!-- ============================================================
-     مودال ذخیره مقایسه
+     مودال ذخیره آمار صنعت
 ============================================================ -->
-<div id="saveCompareModal">
+<div id="saveIndustryModal" style="display:none">
   <div class="modal-box">
-    <h3>💾 ذخیره مقایسه</h3>
-    <label>یه اسم برای این مقایسه بنویس:</label>
-    <input id="saveCompareNameInput" type="text" placeholder="مثلاً: مقایسه فولاد vs خودرو vs شپنا">
+    <h3>💾 ذخیره آمار صنعت</h3>
+    <label>یه اسم برای این صنعت بنویس:</label>
+    <input id="saveIndustryNameInput" type="text" placeholder="مثلاً: فلزات اساسی — بهار ۱۴۰۴">
+    <p style="font-size:12px;color:var(--sub);margin:8px 0 0">
+      💡 این آمار توی «لیست صنایع ذخیره‌شده» نگه داشته می‌شه و می‌تونی بعداً باهاش مقایسه کنی.
+    </p>
     <div class="actions">
-      <button id="saveCompareConfirm" class="primary">ذخیره</button>
-      <button id="saveCompareCancel" class="ghost">انصراف</button>
+      <button id="saveIndustryConfirm" class="primary">ذخیره</button>
+      <button id="saveIndustryCancel" class="ghost">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     مودال مقایسه دو صنعت
+============================================================ -->
+<div id="compareIndustriesModal" style="display:none">
+  <div class="modal-box" style="max-width:520px">
+    <h3>⚖️ مقایسه دو صنعت</h3>
+    <p style="font-size:12.5px;color:var(--sub);margin:0 0 14px">
+      دو صنعت ذخیره‌شده رو انتخاب کن تا با هم مقایسه بشن.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div>
+        <label style="font-size:12px;color:var(--sub)">صنعت اول:</label>
+        <select id="industryA" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--chart-bg);color:var(--txt);font:inherit"></select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--sub)">صنعت دوم:</label>
+        <select id="industryB" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--chart-bg);color:var(--txt);font:inherit"></select>
+      </div>
+    </div>
+    <div id="compareIndustryErr" class="err" style="display:none;margin-top:10px"></div>
+    <div class="actions">
+      <button id="compareIndustryConfirm" class="primary">🔍 مقایسه کن</button>
+      <button id="compareIndustryCancel" class="ghost">انصراف</button>
     </div>
   </div>
 </div>
@@ -51,7 +81,7 @@
 <!-- ============================================================
      مودال مشترک افزودن به دیدبان
 ============================================================ -->
-<div id="addWatchModal">
+<div id="addWatchModal" style="display:none">
   <div class="modal-box" style="max-width:520px">
     <h3 id="addWatchTitle">👁️ افزودن به دیدبان</h3>
     <p id="addWatchSubtitle" style="font-size:12.5px;color:var(--sub);margin:0 0 14px"></p>
@@ -101,7 +131,7 @@
 
 <div class="main-tabs">
   <button class="main-tab active" data-maintab="single">📊 تحلیل تک شرکت</button>
-  <button class="main-tab" data-maintab="compare">📈 مقایسه شرکت‌ها</button>
+  <button class="main-tab" data-maintab="compare">📈 مقایسه با صنعت</button>
   <button class="main-tab" data-maintab="watchlist">👁️ دیدبان</button>
 </div>
 
@@ -275,8 +305,6 @@
 <div id="alerts"></div>
 </div>
 
-
-
 <div class="card">
 <h2>🧠 تحلیل خودکار <span class="help" data-tip="📖 جمع‌بندی خودکار از نسبت‌های مهم با علامت رنگی.">?</span></h2>
 <div id="analysis"></div>
@@ -292,111 +320,148 @@
 </div>
 </div><!-- /tabSingle -->
 
-<!-- ================== تب ۲: مقایسه شرکت‌ها ================== -->
+<!-- ================== تب ۲: مقایسه با صنعت ================== -->
 <div id="tabCompare" class="tab-panel">
 
 <div class="card">
   <div class="topbar">
-    <h1>📈 مقایسه شرکت‌ها <span style="font-size:13px;color:var(--sub);font-weight:400">v1.2</span></h1>
-    <p class="sub" style="margin:0">۲ تا ۴ فایل صورت مالی انتخاب کن. برای نسبت‌های ارزش‌گذاری، قیمت و تعداد سهام رو هم وارد کن.</p>
+    <h1>📈 مقایسه با صنعت <span style="font-size:13px;color:var(--sub);font-weight:400">v1.5</span></h1>
+    <p class="sub" style="margin:0">یه سهم اصلی انتخاب کن، بعد تا ۱۰ سهم هم‌گروهی‌اش رو اضافه کن. آمار کامل صنعت محاسبه می‌شه.</p>
   </div>
 
-  <div class="input-section">
+  <!-- کادر ۱: سهم اصلی -->
+  <div class="input-section industry-base-section">
     <div class="input-section-title">
       <span class="step-badge">۱</span>
-      📁 فایل‌های شرکت‌ها (۲ تا ۴ فایل)
-    </div>
-    <div id="cmpDrop" class="drop">
-      <input id="cmpFiles" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt" multiple>
-      <div class="drop-icon">📂</div>
-      <p class="drop-text">فایل‌ها رو اینجا رها کن یا انتخاب کن (چندتایی)</p>
-      <button id="cmpAddBtn" class="ghost">➕ افزودن فایل</button>
+      🎯 سهم اصلی (Base)
+      <span class="optional-badge">این سهمیه که می‌خوای جایگاهش رو توی صنعت ببینی</span>
     </div>
 
-    <div id="cmpListWrap" style="margin-top:14px;display:none">
-      <h3 style="margin-bottom:8px">شرکت‌های اضافه‌شده:</h3>
-      <div id="cmpList" class="cmp-list"></div>
-      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-        <button id="cmpGo" class="primary" disabled>🔍 مقایسه کن</button>
-        <button id="cmpSaveBtn" class="ghost" style="display:none" disabled>💾 ذخیره مقایسه</button>
-        <button id="cmpClearBtn" class="ghost">🗑️ پاک کردن همه</button>
+    <div class="base-symbol-grid">
+      <div class="market-field">
+        <label>نماد سهم اصلی</label>
+        <input id="baseSymbol" type="text" placeholder="مثلاً: فولاد">
       </div>
-      <div id="cmpErr" class="err" style="display:none"></div>
+      <div class="market-field">
+        <label>صنعت / گروه</label>
+        <input id="baseIndustry" type="text" placeholder="مثلاً: فلزات اساسی">
+      </div>
+      <div class="market-field">
+        <label>قیمت هر سهم (ریال) <span class="optional-badge">اختیاری</span></label>
+        <input id="basePrice" type="text" inputmode="numeric" placeholder="۵,۲۰۰" class="num-input">
+      </div>
+      <div class="market-field">
+        <label>تعداد سهام <span class="optional-badge">اختیاری</span></label>
+        <input id="baseShares" type="text" inputmode="numeric" placeholder="۵,۰۰۰,۰۰۰,۰۰۰" class="num-input">
+      </div>
+    </div>
+
+    <div id="baseDrop" class="drop drop-small">
+      <input id="baseFile" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt">
+      <span class="drop-icon">📂</span>
+      <p class="drop-text">فایل صورت مالی سهم اصلی</p>
+      <button type="button" class="drop-browse-btn" onclick="document.getElementById('baseFile').click()">
+        📁 انتخاب فایل
+      </button>
+      <div id="baseFileInfo" class="drop-file-info">
+        <span class="file-icon">✅</span>
+        <span class="file-name" id="baseFileName"></span>
+      </div>
     </div>
   </div>
+
+  <!-- کادر ۲: سهم‌های هم‌گروهی -->
+  <div class="input-section industry-peers-section">
+    <div class="input-section-title">
+      <span class="step-badge">۲</span>
+      👥 سهم‌های هم‌گروهی
+      <span class="optional-badge">تا ۱۰ سهم — آمار صنعت از اینا محاسبه می‌شه</span>
+    </div>
+
+    <div id="peersList" class="peers-list"></div>
+
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <button id="addPeerBtn" class="ghost" type="button">➕ افزودن سهم هم‌گروهی</button>
+      <button id="clearPeersBtn" class="ghost" type="button" style="color:var(--bad);border-color:var(--bad)">🗑️ پاک کردن همه</button>
+    </div>
+  </div>
+
+  <!-- دکمه‌های اقدام -->
+  <div class="industry-actions">
+    <button id="compareIndustryGo" class="primary" disabled>🔍 مقایسه با صنعت</button>
+    <button id="saveIndustryBtn" class="ghost" style="display:none" disabled>💾 ذخیره آمار صنعت</button>
+    <button id="compareTwoIndustriesBtn" class="ghost">⚖️ مقایسه دو صنعت</button>
+  </div>
+
+  <div id="industryErr" class="err" style="display:none"></div>
+</div>
 </div>
 
+<!-- لیست صنایع ذخیره‌شده -->
 <div class="card">
-<h2>📚 مقایسه‌های ذخیره‌شده <span class="help" data-tip="هر مقایسه‌ای که انجام دادی می‌تونی ذخیره کنی.&#10;توی مرورگر (localStorage) نگه داشته می‌شه.">?</span></h2>
-<div class="saved-controls">
-  <input id="cmpSavedSearch" type="text" placeholder="🔍 جستجو در اسم مقایسه‌ها..." class="saved-search">
-  <select id="cmpSavedSort" class="saved-sort">
-    <option value="recent">جدیدترین</option>
-    <option value="oldest">قدیمی‌ترین</option>
-    <option value="starred">ستاره‌دارها</option>
-    <option value="name">بر اساس نام</option>
-  </select>
+  <h2>📚 صنایع ذخیره‌شده <span class="help" data-tip="هر صنعتی که ذخیره کنی اینجا نگه داشته می‌شه.&#10;می‌تونی بعداً باهاش مقایسه کنی.">?</span></h2>
+  <div class="saved-controls">
+    <input id="industrySavedSearch" type="text" placeholder="🔍 جستجو در صنایع..." class="saved-search">
+    <select id="industrySavedSort" class="saved-sort">
+      <option value="recent">جدیدترین</option>
+      <option value="oldest">قدیمی‌ترین</option>
+      <option value="starred">ستاره‌دارها</option>
+      <option value="name">بر اساس نام</option>
+    </select>
+  </div>
+  <div id="industrySavedList" class="saved-list"></div>
+  <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+    <button id="industryDownloadAll" class="ghost" disabled>📥 دانلود همه صنایع</button>
+    <button id="industryUploadFile" class="ghost">📤 بارگذاری از فایل</button>
+    <input id="industryUploadInput" type="file" accept=".json" style="display:none">
+  </div>
 </div>
-<div id="cmpSavedList" class="saved-list"></div>
-<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-  <button id="cmpDownloadAll" class="ghost" disabled>📥 دانلود همه مقایسه‌ها</button>
-  <button id="cmpUploadFile" class="ghost">📤 بارگذاری از فایل</button>
-  <input id="cmpUploadInput" type="file" accept=".json" style="display:none">
-</div>
-</div>
 
-<div id="cmpOut" style="display:none">
+<!-- خروجی مقایسه -->
+<div id="industryOut" style="display:none">
 
   <div class="card">
-    <h2>🎯 امتیاز سلامت مالی شرکت‌ها</h2>
-    <div id="cmpScores" class="cmp-scores"></div>
+    <h2>🎯 جایگاه سهم اصلی در صنعت</h2>
+    <div id="basePositionSummary" class="base-position-summary"></div>
   </div>
 
   <div class="card">
-    <h2>🛡️ Altman Z-Score <span style="font-size:12px;color:var(--sub);font-weight:400">(ریسک ورشکستگی)</span> <span class="help" data-tip="📖 فرمول علمی (۱۹۶۸):&#10;Z = 1.2·X₁ + 1.4·X₂ + 3.3·X₃ + 0.6·X₄ + 1.0·X₅&#10;🟢 بالای ۲.۹۹ | 🟡 ۱.۸۱ تا ۲.۹۹ | 🔴 زیر ۱.۸۱">?</span></h2>
-    <div id="cmpZScore" class="cmp-zscore-wrap"></div>
+    <h2>🎯 امتیاز سلامت مالی <span class="help" data-tip="مقایسه امتیاز سهم اصلی با میانگین، بهترین و بدترین صنعت">?</span></h2>
+    <div id="industryScores" class="cmp-scores"></div>
   </div>
 
   <div class="card">
-    <h2>📌 اعداد کلیدی (مقایسه‌ای)</h2>
-    <div id="cmpKeyNumbers" class="cmp-table-wrap"></div>
+    <h2>🛡️ Altman Z-Score <span style="font-size:12px;color:var(--sub);font-weight:400">(ریسک ورشکستگی)</span></h2>
+    <div id="industryZScore" class="cmp-zscore-wrap"></div>
   </div>
 
   <div class="card">
-    <h2>📈 نسبت‌های مالی <span class="help" data-tip="در هر ردیف، بهترین مقدار با 🟢 و بدترین با 🔴 مشخص می‌شه.">?</span></h2>
-    <div class="tabs">
-      <div class="tab active" data-ct="liq">نقدینگی</div>
-      <div class="tab" data-ct="lev">اهرم</div>
-      <div class="tab" data-ct="prof">سودآوری</div>
-      <div class="tab" data-ct="eff">کارایی</div>
-      <div class="tab" data-ct="cf">جریان نقد</div>
-      <div class="tab" data-ct="val">ارزش‌گذاری</div>
-    </div>
-    <div id="cmpRatios" class="cmp-table-wrap"></div>
+    <h2>📊 جدول اصلی: سهم اصلی vs آمار صنعت <span class="help" data-tip="ستون «جایگاه» نشون می‌ده سهم اصلی توی صنعت چندمه.">?</span></h2>
+    <div id="industryMainTable" class="cmp-table-wrap"></div>
   </div>
 
   <div class="card">
-    <h2>📊 نمودار مقایسه‌ای نسبت‌ها</h2>
+    <h2>📊 نمودار مقایسه‌ای</h2>
     <div class="chart-box">
-      <div id="cmpBar"></div>
-      <div class="legend" id="cmpBarLegend"></div>
+      <div id="industryBar"></div>
+      <div class="legend" id="industryBarLegend"></div>
     </div>
   </div>
 
   <div class="card">
-    <h2>🕸️ نمودار راداری ۶ معیار کلیدی <span class="help" data-tip="۶ معیار نرمال‌شده (۰ تا ۱۰۰):&#10;حاشیه سود خالص، ROE، نسبت جاری،&#10;بدهی/حقوق (معکوس)، کیفیت سود، رشد درآمد.">?</span></h2>
+    <h2>🕸️ نمودار راداری ۶ معیار</h2>
     <div class="chart-box">
-      <div id="cmpRadar"></div>
-      <div class="legend" id="cmpRadarLegend"></div>
+      <div id="industryRadar"></div>
+      <div class="legend" id="industryRadarLegend"></div>
     </div>
   </div>
 
   <div class="card">
-    <h2>🏆 رتبه‌بندی نهایی</h2>
-    <div id="cmpRanking" class="cmp-table-wrap"></div>
+    <h2>🏆 رتبه‌بندی در صنعت</h2>
+    <div id="industryRanking" class="cmp-table-wrap"></div>
   </div>
 
-</div><!-- /cmpOut -->
+</div><!-- /industryOut -->
 
 </div><!-- /tabCompare -->
 

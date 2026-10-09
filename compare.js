@@ -1,7 +1,12 @@
 /* ============================================================
-   compare.js — منطق تب «مقایسه شرکت‌ها»  |  v38
+   compare.js — منطق تب «مقایسه با صنعت»  |  v1.5
    وابسته به: app.js (window.KodalHelpers)
-   تغییرات v38: چک لایسنس قبل از مقایسه
+   طراحی جدید:
+   - سهم اصلی (Base) + تا ۱۰ سهم هم‌گروهی
+   - محاسبه آمار صنعت (میانگین/بهترین/بدترین/میانه)
+   - جایگاه سهم اصلی در صنعت
+   - ذخیره آمار صنعت و لیست صنایع
+   - مقایسه دو صنعت با هم
 ============================================================ */
 
 (function(){
@@ -18,7 +23,7 @@
     }catch(e){ return '#888888'; }
   }
 
-  /* ---------- کمک‌کننده: تبدیل عدد به فرمت فارسی با کاما ---------- */
+  /* ---------- کمک‌کننده: فرمت عدد ---------- */
   function _fmtNumInput(value){
     const clean = H.fa2en(String(value || '')).replace(/[^\d]/g, '');
     if(!clean) return '';
@@ -32,25 +37,54 @@
     return Math.round(x * 1e6) / 1e6;
   }
 
-  /* ---------- رنگ‌های اختصاصی هر شرکت ---------- */
-  const COMPANY_COLORS = ['#1769e0', '#10b981', '#f59e0b', '#8b5cf6'];
+  /* ---------- میانگین/میانه/انحراف ---------- */
+  function avg(arr){
+    const v = arr.filter(x => x != null && isFinite(x));
+    if(!v.length) return null;
+    return v.reduce((a,b) => a + b, 0) / v.length;
+  }
+  function median(arr){
+    const v = arr.filter(x => x != null && isFinite(x)).sort((a,b) => a - b);
+    if(!v.length) return null;
+    const mid = Math.floor(v.length / 2);
+    return v.length % 2 ? v[mid] : (v[mid-1] + v[mid]) / 2;
+  }
+  function best(arr, direction){
+    const v = arr.filter(x => x != null && isFinite(x));
+    if(!v.length) return null;
+    return direction === 'lower' ? Math.min(...v) : Math.max(...v);
+  }
+  function worst(arr, direction){
+    const v = arr.filter(x => x != null && isFinite(x));
+    if(!v.length) return null;
+    return direction === 'lower' ? Math.max(...v) : Math.min(...v);
+  }
+
+  /* ---------- رنگ‌ها ---------- */
+  const BASE_COLOR = '#f59e0b';           // رنگ سهم اصلی — نارنجی طلایی
+  const PEER_COLORS = ['#1769e0', '#10b981', '#8b5cf6', '#ec4899', '#06b6d4', '#65a30d', '#dc2626', '#0891b2', '#a16207', '#7c3aed'];
 
   /* ---------- State ---------- */
-  let CMP_FILES = [];
-  let CMP_RESULTS = null;
-  const CMP_STORAGE_KEY = 'kodal_compare_v1';
-  let CMP_SAVED = [];
+  let BASE = { file: null, parsed: null, symbol: '', industry: '', price: null, shares: null };
+  let PEERS = [];  // [{file, parsed, symbol, price, shares, color, error}]
+  let INDUSTRY_RESULTS = null;
+  let INDUSTRY_SAVED = [];
+  const MAX_PEERS = 10;
 
-  /* ---------- Storage ---------- */
-  function loadCompareFromStorage(){
+  const INDUSTRY_STORAGE_KEY = 'kodal_industries_v1';
+
+  /* ============================================================
+     Storage: صنایع ذخیره‌شده
+  ============================================================ */
+  function loadIndustriesFromStorage(){
     try{
-      const raw = localStorage.getItem(CMP_STORAGE_KEY);
-      CMP_SAVED = raw ? JSON.parse(raw) : [];
-    }catch(e){ CMP_SAVED = []; }
+      const raw = localStorage.getItem(INDUSTRY_STORAGE_KEY);
+      INDUSTRY_SAVED = raw ? JSON.parse(raw) : [];
+    }catch(e){ INDUSTRY_SAVED = []; }
   }
-  function saveCompareToStorage(){
+  function saveIndustriesToStorage(){
     try{
-      localStorage.setItem(CMP_STORAGE_KEY, JSON.stringify(CMP_SAVED));
+      localStorage.setItem(INDUSTRY_STORAGE_KEY, JSON.stringify(INDUSTRY_SAVED));
       return true;
     }catch(e){
       if(e.name === 'QuotaExceededError' && window.showToast){
@@ -59,61 +93,228 @@
       return false;
     }
   }
-  loadCompareFromStorage();
+  loadIndustriesFromStorage();
 
   /* ============================================================
-     ۱. مدیریت لیست فایل‌ها
+     ۱. سهم اصلی — فرم و فایل
   ============================================================ */
-  function renderCmpList(){
-    const wrap = $('cmpListWrap');
-    const list = $('cmpList');
-    if(!wrap || !list) return;
+  function bindBaseInputs(){
+    const symEl = $('baseSymbol');
+    const indEl = $('baseIndustry');
+    const priceEl = $('basePrice');
+    const sharesEl = $('baseShares');
 
-    if(!CMP_FILES.length){
-      wrap.style.display = 'none';
-      list.innerHTML = '';
-      updateGoButton();
+    if(symEl){
+      symEl.addEventListener('input', () => {
+        BASE.symbol = symEl.value.trim();
+        updateCompareButton();
+      });
+    }
+    if(indEl){
+      indEl.addEventListener('input', () => {
+        BASE.industry = indEl.value.trim();
+      });
+    }
+    if(priceEl){
+      priceEl.addEventListener('input', (e) => {
+        const oldValue = e.target.value;
+        const cursorPos = e.target.selectionStart;
+        const digitsBeforeCursor = H.fa2en(oldValue.slice(0, cursorPos)).replace(/[^\d]/g, '').length;
+
+        const formatted = _fmtNumInput(oldValue);
+        e.target.value = formatted;
+
+        let newPos = 0, digitCount = 0;
+        for(let i = 0; i < formatted.length; i++){
+          if(digitCount >= digitsBeforeCursor) break;
+          newPos = i + 1;
+          if(/[۰-۹]/.test(formatted[i])) digitCount++;
+        }
+        if(digitsBeforeCursor === 0) newPos = 0;
+        try{ e.target.setSelectionRange(newPos, newPos); }catch(_){}
+
+        BASE.price = H.toNum(formatted);
+        updateCompareButton();
+      });
+    }
+    if(sharesEl){
+      sharesEl.addEventListener('input', (e) => {
+        const oldValue = e.target.value;
+        const cursorPos = e.target.selectionStart;
+        const digitsBeforeCursor = H.fa2en(oldValue.slice(0, cursorPos)).replace(/[^\d]/g, '').length;
+
+        const formatted = _fmtNumInput(oldValue);
+        e.target.value = formatted;
+
+        let newPos = 0, digitCount = 0;
+        for(let i = 0; i < formatted.length; i++){
+          if(digitCount >= digitsBeforeCursor) break;
+          newPos = i + 1;
+          if(/[۰-۹]/.test(formatted[i])) digitCount++;
+        }
+        if(digitsBeforeCursor === 0) newPos = 0;
+        try{ e.target.setSelectionRange(newPos, newPos); }catch(_){}
+
+        BASE.shares = H.toNum(formatted);
+        updateCompareButton();
+      });
+    }
+
+    // فایل سهم اصلی
+    const baseFileInput = $('baseFile');
+    if(baseFileInput){
+      baseFileInput.onchange = async (e) => {
+        const f = e.target.files[0];
+        if(!f) return;
+        await loadBaseFile(f);
+        e.target.value = '';
+      };
+    }
+
+    // drag & drop
+    const drop = $('baseDrop');
+    if(drop){
+      ['dragover', 'dragenter'].forEach(ev => {
+        drop.addEventListener(ev, e => {
+          e.preventDefault();
+          drop.classList.add('hover');
+        });
+      });
+      ['dragleave', 'drop'].forEach(ev => {
+        drop.addEventListener(ev, e => {
+          e.preventDefault();
+          drop.classList.remove('hover');
+        });
+      });
+      drop.addEventListener('drop', async (e) => {
+        const f = e.dataTransfer.files[0];
+        if(!f) return;
+        await loadBaseFile(f);
+      });
+    }
+  }
+
+  async function loadBaseFile(file){
+    const errBox = $('industryErr');
+    if(errBox) errBox.style.display = 'none';
+
+    try{
+      const lines = await H.getLines(file);
+      if(!lines.length) throw new Error('خطی استخراج نشد');
+      const parsed = H.parseItems(lines);
+      const found = Object.keys(parsed).length;
+      if(!found) throw new Error('قلمی شناسایی نشد');
+      const maxPer = Math.max(...Object.values(parsed).map(a => a.length));
+      parsed._periods = Math.min(Math.max(maxPer, 1), 5);
+
+      // تشخیص دوره
+      const detected = detectPeriod(lines);
+      parsed._detectedInfo = detected;
+      parsed._detectedPeriod = detected.label;
+
+      BASE.file = file;
+      BASE.parsed = parsed;
+
+      // اگه تعداد سهام نذاشته، از سرمایه بگیر
+      if(!BASE.shares){
+        const cap = parsed.capital?.[0];
+        if(cap != null && cap > 0){
+          BASE.shares = cap * 1000;
+          const sharesEl = $('baseShares');
+          if(sharesEl) sharesEl.value = _fmtNumInput(BASE.shares);
+        }
+      }
+
+      // اگه نماد خالی، از اسم فایل
+      if(!BASE.symbol){
+        BASE.symbol = file.name.replace(/\.[^.]+$/, '');
+        const symEl = $('baseSymbol');
+        if(symEl) symEl.value = BASE.symbol;
+      }
+
+      // نمایش فایل
+      const info = $('baseFileInfo');
+      const nameEl = $('baseFileName');
+      if(info && nameEl){
+        nameEl.textContent = file.name;
+        info.classList.add('active');
+      }
+
+      updateCompareButton();
+    }catch(e){
+      if(errBox){
+        errBox.style.display = 'block';
+        errBox.textContent = 'خطا در فایل سهم اصلی: ' + (e.message || e);
+      }
+    }
+  }
+
+  function detectPeriod(lines){
+    // استفاده از تابع app.js اگه موجود بود
+    if(window.KodalHelpers && window.KodalHelpers.detectPeriodFromLines){
+      try{
+        return window.KodalHelpers.detectPeriodFromLines(lines);
+      }catch(e){}
+    }
+    // fallback ساده
+    return { label: null, year: null, months: null };
+  }
+
+  /* ============================================================
+     ۲. هم‌گروهی‌ها — لیست داینامیک
+  ============================================================ */
+  function renderPeers(){
+    const box = $('peersList');
+    if(!box) return;
+
+    if(!PEERS.length){
+      box.innerHTML = `
+        <div class="saved-empty" style="padding:20px;text-align:center;color:var(--sub);font-size:13px;border:2px dashed var(--line);border-radius:12px">
+          هنوز سهم هم‌گروهی اضافه نکردی.<br>
+          روی «➕ افزودن سهم هم‌گروهی» بزن یا فایل‌ها رو بکش و بذار اینجا.
+        </div>
+      `;
+      updateCompareButton();
       return;
     }
-    wrap.style.display = 'block';
 
-    list.innerHTML = CMP_FILES.map((item, i) => {
-      const fileName = item.file ? item.file.name : (item._fromSaved ? '(ذخیره‌شده)' : '—');
-      const symbolVal = (item.symbol || '').replace(/"/g,'&quot;');
-      const priceVal = item.price ? _fmtNumInput(item.price) : '';
-      const sharesVal = item.shares ? _fmtNumInput(item.shares) : '';
-      const errorBadge = item.error
-        ? `<span style="color:var(--bad);font-size:12px;flex-basis:100%">⚠️ ${item.error}</span>`
+    box.innerHTML = PEERS.map((peer, i) => {
+      const fileName = peer.file ? peer.file.name : '—';
+      const symbolVal = (peer.symbol || '').replace(/"/g, '&quot;');
+      const priceVal = peer.price ? _fmtNumInput(peer.price) : '';
+      const sharesVal = peer.shares ? _fmtNumInput(peer.shares) : '';
+      const errorBadge = peer.error
+        ? `<span style="color:var(--bad);font-size:12px;flex-basis:100%">⚠️ ${peer.error}</span>`
         : '';
       return `
-        <div class="cmp-item">
-          <span class="color-dot" style="background:${item.color}"></span>
+        <div class="peer-item">
+          <span class="color-dot" style="background:${peer.color}"></span>
 
           <label class="field-label">
             نماد
             <input class="symbol-input" type="text"
                    value="${symbolVal}"
-                   placeholder="مثلاً: فولاد"
-                   oninput="window.cmpUpdateSymbol(${i}, this.value)">
+                   placeholder="نماد"
+                   oninput="window.indUpdatePeerSymbol(${i}, this.value)">
           </label>
 
           <label class="field-label">
             قیمت (ریال)
             <input class="price-input" type="text" inputmode="numeric"
                    value="${priceVal}"
-                   placeholder="مثلاً: ۵,۲۰۰"
-                   oninput="window.cmpUpdatePrice(${i}, this.value)">
+                   placeholder="اختیاری"
+                   oninput="window.indUpdatePeerPrice(${i}, this.value)">
           </label>
 
           <label class="field-label">
             تعداد سهام
             <input class="shares-input" type="text" inputmode="numeric"
                    value="${sharesVal}"
-                   placeholder="مثلاً: ۵,۰۰۰,۰۰۰,۰۰۰"
-                   oninput="window.cmpUpdateShares(${i}, this.value)">
+                   placeholder="اختیاری"
+                   oninput="window.indUpdatePeerShares(${i}, this.value)">
           </label>
 
-          <button class="remove-btn" onclick="window.cmpRemoveFile(${i})">✕ حذف</button>
+          <button class="remove-btn" onclick="window.indRemovePeer(${i})">✕</button>
 
           <span class="file-info">📄 ${fileName}</span>
           ${errorBadge}
@@ -121,30 +322,19 @@
       `;
     }).join('');
 
-    updateGoButton();
+    updateCompareButton();
   }
 
-  function updateGoButton(){
-    const btn = $('cmpGo');
-    if(!btn) return;
-    const valid = CMP_FILES.filter(x => x.parsed).length;
-    btn.disabled = valid < 2 || valid > 4;
-    const saveBtn = $('cmpSaveBtn');
-    if(saveBtn && !CMP_RESULTS){
-      saveBtn.style.display = 'none';
-    }
-  }
-
-  window.cmpUpdateSymbol = function(idx, value){
-    if(!CMP_FILES[idx]) return;
-    CMP_FILES[idx].symbol = String(value || '').trim();
+  window.indUpdatePeerSymbol = function(idx, value){
+    if(!PEERS[idx]) return;
+    PEERS[idx].symbol = String(value || '').trim();
   };
 
-  window.cmpUpdatePrice = function(idx, value){
-    if(!CMP_FILES[idx]) return;
+  window.indUpdatePeerPrice = function(idx, value){
+    if(!PEERS[idx]) return;
     const num = H.toNum(value);
-    CMP_FILES[idx].price = num;
-    const inputs = document.querySelectorAll('.cmp-item .price-input');
+    PEERS[idx].price = num;
+    const inputs = document.querySelectorAll('.peer-item .price-input');
     if(inputs[idx]){
       const caretEnd = inputs[idx].selectionStart === inputs[idx].value.length;
       inputs[idx].value = num ? _fmtNumInput(num) : '';
@@ -154,11 +344,11 @@
     }
   };
 
-  window.cmpUpdateShares = function(idx, value){
-    if(!CMP_FILES[idx]) return;
+  window.indUpdatePeerShares = function(idx, value){
+    if(!PEERS[idx]) return;
     const num = H.toNum(value);
-    CMP_FILES[idx].shares = num;
-    const inputs = document.querySelectorAll('.cmp-item .shares-input');
+    PEERS[idx].shares = num;
+    const inputs = document.querySelectorAll('.peer-item .shares-input');
     if(inputs[idx]){
       const caretEnd = inputs[idx].selectionStart === inputs[idx].value.length;
       inputs[idx].value = num ? _fmtNumInput(num) : '';
@@ -168,42 +358,47 @@
     }
   };
 
-  window.cmpRemoveFile = function(idx){
-    CMP_FILES.splice(idx, 1);
-    CMP_FILES.forEach((item, i) => {
-      item.color = COMPANY_COLORS[i % COMPANY_COLORS.length];
+  window.indRemovePeer = function(idx){
+    PEERS.splice(idx, 1);
+    PEERS.forEach((p, i) => {
+      p.color = PEER_COLORS[i % PEER_COLORS.length];
     });
-    renderCmpList();
+    renderPeers();
   };
 
-  /* ============================================================
-     ۲. اضافه کردن فایل‌ها
-  ============================================================ */
-  async function addFiles(fileList){
+  async function addPeerFiles(fileList){
     if(!fileList || !fileList.length) return;
 
-    const errBox = $('cmpErr');
+    const errBox = $('industryErr');
     if(errBox) errBox.style.display = 'none';
 
-    const remaining = 4 - CMP_FILES.length;
+    const remaining = MAX_PEERS - PEERS.length;
     const files = Array.from(fileList).slice(0, remaining);
 
+    if(!files.length){
+      if(errBox){
+        errBox.style.display = 'block';
+        errBox.textContent = `حداکثر ${H.toFa(MAX_PEERS)} سهم هم‌گروهی مجازه.`;
+      }
+      return;
+    }
+
     for(const f of files){
-      const idx = CMP_FILES.length;
-      const color = COMPANY_COLORS[idx % COMPANY_COLORS.length];
+      const idx = PEERS.length;
+      const color = PEER_COLORS[idx % PEER_COLORS.length];
       const defaultSymbol = f.name.replace(/\.[^.]+$/, '');
 
-      const item = {
+      const peer = {
         file: f,
         symbol: defaultSymbol,
         price: null,
         shares: null,
-        color: color,
+        color,
         parsed: null,
         error: null,
       };
-      CMP_FILES.push(item);
-      renderCmpList();
+      PEERS.push(peer);
+      renderPeers();
 
       try{
         const lines = await H.getLines(f);
@@ -213,81 +408,84 @@
         if(!found) throw new Error('قلمی شناسایی نشد');
         const maxPer = Math.max(...Object.values(parsed).map(a => a.length));
         parsed._periods = Math.min(Math.max(maxPer, 1), 5);
-        CMP_FILES[idx].parsed = parsed;
+        PEERS[idx].parsed = parsed;
 
-        if(!CMP_FILES[idx].shares){
-          const capital = parsed.capital?.[0];
-          if(capital != null && capital > 0){
-            CMP_FILES[idx].shares = capital * 1000;
+        if(!PEERS[idx].shares){
+          const cap = parsed.capital?.[0];
+          if(cap != null && cap > 0){
+            PEERS[idx].shares = cap * 1000;
           }
         }
       }catch(e){
-        CMP_FILES[idx].error = e.message || 'خطا در پارس';
+        PEERS[idx].error = e.message || 'خطا در پارس';
       }
-      renderCmpList();
+      renderPeers();
     }
 
     if(fileList.length > remaining && errBox){
       errBox.style.display = 'block';
-      errBox.textContent = `حداکثر ۴ فایل مجازه. ${fileList.length - remaining} فایل نادیده گرفته شد.`;
+      errBox.textContent = `حداکثر ${H.toFa(MAX_PEERS)} سهم هم‌گروهی مجازه. ${H.toFa(fileList.length - remaining)} فایل نادیده گرفته شد.`;
     }
   }
 
-  /* ============================================================
-     ۳. دکمه‌ها
-  ============================================================ */
-  if($('cmpFiles')) $('cmpFiles').onchange = (e) => {
-    addFiles(e.target.files);
-    e.target.value = '';
-  };
-  if($('cmpAddBtn')) $('cmpAddBtn').onclick = () => $('cmpFiles').click();
+  function createPeerInputRow(){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xls,.xlsx,.csv,.html,.htm,.txt';
+    input.multiple = true;
+    return input;
+  }
 
-  if($('cmpDrop')){
-    ['dragover','dragenter'].forEach(ev => {
-      $('cmpDrop').addEventListener(ev, e => {
+  function bindPeersInputs(){
+    const addBtn = $('addPeerBtn');
+    if(addBtn){
+      addBtn.onclick = () => {
+        const input = createPeerInputRow();
+        input.onchange = (e) => {
+          addPeerFiles(e.target.files);
+          e.target.value = '';
+        };
+        input.click();
+      };
+    }
+
+    const clearBtn = $('clearPeersBtn');
+    if(clearBtn){
+      clearBtn.onclick = () => {
+        if(!PEERS.length) return;
+        if(!confirm('همه سهم‌های هم‌گروهی پاک شن؟')) return;
+        PEERS = [];
+        renderPeers();
+      };
+    }
+  }
+
+  /* ---------- drag & drop روی لیست هم‌گروهی‌ها ---------- */
+  function bindPeersDrop(){
+    const box = $('peersList');
+    if(!box) return;
+
+    ['dragover', 'dragenter'].forEach(ev => {
+      box.addEventListener(ev, e => {
         e.preventDefault();
-        $('cmpDrop').classList.add('hover');
+        box.classList.add('hover');
       });
     });
-    ['dragleave','drop'].forEach(ev => {
-      $('cmpDrop').addEventListener(ev, e => {
+    ['dragleave', 'drop'].forEach(ev => {
+      box.addEventListener(ev, e => {
         e.preventDefault();
-        $('cmpDrop').classList.remove('hover');
+        box.classList.remove('hover');
       });
     });
-    $('cmpDrop').addEventListener('drop', e => {
-      addFiles(e.dataTransfer.files);
+    box.addEventListener('drop', (e) => {
+      addPeerFiles(e.dataTransfer.files);
     });
   }
 
-  if($('cmpClearBtn')) $('cmpClearBtn').onclick = () => {
-    if(!CMP_FILES.length) return;
-    if(!confirm('همه فایل‌ها پاک شن؟')) return;
-    CMP_FILES = [];
-    CMP_RESULTS = null;
-    renderCmpList();
-    const out = $('cmpOut');
-    if(out) out.style.display = 'none';
-  };
-
-  if($('cmpGo')) $('cmpGo').onclick = () => {
-    try{
-      runCompare();
-    }catch(e){
-      console.error(e);
-      const errBox = $('cmpErr');
-      if(errBox){
-        errBox.style.display = 'block';
-        errBox.textContent = 'خطا: ' + e.message;
-      }
-    }
-  };
-
   /* ============================================================
-     ۴. اجرای مقایسه
+     ۳. محاسبه و مقایسه
   ============================================================ */
-  function extractCurrentValues(item){
-    const parsed = item.parsed;
+  function extractValues(parsed, price, shares){
     const ci = 0;
     const val = k => parsed?.[k]?.[ci] ?? null;
 
@@ -341,7 +539,7 @@
       cfoToRevenue: H.ratio(v.cfo, v.revenue),
     };
 
-    /* ---------- Altman Z-Score ---------- */
+    // Altman Z-Score
     const taZ = v.ta;
     let zscore = null;
     if(taZ != null && taZ !== 0){
@@ -354,11 +552,8 @@
       zscore = 1.2*x1 + 1.4*x2 + 3.3*x3 + 0.6*x4 + 1.0*x5;
     }
 
-    /* ---------- ارزش‌گذاری ---------- */
+    // ارزش‌گذاری
     const MILLION = 1_000_000;
-    const price = item.price;
-    const shares = item.shares;
-
     const netRial = (v.net != null) ? v.net * MILLION : null;
     const eqRial = (v.eq != null) ? v.eq * MILLION : null;
     const revRial = (v.revenue != null) ? v.revenue * MILLION : null;
@@ -389,7 +584,14 @@
     };
   }
 
-  function runCompare(){
+  function updateCompareButton(){
+    const btn = $('compareIndustryGo');
+    if(!btn) return;
+    const valid = BASE.parsed && PEERS.filter(p => p.parsed).length >= 2;
+    btn.disabled = !valid;
+  }
+
+  function runIndustryCompare(){
     // 🔐 چک لایسنس
     if(window.License){
       const status = window.License.getStatus();
@@ -407,104 +609,248 @@
       window.License.updateIndicator();
     }
 
-    const valid = CMP_FILES.filter(x => x.parsed);
-    if(valid.length < 2){
-      throw new Error('حداقل ۲ فایل سالم لازمه.');
+    if(!BASE.parsed){
+      const errBox = $('industryErr');
+      if(errBox){ errBox.style.display = 'block'; errBox.textContent = 'اول فایل سهم اصلی رو بارگذاری کن.'; }
+      return;
     }
 
-    CMP_RESULTS = valid.map(item => {
-      const data = extractCurrentValues(item);
+    const validPeers = PEERS.filter(p => p.parsed);
+    if(validPeers.length < 2){
+      const errBox = $('industryErr');
+      if(errBox){ errBox.style.display = 'block'; errBox.textContent = 'حداقل ۲ سهم هم‌گروهی سالم لازمه.'; }
+      return;
+    }
+
+    // سهم اصلی
+    const baseData = extractValues(BASE.parsed, BASE.price, BASE.shares);
+    const base = {
+      symbol: BASE.symbol || 'سهم اصلی',
+      industry: BASE.industry || '',
+      color: BASE_COLOR,
+      isBase: true,
+      parsed: BASE.parsed,
+      price: BASE.price,
+      shares: BASE.shares,
+      ...baseData,
+    };
+
+    // هم‌گروهی‌ها
+    const peers = validPeers.map(p => {
+      const data = extractValues(p.parsed, p.price, p.shares);
       return {
-        symbol: item.symbol || item.file?.name || '—',
-        color: item.color,
-        parsed: item.parsed,
-        price: item.price,
-        shares: item.shares,
+        symbol: p.symbol || '—',
+        color: p.color,
+        isBase: false,
+        parsed: p.parsed,
+        price: p.price,
+        shares: p.shares,
         ...data,
       };
     });
 
-    renderCompareOutput();
-    const out = $('cmpOut');
+    INDUSTRY_RESULTS = { base, peers };
+    renderIndustryOutput();
+    const out = $('industryOut');
     if(out) out.style.display = 'block';
-    const saveBtn = $('cmpSaveBtn');
+    const saveBtn = $('saveIndustryBtn');
     if(saveBtn){
       saveBtn.style.display = 'inline-block';
       saveBtn.disabled = false;
     }
-    window.scrollTo({top: $('cmpOut').offsetTop - 20, behavior: 'smooth'});
+    window.scrollTo({ top: $('industryOut').offsetTop - 20, behavior: 'smooth' });
   }
 
   /* ============================================================
-     ۵. رندر خروجی
+     ۴. رندر خروجی
   ============================================================ */
-  function renderCompareOutput(){
-    try{ renderCmpScores(); }catch(e){ console.error('renderCmpScores:', e); }
-    try{ renderCmpZScore(); }catch(e){ console.error('renderCmpZScore:', e); }
-    try{ renderCmpKeyNumbers(); }catch(e){ console.error('renderCmpKeyNumbers:', e); }
-    try{ renderCmpRatios('liq'); }catch(e){ console.error('renderCmpRatios:', e); }
-    try{ renderCmpBar(); }catch(e){ console.error('renderCmpBar:', e); }
-    try{ renderCmpRadar(); }catch(e){ console.error('renderCmpRadar:', e); }
-    try{ renderCmpRanking(); }catch(e){ console.error('renderCmpRanking:', e); }
-    bindRatioTabs();
+  function renderIndustryOutput(){
+    try{ renderBasePosition(); }catch(e){ console.error('renderBasePosition:', e); }
+    try{ renderIndustryScores(); }catch(e){ console.error('renderIndustryScores:', e); }
+    try{ renderIndustryZScore(); }catch(e){ console.error('renderIndustryZScore:', e); }
+    try{ renderIndustryMainTable(); }catch(e){ console.error('renderIndustryMainTable:', e); }
+    try{ renderIndustryBar(); }catch(e){ console.error('renderIndustryBar:', e); }
+    try{ renderIndustryRadar(); }catch(e){ console.error('renderIndustryRadar:', e); }
+    try{ renderIndustryRanking(); }catch(e){ console.error('renderIndustryRanking:', e); }
   }
 
-  function bindRatioTabs(){
-    document.querySelectorAll('#tabCompare .tab').forEach(t => {
-      t.onclick = () => {
-        document.querySelectorAll('#tabCompare .tab').forEach(x => x.classList.remove('active'));
-        t.classList.add('active');
-        renderCmpRatios(t.dataset.ct);
-      };
+  /* ---------- ۴-۱. جایگاه سهم اصلی ---------- */
+  function renderBasePosition(){
+    const box = $('basePositionSummary');
+    if(!box) return;
+
+    const { base, peers } = INDUSTRY_RESULTS;
+
+    // معیارهای اصلی برای محاسبه جایگاه
+    const criteria = [
+      { key: 'netMargin', getter: r => r.r.netMargin, dir: 'higher', label: 'حاشیه سود خالص', fmt: 'pct' },
+      { key: 'roe', getter: r => r.r.roe, dir: 'higher', label: 'ROE', fmt: 'pct' },
+      { key: 'currentRatio', getter: r => r.r.currentRatio, dir: 'higher', label: 'نسبت جاری', fmt: 'num' },
+      { key: 'debtToEquity', getter: r => r.r.debtToEquity, dir: 'lower', label: 'بدهی به حقوق', fmt: 'num' },
+      { key: 'cfoToNet', getter: r => r.r.cfoToNet, dir: 'higher', label: 'کیفیت سود', fmt: 'num' },
+      { key: 'score', getter: r => r.score, dir: 'higher', label: 'امتیاز کلی', fmt: 'num' },
+    ];
+
+    const all = [base, ...peers];
+
+    // امتیازدهی
+    const scores = all.map(() => 0);
+    criteria.forEach(c => {
+      const vals = all.map(r => _cmpVal(c.getter(r)));
+      const valid = vals.map((v, i) => ({ v, i })).filter(x => x.v != null);
+      if(valid.length < 2) return;
+
+      valid.sort((a, b) => c.dir === 'higher' ? b.v - a.v : a.v - b.v);
+
+      let idx = 0;
+      while(idx < valid.length){
+        let j = idx;
+        while(j < valid.length && valid[j].v === valid[idx].v) j++;
+        if(j - idx === 1){
+          scores[valid[idx].i] += valid.length - 1 - idx;
+        }
+        idx = j;
+      }
     });
-  }
 
-  /* ---------- ۵-۱. امتیاز سلامت ---------- */
-  function renderCmpScores(){
-    const box = $('cmpScores');
-    if(!box) return;
+    // رتبه سهم اصلی
+    const baseScore = scores[0];
+    const sortedScores = [...scores].sort((a, b) => b - a);
+    const baseRank = sortedScores.indexOf(baseScore) + 1;
+    const total = all.length;
+    const betterThan = scores.filter(s => s < baseScore).length;
+    const worseThan = scores.filter(s => s > baseScore).length;
+    const totalPossible = criteria.length * (total - 1);
 
-    const scores = CMP_RESULTS.map(r => r.score).filter(s => s != null);
-    const maxScore = scores.length ? Math.max(...scores) : null;
+    const rankPercent = baseRank === 1 ? '🥇' : baseRank === 2 ? '🥈' : baseRank === 3 ? '🥉' : '🎖️';
+    const posClass = baseRank <= total / 2 ? 'good' : 'bad';
+    const posColor = posClass === 'good' ? 'var(--good)' : 'var(--bad)';
+    const posLabel = baseRank <= total / 2 ? 'بهتر از میانگین صنعت' : 'ضعیف‌تر از میانگین صنعت';
 
-    box.innerHTML = CMP_RESULTS.map(r => {
-      const lvl = H.scoreLevel(r.score);
-      const isWinner = r.score != null && r.score === maxScore;
-      return `
-        <div class="cmp-score-card" style="border-top-color:${r.color}">
-          <div class="symbol">
-            <span class="color-dot" style="background:${r.color}"></span>
-            ${r.symbol}
-            ${isWinner ? '<span class="crown">🏆</span>' : ''}
-          </div>
-          <div class="num" style="color:${lvl.color}">${r.score == null ? '—' : H.toFa(r.score)}</div>
-          <div class="lvl" style="color:${lvl.color}">${lvl.label}</div>
+    // محاسبه درصد
+    const betterPct = total > 1 ? (betterThan / (total - 1)) * 100 : 0;
+    const worsePct = total > 1 ? (worseThan / (total - 1)) * 100 : 0;
+
+    let html = `
+      <div class="base-position-grid">
+        <div class="bp-card bp-base">
+          <div class="bp-label">🎯 سهم اصلی</div>
+          <div class="bp-value" style="color:${BASE_COLOR}">${base.symbol}</div>
+          ${base.industry ? `<div class="bp-sub">صنعت: ${base.industry}</div>` : ''}
         </div>
-      `;
-    }).join('');
+
+        <div class="bp-card bp-rank">
+          <div class="bp-label">🏆 رتبه در صنعت</div>
+          <div class="bp-value" style="color:${posColor}">
+            ${rankPercent} ${H.toFa(baseRank)} از ${H.toFa(total)}
+          </div>
+          <div class="bp-sub" style="color:${posColor}">${posLabel}</div>
+        </div>
+
+        <div class="bp-card bp-better">
+          <div class="bp-label">✅ بهتر از</div>
+          <div class="bp-value" style="color:var(--good)">${H.toFa(betterThan)} سهم</div>
+          <div class="bp-sub">${H.toFa(betterPct.toFixed(0))}٪ از هم‌گروهی‌ها</div>
+        </div>
+
+        <div class="bp-card bp-worse">
+          <div class="bp-label">❌ ضعیف‌تر از</div>
+          <div class="bp-value" style="color:var(--bad)">${H.toFa(worseThan)} سهم</div>
+          <div class="bp-sub">${H.toFa(worsePct.toFixed(0))}٪ از هم‌گروهی‌ها</div>
+        </div>
+
+        <div class="bp-card bp-score">
+          <div class="bp-label">📊 امتیاز کل</div>
+          <div class="bp-value">${H.toFa(baseScore)}</div>
+          <div class="bp-sub">از ${H.toFa(totalPossible)} امتیاز ممکن</div>
+        </div>
+      </div>
+    `;
+
+    box.innerHTML = html;
   }
 
-  /* ---------- ۵-۲. Altman Z-Score ---------- */
-  function renderCmpZScore(){
-    const box = $('cmpZScore');
+  /* ---------- ۴-۲. امتیاز سلامت ---------- */
+  function renderIndustryScores(){
+    const box = $('industryScores');
     if(!box) return;
 
-    const validZ = CMP_RESULTS
-      .map(r => r.zscore)
-      .filter(z => z != null && isFinite(z));
-    const maxZ = validZ.length ? Math.max(...validZ) : null;
-    const minZ = validZ.length ? Math.min(...validZ) : null;
-    const allEqual = (maxZ === minZ);
+    const { base, peers } = INDUSTRY_RESULTS;
+    const all = [base, ...peers];
 
-    box.innerHTML = CMP_RESULTS.map(r => {
+    const baseScore = base.score;
+    const peerScores = peers.map(p => p.score).filter(s => s != null);
+    const avgScore = avg(peerScores);
+    const bestScore = best(peerScores, 'higher');
+    const worstScore = worst(peerScores, 'higher');
+
+    const baseLvl = H.scoreLevel(baseScore);
+
+    // رتبه سهم اصلی
+    const allScores = all.map(x => x.score).filter(s => s != null);
+    const sortedScores = [...allScores].sort((a, b) => b - a);
+    const rank = baseScore != null ? sortedScores.indexOf(baseScore) + 1 : null;
+
+    let html = `
+      <div class="cmp-score-card" style="border-top-color:${BASE_COLOR}">
+        <div class="symbol">
+          <span class="color-dot" style="background:${BASE_COLOR}"></span>
+          🎯 ${base.symbol}
+        </div>
+        <div class="num" style="color:${baseLvl.color}">${baseScore == null ? '—' : H.toFa(baseScore)}</div>
+        <div class="lvl" style="color:${baseLvl.color}">${baseLvl.label}</div>
+        ${rank ? `<div class="lvl" style="color:var(--sub);font-size:11.5px;margin-top:6px">رتبه ${H.toFa(rank)} از ${H.toFa(allScores.length)}</div>` : ''}
+      </div>
+
+      <div class="cmp-score-card" style="border-top-color:#94a3b8">
+        <div class="symbol">
+          <span class="color-dot" style="background:#94a3b8"></span>
+          📊 میانگین صنعت
+        </div>
+        <div class="num" style="color:#94a3b8">${avgScore == null ? '—' : H.toFa(Math.round(avgScore))}</div>
+        <div class="lvl" style="color:#94a3b8">${H.toFa(peers.length)} سهم هم‌گروهی</div>
+      </div>
+
+      <div class="cmp-score-card" style="border-top-color:#16834a">
+        <div class="symbol">
+          <span class="color-dot" style="background:#16834a"></span>
+          🥇 بهترین صنعت
+        </div>
+        <div class="num" style="color:#16834a">${bestScore == null ? '—' : H.toFa(bestScore)}</div>
+        <div class="lvl" style="color:#16834a">بالاترین امتیاز</div>
+      </div>
+
+      <div class="cmp-score-card" style="border-top-color:#c62828">
+        <div class="symbol">
+          <span class="color-dot" style="background:#c62828"></span>
+          📉 بدترین صنعت
+        </div>
+        <div class="num" style="color:#c62828">${worstScore == null ? '—' : H.toFa(worstScore)}</div>
+        <div class="lvl" style="color:#c62828">پایین‌ترین امتیاز</div>
+      </div>
+    `;
+
+    box.innerHTML = html;
+  }
+
+  /* ---------- ۴-۳. Altman Z-Score ---------- */
+  function renderIndustryZScore(){
+    const box = $('industryZScore');
+    if(!box) return;
+
+    const { base, peers } = INDUSTRY_RESULTS;
+    const all = [base, ...peers];
+
+    function zCard(r, isBase){
       const z = r.zscore;
+      const color = isBase ? BASE_COLOR : r.color;
 
       if(z == null || !isFinite(z)){
         return `
-          <div class="cmp-zscore-card" style="border-top-color:${r.color}">
+          <div class="cmp-zscore-card" style="border-top-color:${color}">
             <div class="symbol">
-              <span class="color-dot" style="background:${r.color}"></span>
-              ${r.symbol}
+              <span class="color-dot" style="background:${color}"></span>
+              ${isBase ? '🎯 ' : ''}${r.symbol}
             </div>
             <div class="num" style="color:var(--sub)">—</div>
             <div class="zone" style="color:var(--sub)">اطلاعات کافی نیست</div>
@@ -512,80 +858,173 @@
         `;
       }
 
-      let zone, color;
-      if(z > 2.99){
-        zone = '🟢 منطقه امن';
-        color = '#16834a';
-      } else if(z >= 1.81){
-        zone = '🟡 منطقه خاکستری';
-        color = '#eab308';
-      } else {
-        zone = '🔴 منطقه خطر';
-        color = '#c62828';
-      }
+      let zone, zoneColor;
+      if(z > 2.99){ zone = '🟢 منطقه امن'; zoneColor = '#16834a'; }
+      else if(z >= 1.81){ zone = '🟡 منطقه خاکستری'; zoneColor = '#eab308'; }
+      else { zone = '🔴 منطقه خطر'; zoneColor = '#c62828'; }
 
       const pos = Math.max(0, Math.min(100, (z / 4) * 100));
-      const isWinner = !allEqual && maxZ != null && _cmpVal(z) === _cmpVal(maxZ);
 
       return `
-        <div class="cmp-zscore-card" style="border-top-color:${r.color}">
+        <div class="cmp-zscore-card" style="border-top-color:${color}">
           <div class="symbol">
-            <span class="color-dot" style="background:${r.color}"></span>
-            ${r.symbol}
-            ${isWinner ? '🏆' : ''}
+            <span class="color-dot" style="background:${color}"></span>
+            ${isBase ? '🎯 ' : ''}${r.symbol}
           </div>
-          <div class="num" style="color:${color}">${H.num2(z)}</div>
-          <div class="zone" style="color:${color}">${zone}</div>
-          <div class="bar">
-            <div class="marker" style="left:${pos}%"></div>
-          </div>
+          <div class="num" style="color:${zoneColor}">${H.num2(z)}</div>
+          <div class="zone" style="color:${zoneColor}">${zone}</div>
+          <div class="bar"><div class="marker" style="left:${pos}%"></div></div>
         </div>
       `;
-    }).join('');
+    }
+
+    // سهم اصلی + میانگین صنعت
+    const peerZ = peers.map(p => p.zscore).filter(z => z != null && isFinite(z));
+    const avgZ = avg(peerZ);
+
+    let html = zCard(base, true);
+
+    if(avgZ != null){
+      const zoneAvg = avgZ > 2.99 ? '🟢 منطقه امن' : avgZ >= 1.81 ? '🟡 منطقه خاکستری' : '🔴 منطقه خطر';
+      const zoneAvgColor = avgZ > 2.99 ? '#16834a' : avgZ >= 1.81 ? '#eab308' : '#c62828';
+      const posAvg = Math.max(0, Math.min(100, (avgZ / 4) * 100));
+      html += `
+        <div class="cmp-zscore-card" style="border-top-color:#94a3b8">
+          <div class="symbol">
+            <span class="color-dot" style="background:#94a3b8"></span>
+            📊 میانگین صنعت
+          </div>
+          <div class="num" style="color:${zoneAvgColor}">${H.num2(avgZ)}</div>
+          <div class="zone" style="color:${zoneAvgColor}">${zoneAvg}</div>
+          <div class="bar"><div class="marker" style="left:${posAvg}%"></div></div>
+        </div>
+      `;
+    }
+
+    // بهترین و بدترین
+    const bestZ = best(peerZ, 'higher');
+    const worstZ = worst(peerZ, 'higher');
+    if(bestZ != null){
+      const zBest = bestZ > 2.99 ? '#16834a' : bestZ >= 1.81 ? '#eab308' : '#c62828';
+      html += `
+        <div class="cmp-zscore-card" style="border-top-color:#16834a">
+          <div class="symbol">
+            <span class="color-dot" style="background:#16834a"></span>
+            🥇 بهترین صنعت
+          </div>
+          <div class="num" style="color:${zBest}">${H.num2(bestZ)}</div>
+          <div class="zone" style="color:${zBest}">بالاترین Z</div>
+        </div>
+      `;
+    }
+    if(worstZ != null && worstZ !== bestZ){
+      const zWorst = worstZ > 2.99 ? '#16834a' : worstZ >= 1.81 ? '#eab308' : '#c62828';
+      html += `
+        <div class="cmp-zscore-card" style="border-top-color:#c62828">
+          <div class="symbol">
+            <span class="color-dot" style="background:#c62828"></span>
+            📉 بدترین صنعت
+          </div>
+          <div class="num" style="color:${zWorst}">${H.num2(worstZ)}</div>
+          <div class="zone" style="color:${zWorst}">پایین‌ترین Z</div>
+        </div>
+      `;
+    }
+
+    box.innerHTML = html;
   }
 
-  /* ---------- ۵-۳. اعداد کلیدی ---------- */
-  function renderCmpKeyNumbers(){
-    const box = $('cmpKeyNumbers');
+  /* ---------- ۴-۴. جدول اصلی: سهم اصلی vs صنعت ---------- */
+  // ۱۲ نسبت اصلی طبق تصمیم کاربر
+  const MAIN_RATIOS = [
+    // سودآوری
+    { key: 'grossMargin',   label: 'حاشیه سود ناخالص',   getter: r => r.r.grossMargin,   dir: 'higher', fmt: 'pct' },
+    { key: 'opMargin',      label: 'حاشیه سود عملیاتی',  getter: r => r.r.opMargin,      dir: 'higher', fmt: 'pct' },
+    { key: 'netMargin',     label: 'حاشیه سود خالص',     getter: r => r.r.netMargin,     dir: 'higher', fmt: 'pct' },
+    { key: 'roa',           label: 'ROA',                 getter: r => r.r.roa,           dir: 'higher', fmt: 'pct' },
+    { key: 'roe',           label: 'ROE',                 getter: r => r.r.roe,           dir: 'higher', fmt: 'pct' },
+    // نقدینگی و اهرم
+    { key: 'currentRatio',  label: 'نسبت جاری',           getter: r => r.r.currentRatio,  dir: 'higher', fmt: 'num' },
+    { key: 'quickRatio',    label: 'نسبت آنی',            getter: r => r.r.quickRatio,    dir: 'higher', fmt: 'num' },
+    { key: 'debtToAsset',   label: 'بدهی به دارایی',      getter: r => r.r.debtToAsset,   dir: 'lower',  fmt: 'pct' },
+    { key: 'debtToEquity',  label: 'بدهی به حقوق',        getter: r => r.r.debtToEquity,  dir: 'lower',  fmt: 'num' },
+    // کارایی
+    { key: 'assetTurnover', label: 'گردش دارایی',         getter: r => r.r.assetTurnover, dir: 'higher', fmt: 'num' },
+    { key: 'dso',           label: 'دوره وصول مطالبات',   getter: r => r.r.dso,           dir: 'lower',  fmt: 'day' },
+    // کیفیت سود
+    { key: 'cfoToNet',      label: 'کیفیت سود (CFO/Net)', getter: r => r.r.cfoToNet,      dir: 'higher', fmt: 'num' },
+  ];
+
+  function formatRatioValue(raw, fmt){
+    if(raw == null) return '—';
+    switch(fmt){
+      case 'pct': return H.pct(raw);
+      case 'num': return H.num2(raw);
+      case 'day': return H.toFa(raw.toFixed(0)) + ' روز';
+      default: return String(raw);
+    }
+  }
+
+  function renderIndustryMainTable(){
+    const box = $('industryMainTable');
     if(!box) return;
 
-    const rows = [
-      ['درآمد عملیاتی', r => r.v.revenue, 'money'],
-      ['سود ناخالص', r => r.v.gross, 'money'],
-      ['سود عملیاتی', r => r.v.opProfit, 'money'],
-      ['سود خالص', r => r.v.net, 'money'],
-      ['جمع دارایی‌ها', r => r.v.ta, 'money'],
-      ['جمع بدهی‌ها', r => r.v.tl, 'money'],
-      ['حقوق مالکانه', r => r.v.eq, 'money'],
-      ['جریان نقد عملیاتی', r => r.v.cfo, 'money'],
-      ['رشد درآمد', r => r.revGrowth, 'pct'],
-    ];
+    const { base, peers } = INDUSTRY_RESULTS;
+    const all = [base, ...peers];
 
-    let html = '<table class="cmp-table"><thead><tr><th>معیار</th>';
-    CMP_RESULTS.forEach(r => {
-      html += `<th style="color:${r.color}">${r.symbol}</th>`;
-    });
+    // محاسبه جایگاه سهم اصلی برای هر نسبت
+    let html = '<table class="cmp-table industry-table"><thead><tr>';
+    html += '<th>نسبت</th>';
+    html += `<th style="color:${BASE_COLOR}">🎯 ${base.symbol}</th>`;
+    html += '<th style="color:#94a3b8">📊 میانگین صنعت</th>';
+    html += '<th style="color:#16834a">🥇 بهترین</th>';
+    html += '<th style="color:#c62828">📉 بدترین</th>';
+    html += '<th>جایگاه سهم اصلی</th>';
     html += '</tr></thead><tbody>';
 
-    rows.forEach(([label, getter, fmt]) => {
-      const rawValues = CMP_RESULTS.map(r => getter(r));
-      const cmpValues = rawValues.map(v => _cmpVal(v));
-      const validCmp = cmpValues.filter(v => v != null);
-      const maxCmp = validCmp.length ? Math.max(...validCmp) : null;
-      const minCmp = validCmp.length ? Math.min(...validCmp) : null;
-      const allEqual = (maxCmp === minCmp);
+    MAIN_RATIOS.forEach(ratio => {
+      const baseVal = _cmpVal(ratio.getter(base));
+      const peerVals = peers.map(p => _cmpVal(ratio.getter(p))).filter(v => v != null);
 
-      html += `<tr><td>${label}</td>`;
-      rawValues.forEach((rawV, i) => {
-        const cv = cmpValues[i];
-        let cellClass = '';
-        if(cv != null && validCmp.length >= 2 && !allEqual){
-          if(cv === maxCmp) cellClass = 'best-cell';
-          else if(cv === minCmp) cellClass = 'worst-cell';
-        }
-        const display = fmt === 'money' ? H.toman(rawV) : H.pct(rawV);
-        html += `<td class="${cellClass}">${display}</td>`;
-      });
+      const avgVal = avg(peerVals);
+      const bestVal = best(peerVals, ratio.dir);
+      const worstVal = worst(peerVals, ratio.dir);
+
+      // محاسبه رتبه
+      let rank = null, totalWithBase = null;
+      if(baseVal != null && peerVals.length > 0){
+        const allVals = [baseVal, ...peerVals];
+        const sorted = [...allVals].sort((a, b) => ratio.dir === 'higher' ? b - a : a - b);
+        rank = sorted.indexOf(baseVal) + 1;
+        totalWithBase = allVals.length;
+      }
+
+      // نمایش جایگاه
+      let posHtml = '—';
+      if(rank != null){
+        const isGood = rank <= totalWithBase / 2;
+        const posColor = isGood ? 'var(--good)' : 'var(--bad)';
+        const posIcon = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
+        posHtml = `<span style="color:${posColor};font-weight:700">${posIcon} ${H.toFa(rank)} از ${H.toFa(totalWithBase)}</span>`;
+      }
+
+      // مقایسه با میانگین
+      let vsAvg = '';
+      if(baseVal != null && avgVal != null && avgVal !== 0){
+        const diff = ((baseVal - avgVal) / Math.abs(avgVal)) * 100;
+        const isBetter = ratio.dir === 'higher' ? diff > 0 : diff < 0;
+        const color = isBetter ? 'var(--good)' : 'var(--bad)';
+        const sign = diff > 0 ? '+' : '';
+        vsAvg = `<div style="font-size:11px;color:${color};margin-top:2px">${sign}${H.toFa(diff.toFixed(1))}٪ نسبت به میانگین</div>`;
+      }
+
+      html += '<tr>';
+      html += `<td>${ratio.label}</td>`;
+      html += `<td style="color:${BASE_COLOR};font-weight:700;background:rgba(245,158,11,.08)">${formatRatioValue(baseVal, ratio.fmt)}${vsAvg}</td>`;
+      html += `<td>${formatRatioValue(avgVal, ratio.fmt)}</td>`;
+      html += `<td style="color:var(--good)">${formatRatioValue(bestVal, ratio.fmt)}</td>`;
+      html += `<td style="color:var(--bad)">${formatRatioValue(worstVal, ratio.fmt)}</td>`;
+      html += `<td>${posHtml}</td>`;
       html += '</tr>';
     });
 
@@ -593,205 +1032,81 @@
     box.innerHTML = html;
   }
 
-  /* ---------- ۵-۴. نسبت‌ها ---------- */
-  const RATIO_GROUPS = {
-    liq: {
-      rows: [
-        ['نسبت جاری', r => r.r.currentRatio, 'higher'],
-        ['نسبت آنی', r => r.r.quickRatio, 'higher'],
-        ['نسبت نقد', r => r.r.cashRatio, 'higher'],
-      ],
-    },
-    lev: {
-      rows: [
-        ['بدهی به دارایی', r => r.r.debtToAsset, 'lower'],
-        ['بدهی به حقوق', r => r.r.debtToEquity, 'lower'],
-        ['پوشش بهره', r => r.r.interestCoverage, 'higher'],
-        ['اهرم حقوق مالکانه', r => r.r.equityMultiplier, 'lower'],
-      ],
-    },
-    prof: {
-      rows: [
-        ['حاشیه سود ناخالص', r => r.r.grossMargin, 'higher'],
-        ['حاشیه سود عملیاتی', r => r.r.opMargin, 'higher'],
-        ['حاشیه سود خالص', r => r.r.netMargin, 'higher'],
-        ['ROA', r => r.r.roa, 'higher'],
-        ['ROE', r => r.r.roe, 'higher'],
-      ],
-    },
-    eff: {
-      rows: [
-        ['گردش دارایی', r => r.r.assetTurnover, 'higher'],
-        ['گردش موجودی', r => r.r.invTurnover, 'higher'],
-        ['گردش مطالبات', r => r.r.recvTurnover, 'higher'],
-        ['دوره وصول مطالبات (روز)', r => r.r.dso, 'lower'],
-      ],
-    },
-    cf: {
-      rows: [
-        ['CFO به سود خالص', r => r.r.cfoToNet, 'higher'],
-        ['CFO به درآمد', r => r.r.cfoToRevenue, 'higher'],
-        ['آزاد FCF', r => r.r.fcf, 'higher'],
-      ],
-    },
-    val: {
-      rows: [
-        ['قیمت سهام (ریال)', r => r.price, 'none'],
-        ['تعداد سهام', r => r.shares, 'none'],
-        ['ارزش بازار', r => r.val.marketCap, 'higher'],
-        ['EPS', r => r.val.eps, 'higher'],
-        ['P/E', r => r.val.pe, 'lower'],
-        ['P/B', r => r.val.pb, 'lower'],
-        ['P/S', r => r.val.ps, 'lower'],
-        ['EV/EBITDA', r => r.val.evEbitda, 'lower'],
-      ],
-    },
-  };
-
-  function renderCmpRatios(group){
-    const box = $('cmpRatios');
-    if(!box) return;
-    const cfg = RATIO_GROUPS[group];
-    if(!cfg) return;
-
-    const hasAnyPrice = CMP_RESULTS.some(r => r.price != null);
-    let hint = '';
-    if(group === 'val' && !hasAnyPrice){
-      hint = '<div class="cmp-hint">💡 برای نمایش نسبت‌های ارزش‌گذاری، قیمت و تعداد سهام هر شرکت رو بالای همین صفحه وارد کن. اگه تعداد سهام رو هم نذاری، از سرمایه ثبت‌شده فایل خونده می‌شه.</div>';
-    }
-
-    let html = '<table class="cmp-table"><thead><tr><th>نسبت</th>';
-    CMP_RESULTS.forEach(r => {
-      html += `<th style="color:${r.color}">${r.symbol}</th>`;
-    });
-    html += '</tr></thead><tbody>';
-
-    cfg.rows.forEach(([label, getter, direction]) => {
-      const rawValues = CMP_RESULTS.map(r => getter(r));
-      const cmpValues = rawValues.map(v => _cmpVal(v));
-      const validCmp = cmpValues.filter(v => v != null && v !== 0);
-      const maxCmp = validCmp.length ? Math.max(...validCmp) : null;
-      const minCmp = validCmp.length ? Math.min(...validCmp) : null;
-      const allEqual = (maxCmp === minCmp);
-
-      html += `<tr><td>${label}</td>`;
-      rawValues.forEach((rawV, i) => {
-        const cv = cmpValues[i];
-        let cellClass = '';
-        if(direction !== 'none' && cv != null && validCmp.length >= 2 && !allEqual){
-          if(direction === 'higher'){
-            if(cv === maxCmp) cellClass = 'best-cell';
-            else if(cv === minCmp) cellClass = 'worst-cell';
-          } else if(direction === 'lower'){
-            if(cv === minCmp) cellClass = 'best-cell';
-            else if(cv === maxCmp) cellClass = 'worst-cell';
-          }
-        }
-
-        let display = '—';
-        if(rawV != null){
-          if(/دوره|روز/.test(label)){
-            display = H.toFa(rawV.toFixed(0)) + ' روز';
-          } else if(/حاشیه|ROA|ROE|CFO به/.test(label)){
-            display = H.pct(rawV);
-          } else if(/ارزش بازار|FCF/.test(label)){
-            display = H.toman(rawV);
-          } else if(label === 'قیمت سهام (ریال)'){
-            display = '<bdi dir="ltr">' + H.toFa(rawV.toLocaleString('en-US')) + '</bdi>';
-          } else if(label === 'تعداد سهام'){
-            display = '<bdi dir="ltr">' + H.toFa(rawV.toLocaleString('en-US')) + '</bdi>';
-          } else if(label === 'EPS'){
-            display = '<bdi dir="ltr">' + H.toFa(rawV.toFixed(0)) + ' ریال</bdi>';
-          } else if(/P\/E|P\/B|P\/S|EV/.test(label)){
-            display = H.num2(rawV);
-          } else {
-            display = H.num2(rawV);
-          }
-        }
-        html += `<td class="${cellClass}">${display}</td>`;
-      });
-      html += '</tr>';
-    });
-
-    html += '</tbody></table>';
-    box.innerHTML = hint + html;
-  }
-
-  /* ---------- ۵-۵. نمودار میله‌ای ---------- */
-  function renderCmpBar(){
-    const box = $('cmpBar');
-    const legendBox = $('cmpBarLegend');
+  /* ---------- ۴-۵. نمودار میله‌ای ---------- */
+  function renderIndustryBar(){
+    const box = $('industryBar');
+    const legendBox = $('industryBarLegend');
     if(!box) return;
 
+    const { base, peers } = INDUSTRY_RESULTS;
+
+    // معیارهای مهم (درصدی برای مقیاس‌پذیری)
     const metrics = [
-      { key: 'netMargin', label: 'حاشیه سود خالص', format: 'pct' },
-      { key: 'roe', label: 'ROE', format: 'pct' },
-      { key: 'currentRatio', label: 'نسبت جاری', format: 'num' },
-      { key: 'debtToEquity', label: 'بدهی/حقوق', format: 'num' },
+      { key: 'netMargin',    label: 'حاشیه سود خالص', getter: r => r.r.netMargin,    fmt: 'pct' },
+      { key: 'roe',          label: 'ROE',             getter: r => r.r.roe,          fmt: 'pct' },
+      { key: 'roa',          label: 'ROA',             getter: r => r.r.roa,          fmt: 'pct' },
+      { key: 'opMargin',     label: 'حاشیه سود عملیاتی', getter: r => r.r.opMargin,  fmt: 'pct' },
     ];
 
-    const W = 660, Hh = 300, padL = 120, padR = 20, padT = 20, padB = 50;
+    const W = 700, Hh = 320, padL = 120, padR = 20, padT = 20, padB = 50;
     const plotW = W - padL - padR;
     const plotH = Hh - padT - padB;
-
     const groupW = plotW / metrics.length;
-    const barW = Math.min(38, (groupW - 14) / CMP_RESULTS.length);
-    const barGap = 4;
-    const totalBarW = CMP_RESULTS.length * barW + (CMP_RESULTS.length - 1) * barGap;
+
+    const all = [base, ...peers];
+    const totalBarW = all.length * 24 + (all.length - 1) * 3;
 
     let svg = `<svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="xMidYMid meet">`;
     const baseY = padT + plotH;
 
-    svg += `<line x1="${padL}" y1="${baseY}" x2="${W - padR}" y2="${baseY}"
-                  stroke="${_c('chartBaseColor')}" stroke-width="1"/>`;
+    svg += `<line x1="${padL}" y1="${baseY}" x2="${W-padR}" y2="${baseY}" stroke="${_c('chartBaseColor')}" stroke-width="1"/>`;
 
     const steps = 4;
     for(let i = 0; i <= steps; i++){
       const y = padT + (plotH * i / steps);
-      svg += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}"
-                    stroke="${_c('chartLineColor')}" stroke-width="0.8" stroke-dasharray="3,3"/>`;
+      svg += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="${_c('chartLineColor')}" stroke-width="0.8" stroke-dasharray="3,3"/>`;
     }
 
     metrics.forEach((m, mi) => {
       const groupX = padL + mi * groupW;
       const startX = groupX + (groupW - totalBarW) / 2;
 
-      const vals = CMP_RESULTS.map(r => r.r[m.key]).filter(v => v != null);
+      const vals = all.map(r => m.getter(r)).filter(v => v != null);
       const maxVal = vals.length ? Math.max(...vals.map(Math.abs)) : 0;
 
-      CMP_RESULTS.forEach((r, ci) => {
-        const val = r.r[m.key];
+      all.forEach((r, ci) => {
+        const val = m.getter(r);
         if(val == null || maxVal === 0) return;
         const h = Math.abs(val) / maxVal * plotH;
-        const x = startX + ci * (barW + barGap);
+        const x = startX + ci * 27;
         const y = baseY - h;
-        const display = m.format === 'pct' ? H.pct(val) : H.num2(val);
-        svg += `<rect x="${x}" y="${y}" width="${barW}" height="${h}"
-                      fill="${r.color}" rx="3">
-                  <title>${r.symbol} — ${m.label}: ${display}</title>
+        const opacity = r.isBase ? 1 : 0.65;
+        svg += `<rect x="${x}" y="${y}" width="24" height="${h}" fill="${r.color}" rx="3" opacity="${opacity}">
+                  <title>${r.isBase ? '🎯 ' : ''}${r.symbol} — ${m.label}: ${m.fmt === 'pct' ? H.pct(val) : H.num2(val)}</title>
                 </rect>`;
       });
 
       const cx = groupX + groupW / 2;
-      svg += `<text x="${cx}" y="${baseY + 20}" text-anchor="middle"
-                    font-size="11" fill="${_c('chartLabelColor')}">${m.label}</text>`;
+      svg += `<text x="${cx}" y="${baseY + 20}" text-anchor="middle" font-size="11" fill="${_c('chartLabelColor')}">${m.label}</text>`;
     });
 
     svg += '</svg>';
     box.innerHTML = svg;
 
     if(legendBox){
-      legendBox.innerHTML = CMP_RESULTS.map(r =>
-        `<span><i style="background:${r.color}"></i>${r.symbol}</span>`
+      legendBox.innerHTML = all.map(r =>
+        `<span><i style="background:${r.color};${r.isBase ? 'border:2px solid #f59e0b' : 'opacity:.65'}"></i>${r.isBase ? '🎯 ' : ''}${r.symbol}</span>`
       ).join('');
     }
   }
 
-  /* ---------- ۵-۶. نمودار راداری ---------- */
-  function renderCmpRadar(){
-    const box = $('cmpRadar');
-    const legendBox = $('cmpRadarLegend');
+  /* ---------- ۴-۶. نمودار راداری ---------- */
+  function renderIndustryRadar(){
+    const box = $('industryRadar');
+    const legendBox = $('industryRadarLegend');
     if(!box) return;
+
+    const { base, peers } = INDUSTRY_RESULTS;
 
     const RADAR_METRICS = [
       {
@@ -845,9 +1160,9 @@
     ];
 
     const N = RADAR_METRICS.length;
-    const W = 460, Hh = 460;
+    const W = 480, Hh = 480;
     const cx = W / 2, cy = Hh / 2;
-    const R = 165;
+    const R = 170;
 
     function polygonPoints(radius){
       const pts = [];
@@ -866,30 +1181,29 @@
       const rr = (R * ring) / 5;
       const pts = polygonPoints(rr);
       const d = pts.map(p => p.join(',')).join(' ');
-      svg += `<polygon points="${d}" fill="none"
-                        stroke="${_c('chartLineColor')}" stroke-width="1"/>`;
+      svg += `<polygon points="${d}" fill="none" stroke="${_c('chartLineColor')}" stroke-width="1"/>`;
     }
 
     const outerPts = polygonPoints(R);
     outerPts.forEach(p => {
-      svg += `<line x1="${cx}" y1="${cy}" x2="${p[0]}" y2="${p[1]}"
-                    stroke="${_c('chartLineColor')}" stroke-width="1"/>`;
+      svg += `<line x1="${cx}" y1="${cy}" x2="${p[0]}" y2="${p[1]}" stroke="${_c('chartLineColor')}" stroke-width="1"/>`;
     });
 
     outerPts.forEach((p, i) => {
       const angle = -Math.PI / 2 + (i * 2 * Math.PI / N);
-      const labelR = R + 26;
+      const labelR = R + 28;
       const lx = cx + labelR * Math.cos(angle);
       const ly = cy + labelR * Math.sin(angle);
       const anchor = (Math.abs(Math.cos(angle)) < 0.1)
         ? 'middle'
         : (Math.cos(angle) > 0 ? 'start' : 'end');
-      svg += `<text x="${lx}" y="${ly + 4}" text-anchor="${anchor}"
-                    font-size="11.5" font-weight="600"
-                    fill="${_c('chartLabelColor')}">${RADAR_METRICS[i].label}</text>`;
+      svg += `<text x="${lx}" y="${ly + 4}" text-anchor="${anchor}" font-size="11.5" font-weight="600" fill="${_c('chartLabelColor')}">${RADAR_METRICS[i].label}</text>`;
     });
 
-    CMP_RESULTS.forEach(r => {
+    // ابتدا هم‌گروهی‌ها (کم‌رنگ)، سپس سهم اصلی (پررنگ)
+    const allSorted = [...peers, base];
+
+    allSorted.forEach(r => {
       const vals = RADAR_METRICS.map(m => m.getter(r));
       const pts = vals.map((v, i) => {
         const angle = -Math.PI / 2 + (i * 2 * Math.PI / N);
@@ -899,75 +1213,71 @@
         return [x, y];
       });
       const d = pts.map(p => p.join(',')).join(' ');
-      svg += `<polygon points="${d}"
-                        fill="${r.color}22"
-                        stroke="${r.color}"
-                        stroke-width="2"
-                        stroke-linejoin="round"/>`;
-      pts.forEach(p => {
-        svg += `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${r.color}"/>`;
-      });
+      const strokeW = r.isBase ? 3 : 1.8;
+      const opacity = r.isBase ? 1 : 0.5;
+      const fillOpacity = r.isBase ? '44' : '11';
+      svg += `<polygon points="${d}" fill="${r.color}${fillOpacity}" stroke="${r.color}" stroke-width="${strokeW}" stroke-linejoin="round" opacity="${opacity}"/>`;
+      if(r.isBase){
+        pts.forEach(p => {
+          svg += `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${r.color}"/>`;
+        });
+      }
     });
 
     svg += '</svg>';
     box.innerHTML = svg;
 
     if(legendBox){
-      legendBox.innerHTML = CMP_RESULTS.map(r =>
-        `<span><i style="background:${r.color}"></i>${r.symbol}</span>`
+      legendBox.innerHTML = allSorted.map(r =>
+        `<span><i style="background:${r.color};${r.isBase ? 'border:2px solid #f59e0b' : 'opacity:.6'}"></i>${r.isBase ? '🎯 ' : ''}${r.symbol}</span>`
       ).join('');
     }
   }
 
-  /* ---------- ۵-۷. رتبه‌بندی (۸ معیار با P/E و P/B) ---------- */
-  function renderCmpRanking(){
-    const box = $('cmpRanking');
+  /* ---------- ۴-۷. رتبه‌بندی نهایی ---------- */
+  function renderIndustryRanking(){
+    const box = $('industryRanking');
     if(!box) return;
 
+    const { base, peers } = INDUSTRY_RESULTS;
+    const all = [base, ...peers];
+
     const criteria = [
-      // سلامت مالی
-      { label: 'حاشیه سود خالص', getter: r => r.r.netMargin, dir: 'higher' },
-      { label: 'ROE', getter: r => r.r.roe, dir: 'higher' },
-      { label: 'نسبت جاری', getter: r => r.r.currentRatio, dir: 'higher' },
-      { label: 'بدهی به حقوق', getter: r => r.r.debtToEquity, dir: 'lower' },
-      { label: 'کیفیت سود (CFO/Net)', getter: r => r.r.cfoToNet, dir: 'higher' },
-      { label: 'رشد درآمد', getter: r => r.revGrowth, dir: 'higher' },
-      // ارزش‌گذاری
-      { label: 'P/E', getter: r => r.val.pe, dir: 'lower' },
-      { label: 'P/B', getter: r => r.val.pb, dir: 'lower' },
+      { label: 'حاشیه سود خالص', getter: r => r.r.netMargin, dir: 'higher', fmt: 'pct' },
+      { label: 'ROE', getter: r => r.r.roe, dir: 'higher', fmt: 'pct' },
+      { label: 'ROA', getter: r => r.r.roa, dir: 'higher', fmt: 'pct' },
+      { label: 'حاشیه سود عملیاتی', getter: r => r.r.opMargin, dir: 'higher', fmt: 'pct' },
+      { label: 'نسبت جاری', getter: r => r.r.currentRatio, dir: 'higher', fmt: 'num' },
+      { label: 'بدهی به حقوق', getter: r => r.r.debtToEquity, dir: 'lower', fmt: 'num' },
+      { label: 'کیفیت سود', getter: r => r.r.cfoToNet, dir: 'higher', fmt: 'num' },
+      { label: 'رشد درآمد', getter: r => r.revGrowth, dir: 'higher', fmt: 'pct' },
     ];
 
-    const scores = CMP_RESULTS.map(() => 0);
+    const scores = all.map(() => 0);
 
-    /* منطق: فقط برنده‌ی تنها امتیاز می‌گیره، مساوی‌ها صفر */
     criteria.forEach(c => {
-      const cmpVals = CMP_RESULTS.map(r => _cmpVal(c.getter(r)));
-      const valid = cmpVals
-        .map((v, i) => ({ v, i }))
-        .filter(x => x.v != null);
+      const vals = all.map(r => _cmpVal(c.getter(r)));
+      const valid = vals.map((v, i) => ({ v, i })).filter(x => x.v != null);
       if(valid.length < 2) return;
 
       valid.sort((a, b) => c.dir === 'higher' ? b.v - a.v : a.v - b.v);
 
-      const N = valid.length;
       let idx = 0;
-      while(idx < N){
+      while(idx < valid.length){
         let j = idx;
-        while(j < N && valid[j].v === valid[idx].v) j++;
-
-        const groupSize = j - idx;
-        if(groupSize === 1){
-          const groupScore = N - 1 - idx;
-          scores[valid[idx].i] += groupScore;
+        while(j < valid.length && valid[j].v === valid[idx].v) j++;
+        if(j - idx === 1){
+          scores[valid[idx].i] += valid.length - 1 - idx;
         }
         idx = j;
       }
     });
 
-    const ranked = CMP_RESULTS.map((r, i) => ({ ...r, totalScore: scores[i] }))
-                              .sort((a, b) => b.totalScore - a.totalScore);
+    // ترکیب داده + امتیاز
+    const ranked = all.map((r, i) => ({ ...r, totalScore: scores[i] }));
+    ranked.sort((a, b) => b.totalScore - a.totalScore);
 
-    const totalPossibleScore = criteria.length * (CMP_RESULTS.length - 1);
+    const totalPossible = criteria.length * (all.length - 1);
     const maxScore = ranked.length ? ranked[0].totalScore : 0;
     const winners = ranked.filter(r => r.totalScore === maxScore);
 
@@ -983,7 +1293,7 @@
     });
 
     let html = '<table class="cmp-table"><thead><tr>';
-    html += '<th>رتبه</th><th>شرکت</th><th>امتیاز کل</th>';
+    html += '<th>رتبه</th><th>شرکت</th><th>امتیاز</th>';
     criteria.forEach(c => html += `<th>${c.label}</th>`);
     html += '</tr></thead><tbody>';
 
@@ -991,16 +1301,20 @@
       const rank = rankMap.get(r);
       const medal = rank === 0 ? '🥇' : rank === 1 ? '🥈' : rank === 2 ? '🥉' : '🎖️';
       const rankClass = rank === 0 ? 'cmp-rank-1' : rank === 1 ? 'cmp-rank-2' : rank === 2 ? 'cmp-rank-3' : '';
+      const isBase = r.isBase;
+      const rowStyle = isBase
+        ? `background:rgba(245,158,11,.08);font-weight:600`
+        : '';
 
-      html += `<tr>`;
+      html += `<tr style="${rowStyle}">`;
       html += `<td><span class="cmp-rank-medal">${medal}</span><span class="${rankClass}">${H.toFa(rank + 1)}</span></td>`;
-      html += `<td style="color:${r.color};font-weight:700;text-align:right">${r.symbol}</td>`;
+      html += `<td style="color:${r.color};font-weight:700;text-align:right">${isBase ? '🎯 ' : ''}${r.symbol}</td>`;
       html += `<td style="background:transparent;color:${r.color};font-weight:700">${H.toFa(r.totalScore)}</td>`;
 
       criteria.forEach(c => {
         const rawV = c.getter(r);
         const cv = _cmpVal(rawV);
-        const allCmp = CMP_RESULTS.map(x => _cmpVal(c.getter(x))).filter(x => x != null);
+        const allCmp = all.map(x => _cmpVal(c.getter(x))).filter(x => x != null);
         let cls = '';
         if(cv != null && allCmp.length >= 2){
           const maxV = Math.max(...allCmp), minV = Math.min(...allCmp);
@@ -1011,11 +1325,7 @@
             else if(isWorst) cls = 'worst-cell';
           }
         }
-        let display = '—';
-        if(rawV != null){
-          if(/حاشیه|ROE|رشد/.test(c.label)) display = H.pct(rawV);
-          else display = H.num2(rawV);
-        }
+        const display = formatRatioValue(rawV, c.fmt);
         html += `<td class="${cls}">${display}</td>`;
       });
       html += `</tr>`;
@@ -1027,20 +1337,16 @@
       if(winners.length === 1 && maxScore > 0){
         const w = winners[0];
         html = `<div class="one-line-note" style="margin-bottom:12px">
-          🏆 <b>برنده کلی:</b> <span style="color:${w.color};font-weight:700">${w.symbol}</span>
-          با امتیاز <b>${H.toFa(w.totalScore)}</b> از ${H.toFa(totalPossibleScore)} امتیاز ممکن.
+          🏆 <b>برنده کلی:</b> <span style="color:${w.color};font-weight:700">${w.isBase ? '🎯 ' : ''}${w.symbol}</span>
+          با امتیاز <b>${H.toFa(w.totalScore)}</b> از ${H.toFa(totalPossible)}.
         </div>` + html;
       } else if(maxScore === 0){
         html = `<div class="one-line-note" style="margin-bottom:12px">
-          🤝 <b>هیچ شرکتی برتری انحصاری نداره</b> — توی همه معیارها یا مساوی هستن یا تفاوت معنی‌داری ندارن.
+          🤝 هیچ شرکتی برتری انحصاری نداره.
         </div>` + html;
       } else {
-        const winnerNames = winners.map(w =>
-          `<span style="color:${w.color};font-weight:700">${w.symbol}</span>`
-        ).join(' و ');
         html = `<div class="one-line-note" style="margin-bottom:12px">
-          🤝 <b>برندگان مشترک:</b> ${winnerNames}
-          با امتیاز برابر <b>${H.toFa(maxScore)}</b> از ${H.toFa(totalPossibleScore)} امتیاز ممکن.
+          🤝 برندگان مشترک با امتیاز <b>${H.toFa(maxScore)}</b> از ${H.toFa(totalPossible)}.
         </div>` + html;
       }
     }
@@ -1049,28 +1355,103 @@
   }
 
   /* ============================================================
-     ۶. ذخیره و بازیابی مقایسه‌ها
+     ۵. ذخیره و بازیابی صنایع
   ============================================================ */
-  function renderCmpSaved(){
-    const box = $('cmpSavedList');
-    if(!box) return;
-    const dlBtn = $('cmpDownloadAll');
-    if(dlBtn) dlBtn.disabled = CMP_SAVED.length === 0;
+  function openSaveIndustryModal(){
+    if(!INDUSTRY_RESULTS){
+      if(window.showToast) window.showToast('اول یه مقایسه انجام بده!', true);
+      return;
+    }
+    const defName = (BASE.industry || 'صنعت') + ' — ' + H.toFa(new Date().toLocaleString('fa-IR'));
+    const inp = $('saveIndustryNameInput');
+    if(inp) inp.value = defName;
+    const m = $('saveIndustryModal');
+    if(m) m.classList.add('show');
+    setTimeout(() => inp && inp.focus(), 50);
+  }
+  function closeSaveIndustryModal(){
+    const m = $('saveIndustryModal');
+    if(m) m.classList.remove('show');
+  }
 
-    if(!CMP_SAVED.length){
-      box.innerHTML = '<div class="saved-empty">هنوز مقایسه‌ای ذخیره نکردی.</div>';
+  function snapshotIndustry(){
+    const { base, peers } = INDUSTRY_RESULTS;
+
+    // محاسبه آمار صنعت (فقط از هم‌گروهی‌ها — گزینه B)
+    const stats = {};
+    MAIN_RATIOS.forEach(ratio => {
+      const peerVals = peers.map(p => _cmpVal(ratio.getter(p))).filter(v => v != null);
+      stats[ratio.key] = {
+        label: ratio.label,
+        dir: ratio.dir,
+        fmt: ratio.fmt,
+        avg: avg(peerVals),
+        median: median(peerVals),
+        best: best(peerVals, ratio.dir),
+        worst: worst(peerVals, ratio.dir),
+        base: _cmpVal(ratio.getter(base)),
+      };
+    });
+
+    // محاسبه امتیاز و Z-Score
+    const peerScores = peers.map(p => p.score).filter(s => s != null);
+    const peerZ = peers.map(p => p.zscore).filter(z => z != null);
+
+    return {
+      name: (BASE.industry || 'بدون نام'),
+      industry: BASE.industry || '',
+      baseSymbol: base.symbol,
+      baseScore: base.score,
+      baseZScore: base.zscore,
+      baseIndustry: base.industry,
+      basePrice: base.price,
+      baseShares: base.shares,
+      peerCount: peers.length,
+      peerScores,
+      peerZ,
+      stats,
+      symbols: peers.map(p => p.symbol),
+      date: H.toFa(new Date().toLocaleString('fa-IR')),
+      timestamp: Date.now(),
+      // برای بازیابی کامل
+      snapshot: {
+        base: {
+          symbol: base.symbol,
+          industry: base.industry,
+          price: base.price,
+          shares: base.shares,
+          parsed: JSON.parse(JSON.stringify(base.parsed)),
+        },
+        peers: peers.map(p => ({
+          symbol: p.symbol,
+          price: p.price,
+          shares: p.shares,
+          parsed: JSON.parse(JSON.stringify(p.parsed)),
+        })),
+      },
+    };
+  }
+
+  function renderIndustrySaved(){
+    const box = $('industrySavedList');
+    if(!box) return;
+    const dlBtn = $('industryDownloadAll');
+    if(dlBtn) dlBtn.disabled = INDUSTRY_SAVED.length === 0;
+
+    if(!INDUSTRY_SAVED.length){
+      box.innerHTML = '<div class="saved-empty">هنوز صنعتی ذخیره نکردی.</div>';
       return;
     }
 
-    const search = ($('cmpSavedSearch')?.value || '').trim().toLowerCase();
-    const sortBy = $('cmpSavedSort')?.value || 'recent';
+    const search = ($('industrySavedSearch')?.value || '').trim().toLowerCase();
+    const sortBy = $('industrySavedSort')?.value || 'recent';
 
-    let indexed = CMP_SAVED.map((item, idx) => ({ ...item, _idx: idx }));
-    if(search) indexed = indexed.filter(x => x.name.toLowerCase().includes(search));
+    let indexed = INDUSTRY_SAVED.map((item, idx) => ({ ...item, _idx: idx }));
+    if(search) indexed = indexed.filter(x => (x.name || '').toLowerCase().includes(search));
 
     if(sortBy === 'starred') indexed = indexed.filter(x => x.starred);
     else if(sortBy === 'oldest') indexed.reverse();
-    else if(sortBy === 'name') indexed.sort((a, b) => a.name.localeCompare(b.name, 'fa'));
+    else if(sortBy === 'name') indexed.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'fa'));
 
     if(!indexed.length){
       box.innerHTML = '<div class="saved-empty">نتیجه‌ای پیدا نشد.</div>';
@@ -1081,197 +1462,363 @@
       const idx = item._idx;
       const starred = item.starred ? 'on' : 'off';
       const starIcon = item.starred ? '★' : '☆';
-      const symbols = item.companies.map(c => c.symbol).join(' • ');
+      const symbols = (item.symbols || []).slice(0, 5).join(' • ') + (item.symbols && item.symbols.length > 5 ? ' و...' : '');
       return `
         <div class="saved-item ${item.starred ? 'starred' : ''}">
           <div class="name">
-            <span class="star ${starred}" onclick="window.cmpToggleStar(${idx})">${starIcon}</span>
+            <span class="star ${starred}" onclick="window.indToggleStar(${idx})">${starIcon}</span>
             <span>${item.name}</span>
-            <span class="edit-name" onclick="window.cmpEditName(${idx})">✏️</span>
+            <span class="edit-name" onclick="window.indEditName(${idx})">✏️</span>
           </div>
           <div class="date">${item.date}</div>
+          <div class="date" style="direction:rtl;color:var(--sub);font-size:11px">
+            🎯 ${item.baseSymbol} (امتیاز: ${H.toFa(item.baseScore ?? '—')}) — ${H.toFa(item.peerCount)} هم‌گروهی
+          </div>
           <div class="date" style="direction:rtl;color:var(--sub);font-size:11px">${symbols}</div>
           <div class="btns">
-            <button class="primary" onclick="window.cmpRestore(${idx})">بازیابی</button>
-            <button class="ghost" onclick="window.cmpDelete(${idx})">حذف</button>
+            <button class="primary" onclick="window.indRestore(${idx})">بازیابی</button>
+            <button class="ghost" onclick="window.indDelete(${idx})">حذف</button>
           </div>
         </div>
       `;
     }).join('');
   }
 
-  window.cmpToggleStar = function(idx){
-    if(!CMP_SAVED[idx]) return;
-    CMP_SAVED[idx].starred = !CMP_SAVED[idx].starred;
-    saveCompareToStorage();
-    renderCmpSaved();
+  window.indToggleStar = function(idx){
+    if(!INDUSTRY_SAVED[idx]) return;
+    INDUSTRY_SAVED[idx].starred = !INDUSTRY_SAVED[idx].starred;
+    saveIndustriesToStorage();
+    renderIndustrySaved();
   };
 
-  window.cmpEditName = function(idx){
-    if(!CMP_SAVED[idx]) return;
-    const cur = CMP_SAVED[idx].name;
+  window.indEditName = function(idx){
+    if(!INDUSTRY_SAVED[idx]) return;
+    const cur = INDUSTRY_SAVED[idx].name;
     const nn = prompt('اسم جدید:', cur);
     if(nn && nn.trim()){
-      CMP_SAVED[idx].name = nn.trim();
-      saveCompareToStorage();
-      renderCmpSaved();
+      INDUSTRY_SAVED[idx].name = nn.trim();
+      saveIndustriesToStorage();
+      renderIndustrySaved();
       if(window.showToast) window.showToast('✅ اسم عوض شد');
     }
   };
 
-  window.cmpDelete = function(idx){
-    if(!confirm('این مقایسه حذف بشه؟')) return;
-    CMP_SAVED.splice(idx, 1);
-    saveCompareToStorage();
-    renderCmpSaved();
+  window.indDelete = function(idx){
+    if(!confirm('این صنعت حذف بشه؟')) return;
+    INDUSTRY_SAVED.splice(idx, 1);
+    saveIndustriesToStorage();
+    renderIndustrySaved();
   };
 
-  window.cmpRestore = function(idx){
-    const item = CMP_SAVED[idx];
-    if(!item) return;
+  window.indRestore = function(idx){
+    const item = INDUSTRY_SAVED[idx];
+    if(!item || !item.snapshot) return;
     try{
-      CMP_FILES = item.companies.map((c, i) => ({
+      // بازسازی سهم اصلی
+      BASE = {
         file: null,
-        _fromSaved: true,
-        symbol: c.symbol,
-        price: c.price || null,
-        shares: c.shares || null,
-        color: COMPANY_COLORS[i % COMPANY_COLORS.length],
-        parsed: JSON.parse(JSON.stringify(c.parsed)),
+        parsed: JSON.parse(JSON.stringify(item.snapshot.base.parsed)),
+        symbol: item.snapshot.base.symbol,
+        industry: item.snapshot.base.industry,
+        price: item.snapshot.base.price,
+        shares: item.snapshot.base.shares,
+      };
+      if($('baseSymbol')) $('baseSymbol').value = BASE.symbol || '';
+      if($('baseIndustry')) $('baseIndustry').value = BASE.industry || '';
+      if($('basePrice')) $('basePrice').value = BASE.price ? _fmtNumInput(BASE.price) : '';
+      if($('baseShares')) $('baseShares').value = BASE.shares ? _fmtNumInput(BASE.shares) : '';
+      if($('baseFileInfo') && BASE.symbol){
+        $('baseFileInfo').classList.add('active');
+        if($('baseFileName')) $('baseFileName').textContent = '(بازیابی‌شده از ذخیره)';
+      }
+
+      // بازسازی هم‌گروهی‌ها
+      PEERS = item.snapshot.peers.map((p, i) => ({
+        file: null,
+        parsed: JSON.parse(JSON.stringify(p.parsed)),
+        symbol: p.symbol,
+        price: p.price,
+        shares: p.shares,
+        color: PEER_COLORS[i % PEER_COLORS.length],
         error: null,
       }));
-      CMP_FILES.forEach(c => {
-        c.parsed._periods = c.parsed._periods || 3;
-      });
-      renderCmpList();
-      runCompare();
-      if(window.showToast) window.showToast('✅ مقایسه بازیابی شد');
+      renderPeers();
+      updateCompareButton();
+
+      // اجرای مقایسه
+      runIndustryCompare();
+
+      if(window.showToast) window.showToast('✅ صنعت بازیابی شد');
     }catch(e){
       alert('خطا در بازیابی: ' + e.message);
     }
   };
 
-  function openSaveCmpModal(){
-    if(!CMP_RESULTS || !CMP_RESULTS.length){
-      if(window.showToast) window.showToast('اول یه مقایسه انجام بده!', true);
-      return;
-    }
-    const symbols = CMP_RESULTS.map(r => r.symbol).join(' vs ');
-    const defName = symbols + ' — ' + H.toFa(new Date().toLocaleString('fa-IR'));
-    const inp = $('saveCompareNameInput');
-    if(inp) inp.value = defName;
-    const m = $('saveCompareModal');
-    if(m) m.classList.add('show');
-    setTimeout(() => inp && inp.focus(), 50);
-  }
-  function closeSaveCmpModal(){
-    const m = $('saveCompareModal');
-    if(m) m.classList.remove('show');
-  }
-
-  if($('cmpSaveBtn')) $('cmpSaveBtn').onclick = openSaveCmpModal;
-  if($('saveCompareCancel')) $('saveCompareCancel').onclick = closeSaveCmpModal;
-  if($('saveCompareModal')) $('saveCompareModal').addEventListener('click', e => {
-    if(e.target.id === 'saveCompareModal') closeSaveCmpModal();
-  });
-
-  if($('saveCompareConfirm')) $('saveCompareConfirm').onclick = () => {
-    const name = ($('saveCompareNameInput').value || '').trim();
-    if(!name){
-      if(window.showToast) window.showToast('اسم خالی نباشه', true);
-      return;
-    }
-    try{
-      const companies = CMP_RESULTS.map(r => ({
-        symbol: r.symbol,
-        price: r.price,
-        shares: r.shares,
-        parsed: JSON.parse(JSON.stringify(r.parsed)),
-      }));
-      CMP_SAVED.unshift({
-        name,
-        date: H.toFa(new Date().toLocaleString('fa-IR')),
-        companies,
-        starred: false,
-      });
-      if(CMP_SAVED.length > 30) CMP_SAVED.length = 30;
-      saveCompareToStorage();
-      renderCmpSaved();
-      closeSaveCmpModal();
-      if(window.showToast) window.showToast('✅ مقایسه ذخیره شد!');
-    }catch(e){
-      if(window.showToast) window.showToast('خطا: ' + e.message, true);
-    }
-  };
-  if($('saveCompareNameInput')) $('saveCompareNameInput').addEventListener('keydown', e => {
-    if(e.key === 'Enter') $('saveCompareConfirm').click();
-    if(e.key === 'Escape') closeSaveCmpModal();
-  });
-
-  document.addEventListener('input', e => {
-    if(e.target.id === 'cmpSavedSearch') renderCmpSaved();
-  });
-  document.addEventListener('change', e => {
-    if(e.target.id === 'cmpSavedSort') renderCmpSaved();
-  });
-
-  if($('cmpDownloadAll')) $('cmpDownloadAll').onclick = () => {
-    if(!CMP_SAVED.length){
+  /* ---------- بارگذاری/دانلود ---------- */
+  function downloadAllIndustries(){
+    if(!INDUSTRY_SAVED.length){
       if(window.showToast) window.showToast('لیست خالیه', true);
       return;
     }
     const data = {
-      version: '38',
-      type: 'kodal_compare',
+      version: '1.5',
+      type: 'kodal_industries',
       exportDate: new Date().toISOString(),
-      count: CMP_SAVED.length,
-      compares: CMP_SAVED,
+      count: INDUSTRY_SAVED.length,
+      industries: INDUSTRY_SAVED,
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     const date = new Date().toLocaleDateString('fa-IR').replace(/\//g, '-');
-    a.download = `kodal-compares-${date}.json`;
+    a.download = `kodal-industries-${date}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 500);
     if(window.showToast) window.showToast('📥 فایل دانلود شد');
-  };
+  }
 
-  if($('cmpUploadFile')) $('cmpUploadFile').onclick = () => $('cmpUploadInput').click();
-  if($('cmpUploadInput')) $('cmpUploadInput').onchange = e => {
-    const f = e.target.files[0];
-    if(!f) return;
+  function uploadIndustries(file){
+    if(!file) return;
     const reader = new FileReader();
-    reader.onload = ev => {
+    reader.onload = (e) => {
       try{
-        const data = JSON.parse(ev.target.result);
-        if(!data || !Array.isArray(data.compares)) throw new Error('ساختار فایل درست نیست');
+        const data = JSON.parse(e.target.result);
+        if(!data || !Array.isArray(data.industries)) throw new Error('ساختار فایل درست نیست');
         let added = 0;
-        data.compares.forEach(item => {
-          if(!item || !item.name || !item.companies) return;
-          const isDup = CMP_SAVED.some(x => x.name === item.name && x.date === item.date);
-          if(!isDup){ CMP_SAVED.unshift(item); added++; }
+        data.industries.forEach(item => {
+          if(!item || !item.name) return;
+          const isDup = INDUSTRY_SAVED.some(x => x.name === item.name && x.timestamp === item.timestamp);
+          if(!isDup){ INDUSTRY_SAVED.unshift(item); added++; }
         });
-        if(CMP_SAVED.length > 30) CMP_SAVED.length = 30;
-        saveCompareToStorage();
-        renderCmpSaved();
-        if(window.showToast) window.showToast(`✅ ${H.toFa(added)} مقایسه اضافه شد`);
+        if(INDUSTRY_SAVED.length > 30) INDUSTRY_SAVED.length = 30;
+        saveIndustriesToStorage();
+        renderIndustrySaved();
+        if(window.showToast) window.showToast(`✅ ${H.toFa(added)} صنعت اضافه شد`);
       }catch(err){
         if(window.showToast) window.showToast('خطا: ' + err.message, true);
       }
     };
-    reader.readAsText(f);
-    e.target.value = '';
-  };
+    reader.readAsText(file);
+  }
 
+  /* ============================================================
+     ۶. مقایسه دو صنعت
+  ============================================================ */
+  function openCompareIndustriesModal(){
+    if(INDUSTRY_SAVED.length < 2){
+      if(window.showToast) window.showToast('حداقل ۲ صنعت ذخیره‌شده لازمه', true);
+      return;
+    }
+    const selA = $('industryA');
+    const selB = $('industryB');
+    const options = INDUSTRY_SAVED.map((item, idx) =>
+      `<option value="${idx}">${item.name} (${item.baseSymbol})</option>`
+    ).join('');
+
+    if(selA) selA.innerHTML = '<option value="">-- انتخاب --</option>' + options;
+    if(selB) selB.innerHTML = '<option value="">-- انتخاب --</option>' + options;
+    if(selB) selB.value = INDUSTRY_SAVED.length > 1 ? '1' : '';
+
+    const err = $('compareIndustryErr');
+    if(err) err.style.display = 'none';
+
+    const m = $('compareIndustriesModal');
+    if(m) m.classList.add('show');
+  }
+  function closeCompareIndustriesModal(){
+    const m = $('compareIndustriesModal');
+    if(m) m.classList.remove('show');
+  }
+
+  function runTwoIndustriesCompare(){
+    const idxA = parseInt($('industryA')?.value, 10);
+    const idxB = parseInt($('industryB')?.value, 10);
+    const err = $('compareIndustryErr');
+
+    if(isNaN(idxA) || isNaN(idxB)){
+      if(err){ err.style.display = 'block'; err.textContent = 'هر دو صنعت رو انتخاب کن.'; }
+      return;
+    }
+    if(idxA === idxB){
+      if(err){ err.style.display = 'block'; err.textContent = 'دو صنعت متفاوت انتخاب کن.'; }
+      return;
+    }
+
+    const A = INDUSTRY_SAVED[idxA];
+    const B = INDUSTRY_SAVED[idxB];
+    if(!A || !B){
+      if(err){ err.style.display = 'block'; err.textContent = 'صنعت پیدا نشد.'; }
+      return;
+    }
+
+    closeCompareIndustriesModal();
+
+    // نمایش خروجی مقایسه دو صنعت
+    const out = $('industryOut');
+    if(out) out.style.display = 'block';
+
+    // بخش موقتی
+    let existing = document.getElementById('twoIndustriesCompareBox');
+    if(existing) existing.remove();
+
+    const box = document.createElement('div');
+    box.id = 'twoIndustriesCompareBox';
+    box.className = 'card';
+    box.style.borderRight = '4px solid #8b5cf6';
+    box.innerHTML = `<h2>⚖️ مقایسه دو صنعت: <span style="color:#1769e0">${A.name}</span> vs <span style="color:#8b5cf6">${B.name}</span></h2>
+      <div class="cmp-table-wrap">
+        <table class="cmp-table">
+          <thead>
+            <tr>
+              <th>نسبت</th>
+              <th style="color:#1769e0">${A.name}</th>
+              <th style="color:#8b5cf6">${B.name}</th>
+              <th>برنده</th>
+            </tr>
+          </thead>
+          <tbody id="twoIndustriesRows"></tbody>
+        </table>
+      </div>`;
+
+    // درج در ابتدای industryOut
+    out.insertBefore(box, out.firstChild);
+
+    const rows = document.getElementById('twoIndustriesRows');
+    MAIN_RATIOS.forEach(ratio => {
+      const aStats = A.stats?.[ratio.key];
+      const bStats = B.stats?.[ratio.key];
+
+      const aVal = aStats?.avg ?? null;
+      const bVal = bStats?.avg ?? null;
+
+      let winner = '—';
+      let winnerColor = 'var(--sub)';
+      if(aVal != null && bVal != null && aVal !== bVal){
+        const isABetter = ratio.dir === 'higher' ? aVal > bVal : aVal < bVal;
+        winner = isABetter ? `🥇 ${A.name}` : `🥇 ${B.name}`;
+        winnerColor = isABetter ? '#1769e0' : '#8b5cf6';
+      }
+
+      const aDisplay = formatRatioValue(aVal, ratio.fmt);
+      const bDisplay = formatRatioValue(bVal, ratio.fmt);
+
+      rows.innerHTML += `
+        <tr>
+          <td>${ratio.label}</td>
+          <td style="color:#1769e0">${aDisplay}</td>
+          <td style="color:#8b5cf6">${bDisplay}</td>
+          <td style="color:${winnerColor};font-weight:600">${winner}</td>
+        </tr>
+      `;
+    });
+
+    window.scrollTo({ top: out.offsetTop - 20, behavior: 'smooth' });
+    if(window.showToast) window.showToast('✅ مقایسه دو صنعت انجام شد');
+  }
+
+  /* ============================================================
+     ۷. اتصال دکمه‌ها
+  ============================================================ */
+  function bindButtons(){
+    const compareBtn = $('compareIndustryGo');
+    if(compareBtn) compareBtn.onclick = runIndustryCompare;
+
+    const saveBtn = $('saveIndustryBtn');
+    if(saveBtn) saveBtn.onclick = openSaveIndustryModal;
+
+    const compareTwo = $('compareTwoIndustriesBtn');
+    if(compareTwo) compareTwo.onclick = openCompareIndustriesModal;
+
+    const dlBtn = $('industryDownloadAll');
+    if(dlBtn) dlBtn.onclick = downloadAllIndustries;
+
+    const upBtn = $('industryUploadFile');
+    const upInput = $('industryUploadInput');
+    if(upBtn && upInput){
+      upBtn.onclick = () => upInput.click();
+      upInput.onchange = (e) => {
+        const f = e.target.files[0];
+        if(f) uploadIndustries(f);
+        e.target.value = '';
+      };
+    }
+
+    // مودال ذخیره صنعت
+    const saveConfirm = $('saveIndustryConfirm');
+    if(saveConfirm) saveConfirm.onclick = () => {
+      const name = ($('saveIndustryNameInput')?.value || '').trim();
+      if(!name){
+        if(window.showToast) window.showToast('اسم خالی نباشه', true);
+        return;
+      }
+      try{
+        const snapshot = snapshotIndustry();
+        snapshot.name = name;
+        snapshot.starred = false;
+        INDUSTRY_SAVED.unshift(snapshot);
+        if(INDUSTRY_SAVED.length > 30) INDUSTRY_SAVED.length = 30;
+        saveIndustriesToStorage();
+        renderIndustrySaved();
+        closeSaveIndustryModal();
+        if(window.showToast) window.showToast('✅ صنعت ذخیره شد!');
+      }catch(e){
+        if(window.showToast) window.showToast('خطا: ' + e.message, true);
+      }
+    };
+
+    const saveCancel = $('saveIndustryCancel');
+    if(saveCancel) saveCancel.onclick = closeSaveIndustryModal;
+
+    const saveModal = $('saveIndustryModal');
+    if(saveModal) saveModal.addEventListener('click', e => {
+      if(e.target.id === 'saveIndustryModal') closeSaveIndustryModal();
+    });
+
+    const saveNameInput = $('saveIndustryNameInput');
+    if(saveNameInput) saveNameInput.addEventListener('keydown', e => {
+      if(e.key === 'Enter') $('saveIndustryConfirm').click();
+      if(e.key === 'Escape') closeSaveIndustryModal();
+    });
+
+    // مودال مقایسه دو صنعت
+    const cmpConfirm = $('compareIndustryConfirm');
+    if(cmpConfirm) cmpConfirm.onclick = runTwoIndustriesCompare;
+
+    const cmpCancel = $('compareIndustryCancel');
+    if(cmpCancel) cmpCancel.onclick = closeCompareIndustriesModal;
+
+    const cmpModal = $('compareIndustriesModal');
+    if(cmpModal) cmpModal.addEventListener('click', e => {
+      if(e.target.id === 'compareIndustriesModal') closeCompareIndustriesModal();
+    });
+
+    // جستجو و مرتب‌سازی صنایع ذخیره‌شده
+    document.addEventListener('input', e => {
+      if(e.target.id === 'industrySavedSearch') renderIndustrySaved();
+    });
+    document.addEventListener('change', e => {
+      if(e.target.id === 'industrySavedSort') renderIndustrySaved();
+    });
+  }
+
+  /* ============================================================
+     ۸. تغییر تم
+  ============================================================ */
   window.onThemeChange = function(){
-    if(CMP_RESULTS) renderCompareOutput();
+    if(INDUSTRY_RESULTS) renderIndustryOutput();
   };
 
-  renderCmpList();
-  renderCmpSaved();
+  /* ============================================================
+     Init
+  ============================================================ */
+  bindBaseInputs();
+  bindPeersInputs();
+  bindPeersDrop();
+  bindButtons();
+  renderPeers();
+  renderIndustrySaved();
 
 })();
