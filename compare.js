@@ -1,12 +1,8 @@
 /* ============================================================
-   compare.js — منطق تب «مقایسه با صنعت»  |  v1.5
+   compare.js — منطق تب «مقایسه با صنعت»  |  v1.5.1
    وابسته به: app.js (window.KodalHelpers)
-   طراحی جدید:
-   - سهم اصلی (Base) + تا ۱۰ سهم هم‌گروهی
-   - محاسبه آمار صنعت (میانگین/بهترین/بدترین/میانه)
-   - جایگاه سهم اصلی در صنعت
-   - ذخیره آمار صنعت و لیست صنایع
-   - مقایسه دو صنعت با هم
+   تغییرات v1.5.1:
+   - حذف نمودار میله‌ای و راداری برای کاهش شلوغی
 ============================================================ */
 
 (function(){
@@ -650,8 +646,6 @@
     try{ renderIndustryScores(); }catch(e){ console.error('renderIndustryScores:', e); }
     try{ renderIndustryZScore(); }catch(e){ console.error('renderIndustryZScore:', e); }
     try{ renderIndustryMainTable(); }catch(e){ console.error('renderIndustryMainTable:', e); }
-    try{ renderIndustryBar(); }catch(e){ console.error('renderIndustryBar:', e); }
-    try{ renderIndustryRadar(); }catch(e){ console.error('renderIndustryRadar:', e); }
     try{ renderIndustryRanking(); }catch(e){ console.error('renderIndustryRanking:', e); }
   }
 
@@ -993,206 +987,6 @@
     box.innerHTML = html;
   }
 
-  function renderIndustryBar(){
-    const box = $('industryBar');
-    const legendBox = $('industryBarLegend');
-    if(!box) return;
-
-    const { base, peers } = INDUSTRY_RESULTS;
-
-    const metrics = [
-      { key: 'netMargin',    label: 'حاشیه سود خالص', getter: r => r.r.netMargin,    fmt: 'pct' },
-      { key: 'roe',          label: 'ROE',             getter: r => r.r.roe,          fmt: 'pct' },
-      { key: 'roa',          label: 'ROA',             getter: r => r.r.roa,          fmt: 'pct' },
-      { key: 'opMargin',     label: 'حاشیه سود عملیاتی', getter: r => r.r.opMargin,  fmt: 'pct' },
-    ];
-
-    const W = 700, Hh = 320, padL = 120, padR = 20, padT = 20, padB = 50;
-    const plotW = W - padL - padR;
-    const plotH = Hh - padT - padB;
-    const groupW = plotW / metrics.length;
-
-    const all = [base, ...peers];
-    const barW = Math.min(30, (groupW - 20) / all.length);
-    const totalBarW = all.length * barW + (all.length - 1) * 3;
-
-    let svg = `<svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="xMidYMid meet">`;
-    const baseY = padT + plotH;
-
-    svg += `<line x1="${padL}" y1="${baseY}" x2="${W-padR}" y2="${baseY}" stroke="${_c('chartBaseColor')}" stroke-width="1"/>`;
-
-    const steps = 4;
-    for(let i = 0; i <= steps; i++){
-      const y = padT + (plotH * i / steps);
-      svg += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="${_c('chartLineColor')}" stroke-width="0.8" stroke-dasharray="3,3"/>`;
-    }
-
-    metrics.forEach((m, mi) => {
-      const groupX = padL + mi * groupW;
-      const startX = groupX + (groupW - totalBarW) / 2;
-
-      const vals = all.map(r => m.getter(r)).filter(v => v != null && isFinite(v));
-      const maxAbs = vals.length ? Math.max(...vals.map(Math.abs)) : 0;
-      if(maxAbs === 0) return;
-
-      all.forEach((r, ci) => {
-        const val = m.getter(r);
-        if(val == null || !isFinite(val)) return;
-        const h = Math.abs(val) / maxAbs * plotH;
-        const x = startX + ci * (barW + 3);
-        const y = baseY - h;
-        const opacity = r.isBase ? 1 : 0.7;
-        svg += `<rect x="${x}" y="${y}" width="${barW}" height="${h}" fill="${r.color}" rx="3" opacity="${opacity}">
-                  <title>${r.isBase ? '🎯 ' : ''}${r.symbol} — ${m.label}: ${m.fmt === 'pct' ? H.pct(val) : H.num2(val)}</title>
-                </rect>`;
-      });
-
-      const cx = groupX + groupW / 2;
-      svg += `<text x="${cx}" y="${baseY + 22}" text-anchor="middle" font-size="12" font-weight="600" fill="${_c('chartLabelColor')}">${m.label}</text>`;
-    });
-
-    svg += '</svg>';
-    box.innerHTML = svg;
-
-    if(legendBox){
-      legendBox.innerHTML = all.map(r =>
-        `<span><i style="background:${r.color};${r.isBase ? 'border:2px solid #f59e0b' : 'opacity:.7'}"></i>${r.isBase ? '🎯 ' : ''}${r.symbol}</span>`
-      ).join('');
-    }
-  }
-
-  function renderIndustryRadar(){
-    const box = $('industryRadar');
-    const legendBox = $('industryRadarLegend');
-    if(!box) return;
-
-    const { base, peers } = INDUSTRY_RESULTS;
-
-    const RADAR_METRICS = [
-      {
-        label: 'حاشیه سود خالص',
-        getter: r => {
-          const nm = r.r.netMargin;
-          if(nm == null) return 0;
-          return Math.max(0, Math.min(100, (nm / 0.30) * 100));
-        },
-      },
-      {
-        label: 'ROE',
-        getter: r => {
-          const roe = r.r.roe;
-          if(roe == null) return 0;
-          return Math.max(0, Math.min(100, (roe / 0.30) * 100));
-        },
-      },
-      {
-        label: 'نسبت جاری',
-        getter: r => {
-          const cr = r.r.currentRatio;
-          if(cr == null) return 0;
-          return Math.max(0, Math.min(100, ((cr - 0.5) / 2.5) * 100));
-        },
-      },
-      {
-        label: 'کم‌بدهی',
-        getter: r => {
-          const de = r.r.debtToEquity;
-          if(de == null) return 0;
-          return Math.max(0, Math.min(100, ((3 - de) / 3) * 100));
-        },
-      },
-      {
-        label: 'کیفیت سود',
-        getter: r => {
-          const cq = r.r.cfoToNet;
-          if(cq == null) return 0;
-          return Math.max(0, Math.min(100, (cq / 1.2) * 100));
-        },
-      },
-      {
-        label: 'رشد درآمد',
-        getter: r => {
-          const g = r.revGrowth;
-          if(g == null) return 0;
-          return Math.max(0, Math.min(100, ((g + 0.30) / 0.60) * 100));
-        },
-      },
-    ];
-
-    const N = RADAR_METRICS.length;
-    const W = 480, Hh = 480;
-    const cx = W / 2, cy = Hh / 2;
-    const R = 170;
-
-    function polygonPoints(radius){
-      const pts = [];
-      for(let i = 0; i < N; i++){
-        const angle = -Math.PI / 2 + (i * 2 * Math.PI / N);
-        const x = cx + radius * Math.cos(angle);
-        const y = cy + radius * Math.sin(angle);
-        pts.push([x, y]);
-      }
-      return pts;
-    }
-
-    let svg = `<svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="xMidYMid meet">`;
-
-    for(let ring = 1; ring <= 5; ring++){
-      const rr = (R * ring) / 5;
-      const pts = polygonPoints(rr);
-      const d = pts.map(p => p.join(',')).join(' ');
-      svg += `<polygon points="${d}" fill="none" stroke="${_c('chartLineColor')}" stroke-width="1"/>`;
-    }
-
-    const outerPts = polygonPoints(R);
-    outerPts.forEach(p => {
-      svg += `<line x1="${cx}" y1="${cy}" x2="${p[0]}" y2="${p[1]}" stroke="${_c('chartLineColor')}" stroke-width="1"/>`;
-    });
-
-    outerPts.forEach((p, i) => {
-      const angle = -Math.PI / 2 + (i * 2 * Math.PI / N);
-      const labelR = R + 28;
-      const lx = cx + labelR * Math.cos(angle);
-      const ly = cy + labelR * Math.sin(angle);
-      const anchor = (Math.abs(Math.cos(angle)) < 0.1)
-        ? 'middle'
-        : (Math.cos(angle) > 0 ? 'start' : 'end');
-      svg += `<text x="${lx}" y="${ly + 4}" text-anchor="${anchor}" font-size="11.5" font-weight="600" fill="${_c('chartLabelColor')}">${RADAR_METRICS[i].label}</text>`;
-    });
-
-    const allSorted = [...peers, base];
-
-    allSorted.forEach(r => {
-      const vals = RADAR_METRICS.map(m => m.getter(r));
-      const pts = vals.map((v, i) => {
-        const angle = -Math.PI / 2 + (i * 2 * Math.PI / N);
-        const radius = (v / 100) * R;
-        const x = cx + radius * Math.cos(angle);
-        const y = cy + radius * Math.sin(angle);
-        return [x, y];
-      });
-      const d = pts.map(p => p.join(',')).join(' ');
-      const strokeW = r.isBase ? 3 : 1.8;
-      const opacity = r.isBase ? 1 : 0.5;
-      const fillOpacity = r.isBase ? '44' : '11';
-      svg += `<polygon points="${d}" fill="${r.color}${fillOpacity}" stroke="${r.color}" stroke-width="${strokeW}" stroke-linejoin="round" opacity="${opacity}"/>`;
-      if(r.isBase){
-        pts.forEach(p => {
-          svg += `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${r.color}"/>`;
-        });
-      }
-    });
-
-    svg += '</svg>';
-    box.innerHTML = svg;
-
-    if(legendBox){
-      legendBox.innerHTML = allSorted.map(r =>
-        `<span><i style="background:${r.color};${r.isBase ? 'border:2px solid #f59e0b' : 'opacity:.6'}"></i>${r.isBase ? '🎯 ' : ''}${r.symbol}</span>`
-      ).join('');
-    }
-  }
-
   function renderIndustryRanking(){
     const box = $('industryRanking');
     if(!box) return;
@@ -1511,7 +1305,7 @@
       return;
     }
     const data = {
-      version: '1.5',
+      version: '1.5.1',
       type: 'kodal_industries',
       exportDate: new Date().toISOString(),
       count: INDUSTRY_SAVED.length,
@@ -1765,6 +1559,6 @@
   renderPeers();
   renderIndustrySaved();
 
-  console.log('%c📈 compare.js v1.5 لود شد (مقایسه با صنعت)', 'color:#f59e0b;font-weight:bold');
+  console.log('%c📈 compare.js v1.5.1 لود شد (بدون نمودار)', 'color:#f59e0b;font-weight:bold');
 
 })();
