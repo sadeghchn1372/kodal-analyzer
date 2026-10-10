@@ -4703,3 +4703,23 @@ body.dark .ratio-avg-marker-label {
     font-size: 11px !important;
   }
 }
+/* ============================================================
+   🆕 پاسخ پویا در توضیحات نسبت‌ها
+============================================================ */
+
+.ratio-hint-answer {
+  font-weight: 700;
+  transition: color .3s ease;
+  display: inline-block;
+  margin: 0 2px;
+}
+
+/* انیمیشن ملایم ظاهر شدن پاسخ */
+@keyframes hintAnswerFade {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ratio-hint-answer {
+  animation: hintAnswerFade .4s ease;
+}

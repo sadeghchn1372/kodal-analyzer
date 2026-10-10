@@ -870,41 +870,167 @@ function parseItems(lines){
   return items;
 }
 
-/* ---------- Hints ---------- */
+
+
 const HINTS = {
-  'نسبت جاری': 'شرکت اگه همین الان بخواد بدهی‌های کوتاه‌مدتش رو بده، پول یا دارایی کافی داره یا می‌مونه تو گل؟',
-  'نسبت آنی (Quick)': 'اگه شرکت بدبخت شد و خواست فوری بدهی‌هاش رو بده، بدون اینکه انبارش رو بفروشه، می‌تونه یا نه؟ (سخت‌گیرانه‌تره)',
-  'نسبت نقد': 'تو جیب شرکت همین الان چقدر پول نقد هست که بشه فوری بدهی رو داد؟ (سخت‌ترین معیاره)',
-  'سرمایه در گردش': 'بعد از اینکه بدهی‌های کوتاه‌مدتش رو داد، چقدر پول براش می‌مونه که بتونه کارش رو بچرخونه؟ (اگه منفی باشه، شرکت تو فشاره)',
-  'بدهی به دارایی': 'از هر ۱۰۰ تومن دارایی شرکت، چند تومنش مال طلبکارهاست نه سهامدارها؟ (هرچی بالاتر، ریسک بیشتر)',
-  'بدهی به حقوق صاحبان سهام': 'شرکت چقدر روی پول سهامدارها قرض گرفته؟ (اگه زیاد باشه، شرکت خیلی به قرض وابسته‌ست)',
-  'پوشش بهره': 'سود شرکت چند برابر هزینه بهره‌شه؟ (اگه نزدیک ۱ باشه، شرکت داره فقط برای بانک کار می‌کنه!)',
-  'اهرم حقوق مالکانه': 'با پول سهامدارها چند برابر دارایی خریداری شده؟ (هرچی بالاتر، ریسک بیشتر)',
-  'حاشیه سود ناخالص': 'از هر ۱۰۰ تومن فروش، چقدر بعد از هزینه تولید می‌مونه؟ (اگه کم باشه، شرکت تو تولید گرون‌تموم شده)',
-  'حاشیه سود عملیاتی': 'از هر ۱۰۰ تومن فروش، بعد از حقوق و اجاره و بازاریابی چقدر می‌مونه؟ (خود کسب‌وکار چقدر سوددهه)',
-  'حاشیه سود خالص': 'آخرش از هر ۱۰۰ تومن فروش، چقدر به جیب شرکت می‌ره؟ (این خط آخره!)',
-  'ROA': 'شرکت از دارایی‌هاش چقدر خوب داره سود درمیاره؟ (اگه کم باشه، دارایی‌ها هدر می‌رن)',
-  'ROE': 'از پول سهامدارها چقدر سود ساخته؟ (این همون چیزیه که سهامدارها دنبالشن)',
-  'گردش دارایی': 'به ازای هر ۱ تومن دارایی، چقدر فروش ساخته؟ (دارایی‌ها چقدر کار می‌کنن)',
-  'گردش موجودی': 'انبار چند بار تو سال پر و خالی شده؟ (اگه کم باشه، جنس تو انبار مونده و پول خوابیده)',
-  'گردش مطالبات': 'شرکت چقدر سریع پول فروش نسیه‌ش رو می‌گیره؟ (اگه کند باشه، پول تو دست مشتری‌هاست)',
-  'دوره وصول مطالبات (روز)': 'به طور میانگین چند روز طول می‌کشه شرکت پول فروش نسیه رو بگیره؟ (هرچی کمتر، بهتر)',
-  'جریان نقد عملیاتی / سود خالص': 'سودی که تو دفترها نشون داده، چقدرش واقعاً پول نقد شده؟ (اگه خیلی کم باشه، سود دفتریه)',
-  'آزاد FCF': 'بعد از همه هزینه‌ها و سرمایه‌گذاری، چقدر پول آزاد براش مونده؟ (این پول می‌تونه سود بده، بدهی بده، یا رشد کنه)',
-  'CFO به درآمد': 'از فروش شرکت، چند درصدش به پول نقد تبدیل شده؟ (فروش واقعی بوده یا الکی)',
-  'P/E': 'قیمت سهم چند برابر سود سالانه‌شه؟ (اگه زیاد باشه، سهم گرونه یا انتظار رشد زیاده)',
-  'P/B': 'قیمت بازار سهم چند برابر ارزش دفتری‌شه؟ (اگه زیاد باشه، بازار به شرکت خوش‌بین‌تره)',
-  'P/S': 'ارزش بازار شرکت چند برابر فروش سالانه‌شه؟ (برا شرکت‌های ضررده هم به کار میاد)',
-  'EPS': 'شرکت به ازای هر سهم چقدر سود ساخته؟ (این پایه‌ی محاسبه P/E و خیلی چیزای دیگه‌ست)',
-  'EV/EBITDA': 'کل ارزش شرکت (با بدهی) چند برابر سود نقدی قبل از استهلاکشه؟',
-  'چرخه تبدیل نقد (CCC)': 'از وقتی مواد اولیه می‌خره تا وقتی پول فروش به دستش می‌رسه، چند روز طول می‌کشه؟ (هرچی کمتر، شرکت سریع‌تر به پول می‌رسه)',
-  'نرخ رشد فروش': 'فروش شرکت نسبت به دوره قبل چقدر رشد کرده؟ (اگه نزولی باشه، شرکت داره کوچیک می‌شه)',
-  'نرخ رشد سود خالص': 'سود شرکت نسبت به دوره قبل چقدر رشد کرده؟ (اگه سود رشد نکنه، سهامدارها ناراضی‌ان)',
-  'PEG': 'P/E رو تقسیم بر رشد سود می‌کنیم تا ببینیم گرونی سهم به خاطر رشده یا نه؟ (اگه زیر ۱ باشه، سهم ارزون نسبت به رشدش)',
-  'ROCE (بازده سرمایه به کار گرفته شده)': 'شرکت از سرمایه‌ای که تو کارش گذاشته، چقدر سود ساخته؟ (سرمایه‌ش رو چقدر خوب داره کار می‌ندازه)',
-  'FCF به فروش': 'از فروش شرکت، چقدرش به پول آزاد تبدیل شده؟ (پولی که بعد از سرمایه‌گذاری می‌مونه)',
-  'پوشش بهره نقدی': 'شرکت با پول نقد واقعی، چند برابر هزینه بهره‌اش رو می‌تونه بده؟ (توان پرداخت واقعی بدهی)',
+  'نسبت جاری': {
+    template: 'شرکت اگه همین الان بخواد بدهی‌های کوتاه‌مدتش رو بده، ...',
+    good: 'پول یا دارایی کافی داره',
+    warn: 'به سختی می‌تونه بدهی‌هاش رو بده',
+    bad: 'می‌مونه تو گل',
+  },
+  'نسبت آنی (Quick)': {
+    template: 'اگه شرکت بدبخت شد و خواست فوری بدهی‌هاش رو بده، بدون اینکه انبارش رو بفروشه، ...',
+    good: 'می‌تونه بدهی‌هارو بده',
+    warn: 'به سختی می‌تونه',
+    bad: 'نمی‌تونه بدهی‌هارو بده',
+  },
+  'نسبت نقد': {
+    template: 'شرکت همین الان ... با پول نقدش، بدهی هاش بده',
+    good: 'می‌تونه ',
+    warn: 'فقط بخشی رو می‌تونه ',
+    bad: 'نمی‌تونه ',
+  },
+  'سرمایه در گردش': {
+    template: 'بعد از اینکه بدهی‌های کوتاه‌مدتش رو داد، ... که بتونه کارش رو بچرخونه',
+    good: 'پول کافی براش مونده',
+    warn: 'پول کمی براش مونده',
+    bad: 'پولی براش نمونده و تو فشاره',
+  },
+  'بدهی به دارایی': {
+    dynamic: true,
+    template: 'از هر ۱۰۰ تومن دارایی شرکت، {v} تومنش مال طلبکارهاست نه سهامدارها',
+  },
+  'بدهی به حقوق صاحبان سهام': {
+    template: 'شرکت ... روی پول سهامدارها قرض گرفته',
+    good: 'کم',
+    warn: 'متوسط',
+    bad: 'زیاد',
+  },
+  'پوشش بهره': {
+    dynamic: true,
+    template: 'سود شرکت {v} برابر هزینه بهره‌شه',
+  },
+  'اهرم حقوق مالکانه': {
+    dynamic: true,
+    template: 'با پول سهامدارها {v} برابر دارایی خریداری شده',
+  },
+  'حاشیه سود ناخالص': {
+    dynamic: true,
+    template: 'از هر ۱۰۰ تومن فروش، {v} تومن بعد از هزینه تولید براش میمونه',
+  },
+  'حاشیه سود عملیاتی': {
+    dynamic: true,
+    template: 'از هر ۱۰۰ تومن فروش، بعد از حقوق و اجاره و بازاریابی، {v} تومن می‌مونه',
+  },
+  'حاشیه سود خالص': {
+    dynamic: true,
+    template: 'شرکت از هر ۱۰۰ تومن فروش، {v} تومن به جیب شرکت می‌ره',
+  },
+  'ROA': {
+    template: 'شرکت از دارایی‌هاش ... سود درمیاره؟',
+    good: 'خیلی خوب',
+    warn: 'متوسط',
+    bad: 'کم',
+  },
+  'ROE': {
+    template: 'شرکت از پول سهامدارها ...  ساخته',
+    good: 'سود خوبی',
+    warn: 'سود متوسطی',
+    bad: 'سود کمی',
+  },
+  'گردش دارایی': {
+    dynamic: true,
+    template: 'به ازای هر ۱ تومن دارایی، {v} تومن فروش ساخته',
+  },
+  'گردش موجودی': {
+    template: 'انبار ... تو سال پر و خالی شده؟',
+    good: 'چند بار',
+    warn: 'کم',
+    bad: 'خیلی کم',
+  },
+  'گردش مطالبات': {
+    template: 'شرکت ... پول فروش نسیه‌ش رو می‌گیره',
+    good: 'سریع',
+    warn: 'با تاخیر',
+    bad: 'خیلی کند',
+  },
+  'دوره وصول مطالبات (روز)': {
+    dynamic: true,
+    template: 'به طور میانگین {v} روز طول می‌کشه شرکت پول فروش نسیه رو بگیره',
+  },
+  'جریان نقد عملیاتی / سود خالص': {
+    template: 'سودی که تو دفترها نشون داده، ...  پول نقد شده',
+    good: 'واقعاً',
+    warn: 'تا حدی',
+    bad: 'کم',
+  },
+  'آزاد FCF': {
+    template: 'بعد از همه هزینه‌ها و سرمایه‌گذاری، ...  براش مونده',
+    good: 'پول خوبی',
+    warn: 'پول کمی',
+    bad: 'فقط هیچ',
+  },
+  'CFO به درآمد': {
+    dynamic: true,
+    template: 'از فروش شرکت، {v} به پول نقد تبدیل شده',
+  },
+  'P/E': {
+    dynamic: true,
+    template: 'قیمت سهم {v} برابر سود سالانه‌شه',
+  },
+  'P/B': {
+    dynamic: true,
+    template: 'قیمت بازار سهم {v} برابر ارزش دفتری‌شه',
+  },
+  'P/S': {
+    dynamic: true,
+    template: 'ارزش بازار شرکت {v} برابر فروش سالانه‌شه',
+  },
+  'EPS': {
+    dynamic: true,
+    template: 'شرکت به ازای هر سهم {v} سود ساخته',
+  },
+  'EV/EBITDA': {
+    template: 'کل ارزش شرکت (با بدهی) ... برابر سود نقدی قبل از استهلاکشه',
+    good: 'کمتر از ۶',
+    warn: 'حدود ۶ تا ۱۲',
+    bad: 'بیشتر از ۱۲',
+  },
+  'چرخه تبدیل نقد (CCC)': {
+    dynamic: true,
+    template: 'از وقتی مواد اولیه می‌خره تا وقتی پول فروش به دستش می‌رسه، {v} روز طول می‌کشه',
+  },
+  'نرخ رشد فروش': {
+    dynamic: true,
+    template: 'فروش شرکت نسبت به دوره قبل {v}',
+  },
+  'نرخ رشد سود خالص': {
+    dynamic: true,
+    template: 'سود شرکت نسبت به دوره قبل {v}',
+  },
+  'PEG': {
+    template: 'P/E رو تقسیم بر رشد سود می‌کنیم تا ببینیم گرونی سهم به خاطر رشده یا نه؟ ...',
+    good: 'زیر ۱ (ارزون نسبت به رشدش)',
+    warn: 'حدود ۱ تا ۲ (متعادل)',
+    bad: 'بالای ۲ (گرون حتی با رشد)',
+  },
+  'ROCE (بازده سرمایه به کار گرفته شده)': {
+    template: 'شرکت از سرمایه‌ای که تو کارش گذاشته، ...  ساخته',
+    good: 'سود خوبی',
+    warn: 'سود متوسطی',
+    bad: 'سود کمی',
+  },
+
+  'پوشش بهره نقدی': {
+    dynamic: true,
+    template: 'شرکت با پول نقد واقعی، {v} برابر هزینه بهره‌اش رو می‌تونه بده',
+  },
 };
+
+
+
+
 
 /* ---------- Chart Colors ---------- */
 function chartTextColor(){ return document.body.classList.contains('dark') ? '#94a3b8' : '#64748b'; }
@@ -1994,8 +2120,7 @@ function render(ci){
   const peg = (pe != null && growthNet != null && growthNet > 0)
     ? pe / (growthNet * 100) : null;
 
-  const fcfToSales = (v.cfo != null && v.capex != null && v.revenue != null && v.revenue !== 0)
-    ? (v.cfo - Math.abs(v.capex)) / v.revenue : null;
+
 
   const cashInterestCoverage = (v.cfo != null && v.financeCost != null && Math.abs(v.financeCost) > 0)
     ? v.cfo / Math.abs(v.financeCost) : null;
@@ -2034,7 +2159,6 @@ function render(ci){
       ['جریان نقد عملیاتی / سود خالص', ratio(v.cfo, v.net), x=>x<0.5, x=>x<0.8],
       ['آزاد FCF',                     (v.cfo!=null && v.capex!=null)?(v.cfo - Math.abs(v.capex)):null, x=>x<0, ()=>false],
       ['CFO به درآمد',                 ratio(v.cfo, v.revenue), x=>x<0.02, x=>x<0.05],
-      ['FCF به فروش',                  fcfToSales, x=>x<0, x=>x<0.05],
       ['پوشش بهره نقدی',               cashInterestCoverage, x=>x<2, x=>x<5],
     ],
     val: [
@@ -2049,7 +2173,7 @@ function render(ci){
 
   const fmt = (name, x) => {
     if(x==null) return '—';
-    if(/حاشیه|ROA|ROE|ROCE|CFO به درآمد|FCF به فروش|نرخ رشد/.test(name)) return pct(x);
+    if(/حاشیه|ROA|ROE|ROCE|CFO به درآمد|نرخ رشد/.test(name)) return pct(x);
     if(/روز|CCC|چرخه تبدیل/.test(name)) return toFa(x.toFixed(0))+' روز';
     if(/سرمایه در گردش|آزاد FCF/.test(name)) return toman(x);
     if(name === 'EPS'){
@@ -2065,6 +2189,8 @@ function render(ci){
     return 'good';
   };
 
+
+
   function tableFor(list){
     return '<div class="ratio-cards">' + list.map(([name,x,bad,warn])=>{
       const c = statusClass(x, bad, warn);
@@ -2077,6 +2203,7 @@ function render(ci){
       else if(c === 'good') score = 85;
 
       const hint = HINTS[name] || '';
+      const dynamicHint = makeHintDynamic(name, hint, c, x);
 
       return `
         <div class="ratio-card">
@@ -2090,11 +2217,111 @@ function render(ci){
               <div class="ratio-card-fill-inline" style="width:${score}%;background:${color}"></div>
             </div>
           </div>
-          ${hint ? `<div class="ratio-card-hint">${hint}</div>` : ''}
+          ${dynamicHint ? `<div class="ratio-card-hint">${dynamicHint}</div>` : ''}
         </div>
       `;
     }).join('') + '</div>';
   }
+
+
+
+
+
+
+  /* ⭐ فرمت‌کننده مقدار برای نسبت‌های پویا */
+  function formatDynamicValue(name, x){
+    if(x == null || !isFinite(x)) return '—';
+
+    // این ۴ نسبت: عدد بدون ٪ (چون جمله خودش «از هر ۱۰۰ تومن...» داره)
+    const noPercentSign = /^(بدهی به دارایی|حاشیه سود ناخالص|حاشیه سود عملیاتی|حاشیه سود خالص)$/.test(name);
+
+    // نسبت‌های درصدی
+    if(/حاشیه|ROA|ROE|ROCE|بدهی به دارایی|CFO به درآمد|نرخ رشد/.test(name)){
+      const pctVal = x * 100;
+      const rounded = Math.abs(pctVal) >= 1 ? Math.round(pctVal) : null;
+
+      if(rounded !== null){
+        return toFa(rounded.toLocaleString('en-US')) + (noPercentSign ? '' : '٪');
+      }
+      // اگه < ۱ بود، دست‌نخورده با ۲ رقم اعشار
+      return toFa(pctVal.toFixed(2)) + (noPercentSign ? '' : '٪');
+    }
+
+    // نسبت‌های روز
+    if(/روز|CCC|چرخه تبدیل/.test(name)){
+      return toFa(Math.round(x)) + ' روز';
+    }
+
+    // EPS (ریال)
+    if(name === 'EPS'){
+      return toFa(Math.round(x).toLocaleString('en-US')) + ' ریال';
+    }
+
+    // بقیه: عدد ساده
+    if(Math.abs(x) >= 1){
+      return toFa(Math.round(x).toLocaleString('en-US'));
+    }
+    return num2(x);
+  }
+
+
+  /* ⭐ توضیحات پویا — جای {v} رو با عدد واقعی پر می‌کنه */
+  function makeHintDynamic(name, hint, status, x){
+    if(!hint) return '';
+
+    if(typeof hint === 'object' && hint.dynamic && hint.template){
+      let value = formatDynamicValue(name, x);
+      let color = '#16834a';
+
+      if(status === 'warn') color = '#eab308';
+      else if(status === 'bad') color = '#c62828';
+
+      if(/نرخ رشد/.test(name)){
+        if(x != null && isFinite(x)){
+          const absPct = toFa((Math.abs(x) * 100).toFixed(1)) + '٪';
+          const word = x >= 0 ? 'رشد کرده' : 'افت کرده';
+          const finalColor = x >= 0 ? '#16834a' : '#c62828';
+          return hint.template.replace('{v}',
+            `<span class="ratio-hint-answer" style="color:${finalColor};font-weight:700">${absPct} ${word}</span>`
+          );
+        }
+        return hint.template.replace('{v}', '<span style="color:#94a3b8">نامشخص</span>');
+      }
+
+      return hint.template.replace('{v}',
+        `<span class="ratio-hint-answer" style="color:${color};font-weight:700">${value}</span>`
+      );
+    }
+
+    if(typeof hint === 'object' && hint.template){
+      const template = hint.template;
+      let replacement = '';
+      let color = '';
+
+      if(status === 'good'){
+        replacement = hint.good || '';
+        color = '#16834a';
+      } else if(status === 'warn'){
+        replacement = hint.warn || '';
+        color = '#eab308';
+      } else if(status === 'bad'){
+        replacement = hint.bad || '';
+        color = '#c62828';
+      } else {
+        return template.replace('...', '<span style="color:#94a3b8">؟؟</span>');
+      }
+
+      return template.replace('...',
+        `<span class="ratio-hint-answer" style="color:${color};font-weight:700">${replacement}</span>`
+      );
+    }
+
+    return hint;
+  }
+
+
+
+
 
   document.querySelectorAll('#tabSingle .tab').forEach(t => {
     t.onclick = () => {
@@ -2245,6 +2472,12 @@ function render(ci){
   renderAlerts(v);
   updatePrintHeader();
 }
+
+
+
+
+
+
 
 /* ---------- Summary ---------- */
 function renderSummary(v, extras){
