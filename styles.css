@@ -1,19 +1,107 @@
+/* ============================================================
+   styles.css — تحلیلگر کدال  |  v2.0.0
+============================================================ */
+
 @import url('Vazirmatn-font-face.css');
 
-:root{--bg:#f5f7fb;--card:#fff;--txt:#1f2937;--sub:#667085;--line:#e5e7eb;--blue:#1769e0;--good:#16834a;--warn:#a15c00;--bad:#c62828;--chart-bg:#fbfcff;--chart-br:#eef2f7;--table-head:#f8fafc;--hover:#fafbff;--metric-bg:linear-gradient(135deg,#f1f5f9,#e8eefb)}
-body.dark{--bg:#0f172a;--card:#1e293b;--txt:#e2e8f0;--sub:#94a3b8;--line:#334155;--blue:#3b82f6;--good:#34d399;--warn:#fbbf24;--bad:#f87171;--chart-bg:#0f172a;--chart-br:#334155;--table-head:#0f172a;--hover:#334155;--metric-bg:linear-gradient(135deg,#334155,#1e293b)}
+/* ============================================================
+   ۱. متغیرها و تم‌ها
+============================================================ */
+:root{
+  --bg:#f5f7fb;
+  --card:#fff;
+  --txt:#1f2937;
+  --sub:#667085;
+  --line:#e5e7eb;
+  --blue:#1769e0;
+  --good:#16834a;
+  --warn:#a15c00;
+  --bad:#c62828;
+  --chart-bg:#fbfcff;
+  --chart-br:#eef2f7;
+  --table-head:#f8fafc;
+  --hover:#fafbff;
+  --metric-bg:linear-gradient(135deg,#f1f5f9,#e8eefb);
+}
+body.dark{
+  --bg:#0f172a;
+  --card:#1e293b;
+  --txt:#e2e8f0;
+  --sub:#94a3b8;
+  --line:#334155;
+  --blue:#3b82f6;
+  --good:#34d399;
+  --warn:#fbbf24;
+  --bad:#f87171;
+  --chart-bg:#0f172a;
+  --chart-br:#334155;
+  --table-head:#0f172a;
+  --hover:#334155;
+  --metric-bg:linear-gradient(135deg,#334155,#1e293b);
+}
+
+/* ============================================================
+   ۲. ریست و پایه
+============================================================ */
 *{box-sizing:border-box;font-family:'Vazirmatn',Tahoma,Arial,sans-serif}
-body{font-family:'Vazirmatn',Tahoma,Arial,sans-serif;background:var(--bg);margin:0;color:var(--txt);line-height:1.7;transition:background .3s,color .3s}
+body{
+  font-family:'Vazirmatn',Tahoma,Arial,sans-serif;
+  background:var(--bg);
+  margin:0;
+  color:var(--txt);
+  line-height:1.7;
+  transition:background .3s,color .3s;
+}
 .wrap{max-width:1180px;margin:25px auto;padding:18px}
-.card{background:var(--card);border-radius:18px;padding:20px;margin:14px 0;box-shadow:0 5px 22px #0001}
+.card{
+  background:var(--card);
+  border-radius:18px;
+  padding:20px;
+  margin:14px 0;
+  box-shadow:0 5px 22px #0001;
+}
 h1{margin:0 0 8px;font-size:32px;text-align:center;width:100%}
-h2{margin:0 0 12px;font-size:17px;color:var(--txt);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+h2{
+  margin:0 0 12px;
+  font-size:17px;
+  color:var(--txt);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
 h3{margin:0 0 10px;font-size:14px;color:var(--txt)}
 .sub{color:var(--sub);font-size:13px;margin:0;text-align:center}
+
+/* ============================================================
+   ۳. دکمه‌ها و فرم‌ها
+============================================================ */
+button,select{
+  font:inherit;
+  border-radius:10px;
+  padding:11px 18px;
+  border:1px solid #ccd3dd;
+  background:var(--card);
+  color:var(--txt);
+}
+button{cursor:pointer;border:0}
+button.primary{background:var(--blue);color:#fff}
+button.ghost{
+  background:transparent;
+  border:1px solid #ccd3dd;
+  color:var(--txt);
+  padding:8px 14px;
+  font-size:13px;
+}
+button:disabled{opacity:.45;cursor:not-allowed}
+
+/* ============================================================
+   ۴. دراپ‌زون اصلی
+============================================================ */
 .drop{
   border:2px dashed #98a2b3;
   border-radius:14px;
-  padding:18px 18px;
+  padding:18px;
   text-align:center;
   background:linear-gradient(135deg, var(--chart-bg), var(--card));
   transition:.25s ease;
@@ -47,12 +135,8 @@ h3{margin:0 0 10px;font-size:14px;color:var(--txt)}
   transition:transform .3s ease;
   filter:drop-shadow(0 3px 6px rgba(0,0,0,.06));
 }
-.drop:hover .drop-icon{
-  transform:scale(1.1) rotate(-5deg);
-}
-.drop.hover .drop-icon{
-  transform:scale(1.15) translateY(-3px);
-}
+.drop:hover .drop-icon{transform:scale(1.1) rotate(-5deg)}
+.drop.hover .drop-icon{transform:scale(1.15) translateY(-3px)}
 .drop-text{
   font-size:13.5px;
   font-weight:600;
@@ -98,9 +182,7 @@ h3{margin:0 0 10px;font-size:14px;color:var(--txt)}
   font-size:12.5px;
   font-weight:600;
 }
-.drop-file-info.active{
-  display:inline-flex;
-}
+.drop-file-info.active{display:inline-flex}
 .drop-file-info .file-name{
   max-width:220px;
   overflow:hidden;
@@ -108,66 +190,30 @@ h3{margin:0 0 10px;font-size:14px;color:var(--txt)}
   white-space:nowrap;
   direction:ltr;
 }
-.drop-file-info .file-icon{
-  font-size:15px;
-}
-button,select{font:inherit;border-radius:10px;padding:11px 18px;border:1px solid #ccd3dd;background:var(--card);color:var(--txt)}
-button{cursor:pointer;border:0}
-button.primary{background:var(--blue);color:#fff}
-button.ghost{background:transparent;border:1px solid #ccd3dd;color:var(--txt);padding:8px 14px;font-size:13px}
-button:disabled{opacity:.45;cursor:not-allowed}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.metric{background:var(--metric-bg);padding:12px 14px;border-radius:12px;transition:transform .15s}
-.metric:hover{transform:translateY(-2px)}
-.metric span{font-size:12px;color:var(--sub)}
-.metric b{display:block;font-size:18px;margin-top:6px;color:var(--txt);text-align:right;direction:rtl}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top;color:var(--txt)}
-th{background:var(--table-head);color:var(--sub);font-weight:600;font-size:13px}
-tr:hover td{background:var(--hover)}
-.good{color:var(--good);font-weight:600}
-.warn{color:var(--warn);font-weight:600}
-.bad{color:var(--bad);font-weight:600}
-.analysis-item{padding:12px 14px;border-right:4px solid var(--blue);background:var(--chart-bg);border-radius:8px;margin:8px 0;display:flex;align-items:center;gap:10px}
-.analysis-item.good-item{border-color:var(--good);background:rgba(16,185,129,.08)}
-.analysis-item.warn-item{border-color:var(--warn);background:rgba(234,179,8,.08)}
-.analysis-item.bad-item{border-color:var(--bad);background:rgba(239,68,68,.08)}
-.analysis-item .icon{font-size:18px;line-height:1.4;flex-shrink:0}
-.analysis-item .help{margin-right:auto}
-.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.tab{padding:8px 14px;border-radius:10px;background:rgba(59,130,246,.12);color:var(--blue);cursor:pointer;font-size:13px}
-.tab.active{background:var(--blue);color:#fff}
-.err{background:rgba(239,68,68,.1);color:var(--bad);padding:12px;border-radius:10px;margin-top:12px;border-right:4px solid var(--bad)}
+.drop-file-info .file-icon{font-size:15px}
 
-.help{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:20px;height:20px;border-radius:50%;
-  background:var(--blue);color:#fff;font-size:12px;font-weight:700;
-  cursor:pointer;user-select:none;line-height:1;
-  transition:transform .15s;font-family:'Vazirmatn',Tahoma,sans-serif;
-  flex-shrink:0;
+/* ============================================================
+   ۵. توپ‌بار بالا
+============================================================ */
+.topbar{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  margin-bottom:8px;
+  padding-bottom:14px;
+  border-bottom:1px solid var(--line);
+  width:100%;
 }
-.help:hover{transform:scale(1.15)}
-#globalTooltip{
-  position:fixed;
-  background:#1e293b;color:#f1f5f9;
-  padding:12px 16px;border-radius:10px;
-  font-size:12.5px;font-weight:400;line-height:1.8;
-  width:min(360px, 85vw);
-  text-align:right;direction:rtl;
-  opacity:0;visibility:hidden;pointer-events:none;
-  transition:opacity .15s, visibility .15s;
-  box-shadow:0 12px 30px rgba(0,0,0,.35);
-  z-index:999999;
-  white-space:pre-line;
+.topbar .actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
 }
-body.dark #globalTooltip{background:#475569;color:#f8fafc;border:1px solid #64748b}
-#globalTooltip.show{opacity:1;visibility:visible;pointer-events:auto}
 
-.topbar{display:flex;flex-direction:column;gap:14px;margin-bottom:8px;padding-bottom:14px;border-bottom:1px solid var(--line);width:100%}
-.topbar .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-
-/* ============ Main Tabs ============ */
+/* ============================================================
+   ۶. تب‌های اصلی
+============================================================ */
 .main-tabs{
   display:flex;
   gap:8px;
@@ -194,14 +240,23 @@ body.dark #globalTooltip{background:#475569;color:#f8fafc;border:1px solid #6474
   gap:8px;
 }
 .main-tab:hover{background:rgba(23,105,224,.08);color:var(--blue)}
-.main-tab.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px rgba(23,105,224,.35)}
+.main-tab.active{
+  background:var(--blue);
+  color:#fff;
+  box-shadow:0 4px 12px rgba(23,105,224,.35);
+}
 body.dark .main-tab.active{box-shadow:0 4px 12px rgba(59,130,246,.5)}
 
 .tab-panel{display:none;animation:fadeIn .25s ease}
 .tab-panel.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
+}
 
-/* ============ Input Sections ============ */
+/* ============================================================
+   ۷. بخش‌های ورودی
+============================================================ */
 .input-section{
   margin-top:14px;
   padding:16px;
@@ -241,6 +296,7 @@ body.dark .main-tab.active{box-shadow:0 4px 12px rgba(59,130,246,.5)}
   border-radius:6px;
 }
 
+/* ---------- اطلاعات بازار ---------- */
 .market-grid{
   display:grid;
   grid-template-columns:1.2fr 1fr 1fr;
@@ -299,11 +355,7 @@ body.dark .market-hint{background:rgba(59,130,246,.1)}
   border-radius:8px;
   border:1px solid var(--line);
 }
-.period-info-box label{
-  font-size:12.5px;
-  color:var(--sub);
-  margin:0;
-}
+.period-info-box label{font-size:12.5px;color:var(--sub);margin:0}
 .period-info-text{
   font-size:12.5px;
   font-weight:700;
@@ -313,9 +365,7 @@ body.dark .market-hint{background:rgba(59,130,246,.1)}
   border-radius:6px;
   direction:rtl;
 }
-body.dark .period-info-text{
-  background:rgba(59,130,246,.15);
-}
+body.dark .period-info-text{background:rgba(59,130,246,.15)}
 
 .one-line-note{
   margin-top:12px;
@@ -330,32 +380,267 @@ body.dark .period-info-text{
 body.dark .one-line-note{background:rgba(59,130,246,.1)}
 .one-line-note:empty{display:none}
 
+/* ============================================================
+   ۸. امتیاز و کارت‌ها
+============================================================ */
 .score-wrap{display:flex;align-items:center;gap:18px;margin:6px 0 4px}
-.score-num{font-size:46px;font-weight:700;direction:ltr;line-height:1;min-width:110px;text-align:center}
+.score-num{
+  font-size:46px;
+  font-weight:700;
+  direction:ltr;
+  line-height:1;
+  min-width:110px;
+  text-align:center;
+}
 .score-label{font-size:14px;color:var(--txt)}
-.score-bar{flex:1;height:16px;background:#e5e7eb;border-radius:999px;overflow:hidden;position:relative}
-.score-fill{height:100%;border-radius:999px;transition:width .8s ease;background:linear-gradient(90deg,#ef4444,#f59e0b,#10b981)}
-.score-text{margin-top:10px;font-size:14px;padding:10px 14px;border-radius:10px;background:var(--chart-bg);border-right:4px solid var(--blue)}
+.score-bar{
+  flex:1;
+  height:16px;
+  background:#e5e7eb;
+  border-radius:999px;
+  overflow:hidden;
+  position:relative;
+}
+.score-fill{
+  height:100%;
+  border-radius:999px;
+  transition:width .8s ease;
+  background:linear-gradient(90deg,#ef4444,#f59e0b,#10b981);
+}
+.score-text{
+  margin-top:10px;
+  font-size:14px;
+  padding:10px 14px;
+  border-radius:10px;
+  background:var(--chart-bg);
+  border-right:4px solid var(--blue);
+}
 
+/* ============================================================
+   ۹. نمودارها
+============================================================ */
 .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px}
-.chart-box{background:var(--chart-bg);border:1px solid var(--chart-br);border-radius:14px;padding:14px}
+.chart-box{
+  background:var(--chart-bg);
+  border:1px solid var(--chart-br);
+  border-radius:14px;
+  padding:14px;
+}
 .chart-box svg{width:100%;height:auto;display:block}
-.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:12px;color:var(--sub);justify-content:center}
+.legend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-top:10px;
+  font-size:12px;
+  color:var(--sub);
+  justify-content:center;
+}
 .legend span{display:flex;align-items:center;gap:5px}
 .legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
 .pie-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
 
-.dupont{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;gap:8px;align-items:center;margin-top:10px}
-.dupont-box{background:linear-gradient(135deg,#eef4ff,#dbeafe);border-radius:12px;padding:14px;text-align:center;border:1px solid #bfdbfe}
+/* ============================================================
+   ۱۰. DuPont
+============================================================ */
+.dupont{
+  display:grid;
+  grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;
+  gap:8px;
+  align-items:center;
+  margin-top:10px;
+}
+.dupont-box{
+  background:linear-gradient(135deg,#eef4ff,#dbeafe);
+  border-radius:12px;
+  padding:14px;
+  text-align:center;
+  border:1px solid #bfdbfe;
+}
 body.dark .dupont-box{background:linear-gradient(135deg,#1e3a8a,#172554);border-color:#3b82f6}
 .dupont-box .lbl{font-size:11px;color:var(--sub);display:block;margin-bottom:6px}
 .dupont-box .val{font-size:18px;font-weight:700;color:var(--blue);direction:ltr}
 .dupont-op{font-size:24px;color:var(--sub);font-weight:700}
-.dupont-result{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-color:#6ee7b7}
+.dupont-result{
+  background:linear-gradient(135deg,#d1fae5,#a7f3d0);
+  border-color:#6ee7b7;
+}
 body.dark .dupont-result{background:linear-gradient(135deg,#065f46,#064e3b);border-color:#10b981}
 .dupont-result .val{color:#065f46}
 body.dark .dupont-result .val{color:#6ee7b7}
 
+/* ---------- DuPont Hero (v1.7) ---------- */
+.dupont-hero{
+  text-align:center;
+  padding:20px 16px 16px;
+  background:linear-gradient(135deg, var(--chart-bg), var(--card));
+  border-radius:14px;
+  margin-bottom:18px;
+  border:1px solid var(--chart-br);
+}
+.dupont-hero-label{
+  font-size:12.5px;
+  color:var(--sub);
+  font-weight:600;
+  margin-bottom:6px;
+}
+.dupont-hero-num{
+  font-size:42px;
+  font-weight:700;
+  line-height:1;
+  direction:rtl;
+  margin-bottom:6px;
+  font-variant-numeric:tabular-nums;
+}
+.dupont-hero-level{
+  font-size:14px;
+  font-weight:700;
+  margin-bottom:18px;
+}
+.dupont-scale{margin:0 auto;max-width:420px}
+.dupont-scale-bar{
+  position:relative;
+  display:flex;
+  height:12px;
+  border-radius:8px;
+  overflow:hidden;
+  background:var(--chart-br);
+  margin-bottom:8px;
+}
+.dupont-scale-zone{height:100%;transition:opacity .2s}
+.zone-bad{background:#ef4444}
+.zone-warn{background:#f59e0b}
+.zone-neutral{background:#eab308}
+.zone-good{background:#22c55e}
+.zone-excellent{background:#16834a}
+.dupont-scale-marker{
+  position:absolute;
+  top:-5px;
+  width:6px;
+  height:22px;
+  background:var(--txt);
+  border-radius:3px;
+  border:2px solid var(--card);
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
+  transition:left .6s ease;
+  transform:translateX(-50%);
+}
+.dupont-scale-ticks{
+  display:flex;
+  justify-content:space-between;
+  font-size:10.5px;
+  color:var(--sub);
+  direction:rtl;
+  padding:0 4px;
+}
+.dupont-factors{margin-bottom:18px}
+.dupont-factors-title{
+  font-size:13.5px;
+  font-weight:700;
+  color:var(--txt);
+  margin-bottom:12px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--line);
+}
+.dupont-factor{margin-bottom:14px}
+.dupont-factor-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:12.5px;
+  margin-bottom:6px;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.dupont-factor-name{color:var(--sub);font-weight:600}
+.dupont-factor-value{font-weight:700;direction:rtl;font-variant-numeric:tabular-nums}
+.dupont-factor-bar{
+  height:10px;
+  background:var(--chart-br);
+  border-radius:6px;
+  overflow:hidden;
+}
+.dupont-factor-fill{
+  height:100%;
+  border-radius:6px;
+  transition:width .8s ease;
+}
+.dupont-story{
+  padding:14px 16px;
+  background:var(--chart-bg);
+  border-radius:12px;
+  border-right:4px solid var(--blue);
+  font-size:13.5px;
+  line-height:1.9;
+  color:var(--txt);
+}
+.dupont-story-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+  margin-bottom:8px;
+}
+.dupont-story-icon{font-size:18px}
+.dupont-story-text{margin-bottom:10px}
+.dupont-story-suggestion{
+  padding-top:8px;
+  border-top:1px dashed var(--line);
+  font-size:12.5px;
+  color:var(--sub);
+}
+.dupont-story-suggestion b{color:var(--blue)}
+
+/* ---------- DuPont Factor Inline (v1.7 افقی) ---------- */
+.dupont-factor-row{
+  display:grid;
+  grid-template-columns:auto auto 1fr;
+  align-items:center;
+  gap:14px;
+  padding:10px 12px;
+  margin-bottom:8px;
+  border-radius:10px;
+  background:var(--chart-bg);
+  border:1px solid var(--chart-br);
+  transition:background .15s;
+}
+.dupont-factor-row:hover{background:var(--hover)}
+.dupont-factor-label{
+  font-size:13px;
+  font-weight:600;
+  color:var(--txt);
+  white-space:nowrap;
+  min-width:110px;
+}
+.dupont-factor-value-box{
+  font-size:12.5px;
+  font-weight:700;
+  direction:rtl;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+  min-width:110px;
+  text-align:left;
+  padding:4px 10px;
+  border-radius:8px;
+  background:rgba(102,112,133,.08);
+}
+.dupont-factor-bar-inline{
+  height:12px;
+  border-radius:6px;
+  overflow:hidden;
+  background:var(--chart-br);
+  position:relative;
+}
+.dupont-factor-fill-inline{
+  height:100%;
+  border-radius:6px;
+  transition:width .8s ease;
+  box-shadow:0 0 8px rgba(0,0,0,.1) inset;
+}
+
+/* ============================================================
+   ۱۱. Z-Score
+============================================================ */
 .zscore-wrap{
   display:flex;
   flex-direction:column;
@@ -363,11 +648,43 @@ body.dark .dupont-result .val{color:#6ee7b7}
   gap:14px;
   margin-top:14px;
 }
-.zscore-num{font-size:56px;font-weight:700;direction:ltr;text-align:center;line-height:1}
+.zscore-num{
+  font-size:56px;
+  font-weight:700;
+  direction:ltr;
+  text-align:center;
+  line-height:1;
+}
 .zscore-zone{font-size:16px;text-align:center;font-weight:600}
-.zscore-bar{position:relative;height:22px;border-radius:12px;overflow:hidden;background:linear-gradient(90deg,#ef4444 0%,#ef4444 33%,#eab308 33%,#eab308 55%,#10b981 55%,#10b981 100%);width:100%;max-width:520px;margin-top:6px}
-.zscore-marker{position:absolute;top:-4px;width:4px;height:30px;background:var(--txt);border-radius:2px;transition:left .8s ease}
-.zscore-ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-top:6px;direction:ltr;width:100%;max-width:520px}
+.zscore-bar{
+  position:relative;
+  height:22px;
+  border-radius:12px;
+  overflow:hidden;
+  background:linear-gradient(90deg,#ef4444 0%,#ef4444 33%,#eab308 33%,#eab308 55%,#10b981 55%,#10b981 100%);
+  width:100%;
+  max-width:520px;
+  margin-top:6px;
+}
+.zscore-marker{
+  position:absolute;
+  top:-4px;
+  width:4px;
+  height:30px;
+  background:var(--txt);
+  border-radius:2px;
+  transition:left .8s ease;
+}
+.zscore-ticks{
+  display:flex;
+  justify-content:space-between;
+  font-size:11px;
+  color:var(--sub);
+  margin-top:6px;
+  direction:ltr;
+  width:100%;
+  max-width:520px;
+}
 .zscore-note{
   margin-top:16px;
   font-size:13.5px;
@@ -381,9 +698,9 @@ body.dark .dupont-result .val{color:#6ee7b7}
   text-align:center;
 }
 
-/* ============================================
-   🔬 کیفیت سود
-============================================ */
+/* ============================================================
+   ۱۲. کیفیت سود
+============================================================ */
 .qual-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -414,17 +731,11 @@ body.dark .dupont-result .val{color:#6ee7b7}
   color:var(--sub);
   line-height:1.7;
 }
-.qual-box.real{
-  border-right:4px solid var(--good);
-}
+.qual-box.real{border-right:4px solid var(--good)}
 .qual-box.real .qual-val{color:var(--good)}
-.qual-box.other{
-  border-right:4px solid var(--warn);
-}
+.qual-box.other{border-right:4px solid var(--warn)}
 .qual-box.other .qual-val{color:var(--warn)}
-.qual-box.other.bad{
-  border-right-color:var(--bad);
-}
+.qual-box.other.bad{border-right-color:var(--bad)}
 .qual-box.other.bad .qual-val{color:var(--bad)}
 
 .qual-bar-wrap{
@@ -474,136 +785,22 @@ body.dark .dupont-result .val{color:#6ee7b7}
   color:var(--sub);
   justify-content:center;
 }
+.qual-legend span{display:flex;align-items:center;gap:6px}
+.qual-legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+/* ============================================================
+   ۱۳. متغیرهای مشترک (تکرارشده‌ها یکسان‌سازی شد)
+============================================================ */
+.legend span,
 .qual-legend span{
   display:flex;
   align-items:center;
-  gap:6px;
-}
-.qual-legend i{
-  width:11px;
-  height:11px;
-  border-radius:3px;
-  display:inline-block;
+  gap:5px;
 }
 
-/* ============================================
-   🔍 تفسیر متن صورت مالی
-============================================ */
-.text-insight-summary{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-  margin-bottom:14px;
-  padding:12px 16px;
-  background:var(--chart-bg);
-  border-radius:12px;
-  border:1px solid var(--chart-br);
-}
-.text-insight-count{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:6px 14px;
-  border-radius:20px;
-  font-size:13px;
-  font-weight:600;
-}
-.text-insight-count.danger{
-  background:rgba(198,40,40,.12);
-  color:#c62828;
-}
-body.dark .text-insight-count.danger{
-  background:rgba(248,113,113,.15);
-  color:#f87171;
-}
-.text-insight-count.warning{
-  background:rgba(234,179,8,.12);
-  color:#a16207;
-}
-body.dark .text-insight-count.warning{
-  background:rgba(251,191,36,.15);
-  color:#fbbf24;
-}
-.text-insight-count.success{
-  background:rgba(16,185,129,.12);
-  color:#16834a;
-}
-body.dark .text-insight-count.success{
-  background:rgba(52,211,153,.15);
-  color:#34d399;
-}
-.text-insight-count.neutral{
-  background:rgba(102,112,133,.12);
-  color:var(--sub);
-}
-
-.text-insight-group{
-  margin-top:14px;
-}
-.text-insight-group-title{
-  font-size:13px;
-  font-weight:700;
-  margin-bottom:8px;
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-.text-insight-item{
-  display:flex;
-  align-items:flex-start;
-  gap:10px;
-  padding:10px 14px;
-  border-radius:8px;
-  margin:6px 0;
-  font-size:13px;
-  line-height:1.8;
-  border-right:4px solid var(--blue);
-  background:var(--chart-bg);
-}
-.text-insight-item.danger{
-  border-right-color:var(--bad);
-  background:rgba(198,40,40,.06);
-}
-body.dark .text-insight-item.danger{
-  background:rgba(248,113,113,.08);
-}
-.text-insight-item.warning{
-  border-right-color:var(--warn);
-  background:rgba(234,179,8,.06);
-}
-body.dark .text-insight-item.warning{
-  background:rgba(251,191,36,.08);
-}
-.text-insight-item.success{
-  border-right-color:var(--good);
-  background:rgba(16,185,129,.06);
-}
-body.dark .text-insight-item.success{
-  background:rgba(52,211,153,.08);
-}
-.text-insight-item .ins-icon{
-  font-size:16px;
-  flex-shrink:0;
-  line-height:1.6;
-}
-.text-insight-item .ins-text{
-  flex:1;
-  color:var(--txt);
-}
-.text-insight-item .ins-text b{
-  color:var(--blue);
-  font-weight:700;
-}
-.text-insight-empty{
-  text-align:center;
-  padding:20px;
-  color:var(--sub);
-  font-size:13px;
-}
-
-/* ============================================
-   🔔 هشدارهای تغییرات مهم (دیدبان)
-============================================ */
+/* ============================================================
+   ۱۴. بج‌های هشدار
+============================================================ */
 .wl-alert-badge{
   display:inline-flex;
   align-items:center;
@@ -684,11 +881,7 @@ body.dark .wl-alert-badge.success{
   align-items:center;
   gap:8px;
 }
-.wl-alert-popup ul{
-  margin:0;
-  padding:0;
-  list-style:none;
-}
+.wl-alert-popup ul{margin:0;padding:0;list-style:none}
 .wl-alert-popup li{
   padding:6px 0;
   display:flex;
@@ -697,13 +890,8 @@ body.dark .wl-alert-badge.success{
   border-bottom:1px dashed var(--line);
 }
 .wl-alert-popup li:last-child{border-bottom:0}
-.wl-alert-popup li .ic{
-  flex-shrink:0;
-  font-size:14px;
-}
-.wl-alert-popup li b{
-  color:var(--txt);
-}
+.wl-alert-popup li .ic{flex-shrink:0;font-size:14px}
+.wl-alert-popup li b{color:var(--txt)}
 .wl-alert-popup .num{
   font-weight:700;
   direction:ltr;
@@ -712,108 +900,172 @@ body.dark .wl-alert-badge.success{
 .wl-alert-popup .up{color:#16834a}
 .wl-alert-popup .down{color:#c62828}
 
-/* ============================================
-   📈 نمودار خطی دیدبان
-============================================ */
-.wl-chart-selector{
+/* ============================================================
+   ۱۵. لیست ذخیره‌شده
+============================================================ */
+.saved-list{display:grid;gap:8px;margin-top:10px}
+.saved-item{
   display:flex;
+  justify-content:space-between;
   align-items:center;
   gap:10px;
-  margin-bottom:14px;
   padding:10px 14px;
-  background:var(--chart-bg);
+  border:1px solid var(--line);
   border-radius:10px;
-  border:1px solid var(--chart-br);
+  background:var(--chart-bg);
   flex-wrap:wrap;
 }
-.wl-chart-selector label{
-  font-size:13px;
-  color:var(--sub);
+.saved-item .name{
   font-weight:600;
-}
-.wl-chart-selector select{
-  padding:8px 14px;
-  border-radius:8px;
-  border:1px solid var(--line);
-  background:var(--card);
-  color:var(--txt);
-  font:inherit;
-  cursor:pointer;
+  flex:1;
   min-width:180px;
+  display:flex;
+  align-items:center;
+  gap:6px;
 }
-.wl-chart-empty{
-  text-align:center;
-  padding:30px;
-  color:var(--sub);
-  font-size:13px;
-}
-
-.saved-list{display:grid;gap:8px;margin-top:10px}
-.saved-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--chart-bg);flex-wrap:wrap}
-.saved-item .name{font-weight:600;flex:1;min-width:180px;display:flex;align-items:center;gap:6px}
 .saved-item .date{font-size:12px;color:var(--sub);direction:ltr}
 .saved-item .btns{display:flex;gap:6px}
 .saved-item button{padding:5px 12px;font-size:12px}
-.saved-empty{color:var(--sub);font-size:13px;text-align:center;padding:14px}
+.saved-empty{
+  color:var(--sub);
+  font-size:13px;
+  text-align:center;
+  padding:14px;
+}
 
+/* ============================================================
+   ۱۶. مودال‌ها (یکسان‌سازی شده)
+============================================================ */
 #saveModal,
 #saveCompareModal,
 #saveMonthlyModal,
-#addWatchModal{
-  position:fixed;inset:0;background:rgba(0,0,0,.55);
-  display:none;align-items:center;justify-content:center;
-  z-index:99999;padding:20px;
+#addWatchModal,
+#saveIndustryModal,
+#compareIndustriesModal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+  padding:20px;
 }
 #saveModal.show,
 #saveCompareModal.show,
 #saveMonthlyModal.show,
-#addWatchModal.show{display:flex}
+#addWatchModal.show,
+#saveIndustryModal.show,
+#compareIndustriesModal.show{
+  display:flex !important;
+}
+
 #saveModal .modal-box,
 #saveCompareModal .modal-box,
 #saveMonthlyModal .modal-box,
-#addWatchModal .modal-box{
-  background:var(--card);color:var(--txt);
-  border-radius:16px;padding:22px;max-width:440px;width:100%;
+#addWatchModal .modal-box,
+#saveIndustryModal .modal-box,
+#compareIndustriesModal .modal-box{
+  background:var(--card);
+  color:var(--txt);
+  border-radius:16px;
+  padding:22px;
+  max-width:440px;
+  width:100%;
   box-shadow:0 20px 60px rgba(0,0,0,.4);
 }
+
 #saveModal h3,
 #saveCompareModal h3,
 #saveMonthlyModal h3,
-#addWatchModal h3{margin:0 0 12px;font-size:16px}
+#addWatchModal h3,
+#saveIndustryModal h3,
+#compareIndustriesModal h3{
+  margin:0 0 12px;
+  font-size:16px;
+}
+
 #saveModal label,
 #saveCompareModal label,
 #saveMonthlyModal label,
-#addWatchModal label{font-size:13px;color:var(--sub);display:block;margin-bottom:6px}
+#addWatchModal label,
+#saveIndustryModal label,
+#compareIndustriesModal label{
+  font-size:13px;
+  color:var(--sub);
+  display:block;
+  margin-bottom:6px;
+}
+
 #saveModal input,
 #saveCompareModal input,
 #saveMonthlyModal input,
 #addWatchModal input,
-#addWatchModal select{
-  width:100%;padding:11px 14px;border-radius:10px;
-  border:1px solid var(--line);background:var(--chart-bg);
-  color:var(--txt);font:inherit;direction:rtl;
+#addWatchModal select,
+#saveIndustryModal input,
+#compareIndustriesModal input,
+#compareIndustriesModal select{
+  width:100%;
+  padding:11px 14px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--chart-bg);
+  color:var(--txt);
+  font:inherit;
+  direction:rtl;
+  box-sizing:border-box;
 }
 #saveModal input:focus,
 #saveCompareModal input:focus,
 #saveMonthlyModal input:focus,
 #addWatchModal input:focus,
-#addWatchModal select:focus{outline:2px solid var(--blue);outline-offset:0;border-color:var(--blue)}
+#addWatchModal select:focus,
+#saveIndustryModal input:focus,
+#compareIndustriesModal input:focus,
+#compareIndustriesModal select:focus{
+  outline:2px solid var(--blue);
+  outline-offset:0;
+  border-color:var(--blue);
+}
+
 #saveModal .actions,
 #saveCompareModal .actions,
 #saveMonthlyModal .actions,
-#addWatchModal .actions{display:flex;justify-content:flex-start;gap:8px;margin-top:16px}
+#addWatchModal .actions,
+#saveIndustryModal .actions,
+#compareIndustriesModal .actions{
+  display:flex;
+  justify-content:flex-start;
+  gap:8px;
+  margin-top:16px;
+}
+
+/* ============================================================
+   ۱۷. Toast
+============================================================ */
 #saveToast{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-  background:#16834a;color:#fff;padding:12px 22px;border-radius:12px;
-  font-size:14px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.3);
-  opacity:0;visibility:hidden;transition:.3s;z-index:999999;
-  max-width:90vw;text-align:center;
+  position:fixed;
+  bottom:24px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#16834a;
+  color:#fff;
+  padding:12px 22px;
+  border-radius:12px;
+  font-size:14px;
+  font-weight:600;
+  box-shadow:0 10px 30px rgba(0,0,0,.3);
+  opacity:0;
+  visibility:hidden;
+  transition:.3s;
+  z-index:999999;
+  max-width:90vw;
+  text-align:center;
 }
 #saveToast.show{opacity:1;visibility:visible}
 #saveToast.error{background:#c62828}
-
 /* ============================================================
-   Watch Modal Selector
+   ۱۸. Watch Mode Selector
 ============================================================ */
 .watch-mode-selector{
   display:flex;
@@ -858,6 +1110,9 @@ body.dark .wl-alert-badge.success{
 }
 .watch-mode-option span{flex:1}
 
+/* ============================================================
+   ۱۹. Summary Box
+============================================================ */
 .summary-box{
   background:linear-gradient(135deg,#f0f7ff,#e6f0ff);
   border-right:4px solid var(--blue);
@@ -872,9 +1127,21 @@ body.dark .summary-box{
   border-color:#3b82f6;
 }
 .summary-box b{color:var(--blue)}
-.summary-box .stat{display:inline-block;background:rgba(255,255,255,.6);padding:2px 8px;border-radius:6px;margin:0 2px;font-weight:700;direction:ltr;color:var(--txt)}
+.summary-box .stat{
+  display:inline-block;
+  background:rgba(255,255,255,.6);
+  padding:2px 8px;
+  border-radius:6px;
+  margin:0 2px;
+  font-weight:700;
+  direction:ltr;
+  color:var(--txt);
+}
 body.dark .summary-box .stat{background:rgba(255,255,255,.1)}
 
+/* ============================================================
+   ۲۰. Alert Box
+============================================================ */
 .alert{
   padding:12px 14px;
   border-radius:10px;
@@ -890,8 +1157,15 @@ body.dark .summary-box .stat{background:rgba(255,255,255,.1)}
 .alert-success{background:rgba(16,185,129,.1);border-right:4px solid var(--good)}
 .alert-info{background:var(--chart-bg);border-right:4px solid var(--blue)}
 .alert b{color:var(--txt)}
-.alert .num{font-weight:700;direction:ltr;display:inline-block}
+.alert .num{
+  font-weight:700;
+  direction:ltr;
+  display:inline-block;
+}
 
+/* ============================================================
+   ۲۱. Saved Controls
+============================================================ */
 .saved-controls{
   display:grid;
   grid-template-columns:1fr auto;
@@ -899,27 +1173,41 @@ body.dark .summary-box .stat{background:rgba(255,255,255,.1)}
   margin-bottom:12px;
 }
 .saved-search{
-  width:100%;padding:10px 14px;border-radius:10px;
-  border:1px solid var(--line);background:var(--chart-bg);
-  color:var(--txt);font:inherit;direction:rtl;
+  width:100%;
+  padding:10px 14px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--chart-bg);
+  color:var(--txt);
+  font:inherit;
+  direction:rtl;
 }
 .saved-search:focus{outline:2px solid var(--blue);border-color:var(--blue)}
 .saved-sort{
-  padding:10px 14px;border-radius:10px;
-  border:1px solid var(--line);background:var(--chart-bg);
-  color:var(--txt);font:inherit;cursor:pointer;
+  padding:10px 14px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--chart-bg);
+  color:var(--txt);
+  font:inherit;
+  cursor:pointer;
 }
 .saved-item .star{
-  cursor:pointer;font-size:22px;line-height:1;
-  user-select:none;transition:transform .15s;
+  cursor:pointer;
+  font-size:22px;
+  line-height:1;
+  user-select:none;
+  transition:transform .15s;
 }
 .saved-item .star:hover{transform:scale(1.2)}
 .saved-item .star.on{color:#f59e0b}
 .saved-item .star.off{color:#cbd5e1}
 body.dark .saved-item .star.off{color:#475569}
 .saved-item .edit-name{
-  cursor:pointer;font-size:14px;
-  opacity:.5;transition:opacity .15s;
+  cursor:pointer;
+  font-size:14px;
+  opacity:.5;
+  transition:opacity .15s;
 }
 .saved-item .edit-name:hover{opacity:1}
 .saved-item.starred{
@@ -927,128 +1215,232 @@ body.dark .saved-item .star.off{color:#475569}
   background:linear-gradient(90deg, rgba(245,158,11,.08), transparent);
 }
 
-/* ============================================
-   مقایسه شرکت‌ها
-============================================ */
+/* ============================================================
+   ۲۲. مقایسه شرکت‌ها
+============================================================ */
 .cmp-list{display:grid;gap:10px}
 .cmp-item{
-  display:flex;align-items:center;gap:10px;
-  padding:12px 14px;border:1px solid var(--line);
-  border-radius:12px;background:var(--card);flex-wrap:wrap;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--card);
+  flex-wrap:wrap;
 }
-.cmp-item .color-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.cmp-item .color-dot{
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  flex-shrink:0;
+}
 .cmp-item .symbol-input{
-  flex:1;min-width:100px;max-width:150px;
-  padding:8px 12px;border-radius:8px;
-  border:1px solid var(--line);background:var(--chart-bg);
-  color:var(--txt);font:inherit;font-weight:600;direction:rtl;
+  flex:1;
+  min-width:100px;
+  max-width:150px;
+  padding:8px 12px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--chart-bg);
+  color:var(--txt);
+  font:inherit;
+  font-weight:600;
+  direction:rtl;
 }
-.cmp-item .symbol-input:focus{outline:2px solid var(--blue);border-color:var(--blue)}
+.cmp-item .symbol-input:focus{
+  outline:2px solid var(--blue);
+  border-color:var(--blue);
+}
 .cmp-item .price-input,
 .cmp-item .shares-input{
-  width:150px;padding:8px 12px;border-radius:8px;
-  border:1px solid var(--line);background:var(--chart-bg);
-  color:var(--txt);font:inherit;direction:rtl;
-  text-align:right;font-variant-numeric:tabular-nums;
+  width:150px;
+  padding:8px 12px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--chart-bg);
+  color:var(--txt);
+  font:inherit;
+  direction:rtl;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
 }
 .cmp-item .price-input:focus,
-.cmp-item .shares-input:focus{outline:2px solid var(--blue);border-color:var(--blue)}
+.cmp-item .shares-input:focus{
+  outline:2px solid var(--blue);
+  border-color:var(--blue);
+}
 .cmp-item .file-info{
-  font-size:11.5px;color:var(--sub);direction:ltr;
-  flex-basis:100%;padding-right:24px;
+  font-size:11.5px;
+  color:var(--sub);
+  direction:ltr;
+  flex-basis:100%;
+  padding-right:24px;
 }
 .cmp-item .remove-btn{
-  padding:5px 12px;font-size:12px;
-  color:var(--bad);border:1px solid var(--bad);
-  background:transparent;border-radius:8px;
-  cursor:pointer;margin-right:auto;
+  padding:5px 12px;
+  font-size:12px;
+  color:var(--bad);
+  border:1px solid var(--bad);
+  background:transparent;
+  border-radius:8px;
+  cursor:pointer;
+  margin-right:auto;
 }
 .cmp-item .remove-btn:hover{background:rgba(198,40,40,.1)}
 .cmp-item .field-label{
-  font-size:11.5px;color:var(--sub);
-  display:flex;flex-direction:column;gap:3px;
+  font-size:11.5px;
+  color:var(--sub);
+  display:flex;
+  flex-direction:column;
+  gap:3px;
 }
 
 .cmp-scores{
-  display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
   gap:14px;
 }
 .cmp-score-card{
-  padding:16px;border-radius:14px;background:var(--chart-bg);
-  border:1px solid var(--chart-br);text-align:center;
-  border-top:5px solid var(--blue);transition:transform .15s;
+  padding:16px;
+  border-radius:14px;
+  background:var(--chart-bg);
+  border:1px solid var(--chart-br);
+  text-align:center;
+  border-top:5px solid var(--blue);
+  transition:transform .15s;
 }
 .cmp-score-card:hover{transform:translateY(-3px)}
 .cmp-score-card .symbol{
-  font-size:15px;font-weight:700;color:var(--txt);
-  margin-bottom:6px;display:flex;align-items:center;
-  justify-content:center;gap:8px;
+  font-size:15px;
+  font-weight:700;
+  color:var(--txt);
+  margin-bottom:6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
 }
-.cmp-score-card .symbol .color-dot{width:12px;height:12px;border-radius:50%}
-.cmp-score-card .num{font-size:42px;font-weight:700;line-height:1;direction:ltr}
-.cmp-score-card .lvl{font-size:13px;margin-top:6px;font-weight:600}
-.cmp-score-card .crown{font-size:20px;display:block;margin-top:4px}
+.cmp-score-card .symbol .color-dot{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+}
+.cmp-score-card .num{
+  font-size:42px;
+  font-weight:700;
+  line-height:1;
+  direction:ltr;
+}
+.cmp-score-card .lvl{
+  font-size:13px;
+  margin-top:6px;
+  font-weight:600;
+}
+.cmp-score-card .crown{
+  font-size:20px;
+  display:block;
+  margin-top:4px;
+}
 
 .cmp-zscore-wrap{
-  display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
-  gap:14px;margin-top:6px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+  gap:14px;
+  margin-top:6px;
 }
 .cmp-zscore-card{
-  padding:18px 16px;border-radius:14px;background:var(--chart-bg);
-  border:1px solid var(--chart-br);text-align:center;
-  border-top:5px solid var(--blue);transition:transform .15s;
+  padding:18px 16px;
+  border-radius:14px;
+  background:var(--chart-bg);
+  border:1px solid var(--chart-br);
+  text-align:center;
+  border-top:5px solid var(--blue);
+  transition:transform .15s;
 }
 .cmp-zscore-card:hover{transform:translateY(-3px)}
 .cmp-zscore-card .symbol{
-  font-size:15px;font-weight:700;color:var(--txt);
-  margin-bottom:8px;display:flex;align-items:center;
-  justify-content:center;gap:8px;
+  font-size:15px;
+  font-weight:700;
+  color:var(--txt);
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
 }
-.cmp-zscore-card .symbol .color-dot{width:12px;height:12px;border-radius:50%}
+.cmp-zscore-card .symbol .color-dot{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+}
 .cmp-zscore-card .num{
-  font-size:40px;font-weight:700;line-height:1;
-  direction:ltr;margin-bottom:6px;
+  font-size:40px;
+  font-weight:700;
+  line-height:1;
+  direction:ltr;
+  margin-bottom:6px;
 }
 .cmp-zscore-card .zone{font-size:13px;font-weight:600;margin-top:4px}
 .cmp-zscore-card .bar{
-  position:relative;height:8px;border-radius:4px;overflow:hidden;
-  background:linear-gradient(90deg,
-    #ef4444 0%, #ef4444 33%,
-    #eab308 33%, #eab308 55%,
-    #10b981 55%, #10b981 100%);
+  position:relative;
+  height:8px;
+  border-radius:4px;
+  overflow:hidden;
+  background:linear-gradient(90deg,#ef4444 0%,#ef4444 33%,#eab308 33%,#eab308 55%,#10b981 55%,#10b981 100%);
   margin-top:12px;
 }
 .cmp-zscore-card .marker{
-  position:absolute;top:-3px;width:4px;height:14px;
-  background:var(--txt);border-radius:2px;
+  position:absolute;
+  top:-3px;
+  width:4px;
+  height:14px;
+  background:var(--txt);
+  border-radius:2px;
 }
 
 .cmp-table-wrap{overflow-x:auto;margin-top:6px}
 .cmp-table{
-  width:100%;border-collapse:collapse;
-  font-size:13.5px;min-width:520px;
+  width:100%;
+  border-collapse:collapse;
+  font-size:13.5px;
+  min-width:520px;
 }
 .cmp-table th{
-  background:var(--table-head);color:var(--sub);
-  font-weight:600;font-size:12.5px;
-  padding:10px 12px;border-bottom:2px solid var(--line);
-  text-align:center;white-space:nowrap;
+  background:var(--table-head);
+  color:var(--sub);
+  font-weight:600;
+  font-size:12.5px;
+  padding:10px 12px;
+  border-bottom:2px solid var(--line);
+  text-align:center;
+  white-space:nowrap;
 }
 .cmp-table th:first-child{text-align:right}
 .cmp-table td{
-  padding:10px 12px;border-bottom:1px solid var(--line);
-  text-align:center;color:var(--txt);
+  padding:10px 12px;
+  border-bottom:1px solid var(--line);
+  text-align:center;
+  color:var(--txt);
 }
 .cmp-table td:first-child{
-  text-align:right;font-weight:600;color:var(--sub);
-  background:var(--chart-bg);font-size:13px;
+  text-align:right;
+  font-weight:600;
+  color:var(--sub);
+  background:var(--chart-bg);
+  font-size:13px;
 }
 .cmp-table td.best-cell{
-  background:rgba(16,185,129,.13);font-weight:700;
-  color:var(--good);position:relative;
+  background:rgba(16,185,129,.13);
+  font-weight:700;
+  color:var(--good);
+  position:relative;
 }
 .cmp-table td.best-cell::before{content:" ";font-size:12px}
-.cmp-table td.worst-cell{background:rgba(198,40,40,.08);color:var(--bad)}
+.cmp-table td.worst-cell{
+  background:rgba(198,40,40,.08);
+  color:var(--bad);
+}
 .cmp-table tr:hover td{background:var(--hover)}
 .cmp-table tr:hover td.best-cell{background:rgba(16,185,129,.2)}
 .cmp-table tr:hover td.worst-cell{background:rgba(198,40,40,.13)}
@@ -1059,16 +1451,20 @@ body.dark .saved-item .star.off{color:#475569}
 .cmp-rank-3{color:#b45309;font-weight:700}
 
 .cmp-hint{
-  font-size:11.5px;color:var(--sub);
-  padding:8px 12px;background:rgba(23,105,224,.06);
-  border-radius:8px;border-right:3px solid var(--blue);
-  margin-top:10px;line-height:1.7;
+  font-size:11.5px;
+  color:var(--sub);
+  padding:8px 12px;
+  background:rgba(23,105,224,.06);
+  border-radius:8px;
+  border-right:3px solid var(--blue);
+  margin-top:10px;
+  line-height:1.7;
 }
 body.dark .cmp-hint{background:rgba(59,130,246,.1)}
 
-/* ============================================
-   📅 گزارش فعالیت ماهانه
-============================================ */
+/* ============================================================
+   ۲۳. گزارش فعالیت ماهانه
+============================================================ */
 .monthly-kpi-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
@@ -1118,7 +1514,7 @@ body.dark .cmp-hint{background:rgba(59,130,246,.1)}
   color:var(--sub);
   font-weight:600;
   font-size:12.5px;
-  padding:10px 10px;
+  padding:10px;
   border-bottom:2px solid var(--line);
   text-align:center;
   white-space:nowrap;
@@ -1146,9 +1542,20 @@ body.dark .cmp-hint{background:rgba(59,130,246,.1)}
   color:var(--blue);
   border-top:2px solid var(--line);
 }
-.monthly-table td.num{direction:ltr;font-variant-numeric:tabular-nums}
-.monthly-table td.pct-pos{color:var(--good);font-weight:600;direction:ltr}
-.monthly-table td.pct-neg{color:var(--bad);font-weight:600;direction:ltr}
+.monthly-table td.num{
+  direction:ltr;
+  font-variant-numeric:tabular-nums;
+}
+.monthly-table td.pct-pos{
+  color:var(--good);
+  font-weight:600;
+  direction:ltr;
+}
+.monthly-table td.pct-neg{
+  color:var(--bad);
+  font-weight:600;
+  direction:ltr;
+}
 
 .monthly-notes{
   background:linear-gradient(135deg,#f0f7ff,#e6f0ff);
@@ -1167,12 +1574,10 @@ body.dark .monthly-notes{
   border-color:#3b82f6;
 }
 
-/* ============================================
-   👁️ دیدبان
-============================================ */
-.wl-section{
-  animation:fadeIn .25s ease;
-}
+/* ============================================================
+   ۲۴. دیدبان
+============================================================ */
+.wl-section{animation:fadeIn .25s ease}
 
 .wl-list{
   display:grid;
@@ -1193,9 +1598,7 @@ body.dark .monthly-notes{
   transform:translateY(-3px);
   box-shadow:0 8px 24px rgba(0,0,0,.1);
 }
-.wl-card.activity-card{
-  border-top-color:#f59e0b;
-}
+.wl-card.activity-card{border-top-color:#f59e0b}
 
 .wl-card .wl-head{
   display:flex;
@@ -1264,9 +1667,7 @@ body.dark .monthly-notes{
   border:1px solid var(--bad);
   background:transparent;
 }
-.wl-card .wl-actions .delete-btn:hover{
-  background:rgba(198,40,40,.1);
-}
+.wl-card .wl-actions .delete-btn:hover{background:rgba(198,40,40,.1)}
 
 .wl-detail-header{
   display:flex;
@@ -1277,10 +1678,7 @@ body.dark .monthly-notes{
   padding-bottom:14px;
   border-bottom:1px solid var(--line);
 }
-.wl-detail-header h2{
-  margin:0;
-  font-size:20px;
-}
+.wl-detail-header h2{margin:0;font-size:20px}
 .wl-detail-header .wl-back-btn{
   font-size:12px;
   padding:6px 12px;
@@ -1329,412 +1727,400 @@ body.dark .monthly-notes{
   border:1px solid var(--bad);
   background:transparent;
 }
-.wl-report-item .rep-actions .delete-btn:hover{
-  background:rgba(198,40,40,.1);
+.wl-report-item .rep-actions .delete-btn:hover{background:rgba(198,40,40,.1)}
+
+/* ---------- انتخابگر نمودار دیدبان ---------- */
+.wl-chart-selector{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:14px;
+  padding:10px 14px;
+  background:var(--chart-bg);
+  border-radius:10px;
+  border:1px solid var(--chart-br);
+  flex-wrap:wrap;
+}
+.wl-chart-selector label{
+  font-size:13px;
+  color:var(--sub);
+  font-weight:600;
+}
+.wl-chart-selector select{
+  padding:8px 14px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--card);
+  color:var(--txt);
+  font:inherit;
+  cursor:pointer;
+  min-width:180px;
+}
+.wl-chart-empty{
+  text-align:center;
+  padding:30px;
+  color:var(--sub);
+  font-size:13px;
 }
 
-/* ============================================
-   فوتر کپی‌رایت
-============================================ */
+/* ============================================================
+   ۲۵. فوتر کپی‌رایت
+============================================================ */
 .footer-credit{
-  margin: 30px auto 20px;
-  max-width: 1180px;
-  padding: 20px;
-  text-align: center;
-  border-top: 1px solid var(--line);
+  margin:30px auto 20px;
+  max-width:1180px;
+  padding:20px;
+  text-align:center;
+  border-top:1px solid var(--line);
 }
 .footer-inner{
-  display: flex;flex-direction: column;gap: 14px;
-  align-items: center;justify-content: center;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  align-items:center;
+  justify-content:center;
 }
 .footer-text{
-  font-size: 14px;color: var(--sub);
-  display: flex;align-items: center;gap: 8px;
-  flex-wrap: wrap;justify-content: center;
+  font-size:14px;
+  color:var(--sub);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:center;
 }
-.footer-label{font-weight: 400}
-.footer-name{font-weight: 700;color: var(--txt);font-size: 15px}
-.footer-links{display: flex;gap: 12px;flex-wrap: wrap;justify-content: center}
+.footer-label{font-weight:400}
+.footer-name{font-weight:700;color:var(--txt);font-size:15px}
+.footer-links{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
 .footer-link{
-  display: inline-flex;align-items: center;gap: 8px;
-  padding: 10px 18px;border-radius: 12px;
-  text-decoration: none;font-size: 13.5px;font-weight: 600;
-  transition: all .2s ease;border: 1.5px solid transparent;
-  direction: ltr;color: #fff;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 18px;
+  border-radius:12px;
+  text-decoration:none;
+  font-size:13.5px;
+  font-weight:600;
+  transition:all .2s ease;
+  border:1.5px solid transparent;
+  direction:ltr;
+  color:#fff;
 }
-.footer-icon-svg{flex-shrink: 0;display: block}
-.footer-handle{font-family: 'Vazirmatn', Tahoma, sans-serif}
+.footer-icon-svg{flex-shrink:0;display:block}
+.footer-handle{font-family:'Vazirmatn',Tahoma,sans-serif}
 .footer-instagram{
-  background: linear-gradient(135deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
-  box-shadow: 0 4px 12px rgba(214,41,118,.25);
+  background:linear-gradient(135deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
+  box-shadow:0 4px 12px rgba(214,41,118,.25);
 }
-.footer-instagram:hover{transform: translateY(-2px);box-shadow: 0 6px 18px rgba(214,41,118,.4)}
+.footer-instagram:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 18px rgba(214,41,118,.4);
+}
 .footer-telegram{
-  background: linear-gradient(135deg, #0088cc, #229ED9);
-  box-shadow: 0 4px 12px rgba(34,158,217,.25);
+  background:linear-gradient(135deg, #0088cc, #229ED9);
+  box-shadow:0 4px 12px rgba(34,158,217,.25);
 }
-.footer-telegram:hover{transform: translateY(-2px);box-shadow: 0 6px 18px rgba(34,158,217,.4)}
+.footer-telegram:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 18px rgba(34,158,217,.4);
+}
+/* ============================================================
+   ۲۶. Grid / Table اصلی
+============================================================ */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.metric{
+  background:var(--metric-bg);
+  padding:12px 14px;
+  border-radius:12px;
+  transition:transform .15s;
+}
+.metric:hover{transform:translateY(-2px)}
+.metric span{font-size:12px;color:var(--sub)}
+.metric b{
+  display:block;
+  font-size:18px;
+  margin-top:6px;
+  color:var(--txt);
+  text-align:right;
+  direction:rtl;
+}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{
+  padding:10px 12px;
+  border-bottom:1px solid var(--line);
+  text-align:right;
+  vertical-align:top;
+  color:var(--txt);
+}
+th{
+  background:var(--table-head);
+  color:var(--sub);
+  font-weight:600;
+  font-size:13px;
+}
+tr:hover td{background:var(--hover)}
+.good{color:var(--good);font-weight:600}
+.warn{color:var(--warn);font-weight:600}
+.bad{color:var(--bad);font-weight:600}
 
-/* ============================================
-   🔐 سیستم لایسنس
-============================================ */
-.license-modal-overlay{
-  position: fixed;inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: none;align-items: center;justify-content: center;
-  z-index: 9999999;padding: 20px;
-  animation: licenseFadeIn .25s ease;
+/* ============================================================
+   ۲۷. تحلیل خودکار
+============================================================ */
+.analysis-item{
+  padding:12px 14px;
+  border-right:4px solid var(--blue);
+  background:var(--chart-bg);
+  border-radius:8px;
+  margin:8px 0;
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
-.license-modal-overlay.show{display: flex}
-@keyframes licenseFadeIn{from{opacity:0}to{opacity:1}}
+.analysis-item.good-item{border-color:var(--good);background:rgba(16,185,129,.08)}
+.analysis-item.warn-item{border-color:var(--warn);background:rgba(234,179,8,.08)}
+.analysis-item.bad-item{border-color:var(--bad);background:rgba(239,68,68,.08)}
+.analysis-item .icon{font-size:18px;line-height:1.4;flex-shrink:0}
+.analysis-item .help{margin-right:auto}
 
-.license-modal-box{
-  background: var(--card);color: var(--txt);
-  border-radius: 20px;max-width: 620px;width: 100%;
-  max-height: 92vh;overflow-y: auto;
-  box-shadow: 0 30px 90px rgba(0,0,0,.6);
-  border: 1px solid var(--line);
-  animation: licenseSlideUp .35s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ============================================================
+   ۲۸. تب‌های داخلی (نسبت‌ها)
+============================================================ */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tab{
+  padding:8px 14px;
+  border-radius:10px;
+  background:rgba(59,130,246,.12);
+  color:var(--blue);
+  cursor:pointer;
+  font-size:13px;
 }
-@keyframes licenseSlideUp{
-  from{transform: translateY(40px); opacity: 0}
-  to{transform: translateY(0); opacity: 1}
-}
+.tab.active{background:var(--blue);color:#fff}
 
-.license-modal-header{
-  background: linear-gradient(135deg, #1769e0, #8b5cf6);
-  color: #fff;padding: 26px 24px 22px;
-  border-radius: 20px 20px 0 0;text-align: center;
-  position: relative;overflow: hidden;
-}
-.license-modal-header::before{
-  content: "";position: absolute;top: -50%;left: -50%;
-  width: 200%;height: 200%;
-  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.15), transparent 60%);
-  pointer-events: none;
-}
-.license-icon{
-  font-size: 42px;display: block;margin-bottom: 6px;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,.3));
-}
-.license-modal-header h2{
-  margin: 0;font-size: 20px;font-weight: 700;
-  color: #fff;justify-content: center;
-}
-.license-modal-sub{
-  margin: 6px 0 0;font-size: 12.5px;
-  color: rgba(255,255,255,.85);text-align: center;
-}
-
-.license-modal-body{padding: 22px 24px 26px}
-
-.license-status-box{
-  padding: 12px 16px;border-radius: 10px;
-  font-size: 13px;margin-bottom: 16px;
-  line-height: 1.7;text-align: center;
-}
-.license-status-box.license-status-error{
-  background: rgba(198,40,40,.12);color: var(--bad);
-  border-right: 4px solid var(--bad);
-}
-.license-status-box.license-status-warning{
-  background: rgba(234,179,8,.12);color: var(--warn);
-  border-right: 4px solid var(--warn);
-}
-.license-status-box.license-status-success{
-  background: rgba(16,185,129,.12);color: var(--good);
-  border-right: 4px solid var(--good);
-}
-
-.license-section{margin-bottom: 12px}
-.license-section label{
-  display: block;font-size: 12.5px;color: var(--sub);
-  margin-bottom: 6px;font-weight: 600;
-}
-.license-section textarea{
-  width: 100%;padding: 12px 14px;border-radius: 10px;
-  border: 1.5px solid var(--line);background: var(--chart-bg);
-  color: var(--txt);font: inherit;font-size: 12.5px;
-  font-family: monospace;direction: ltr;text-align: left;
-  resize: vertical;min-height: 70px;transition: .2s;
-  word-break: break-all;line-height: 1.6;
-}
-.license-section textarea:focus{
-  outline: none;border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(23,105,224,.15);
-}
-.license-section textarea::placeholder{color: var(--sub);opacity: .6}
-
-.license-btn-primary{
-  width: 100%;padding: 13px;border-radius: 10px;border: 0;
-  background: linear-gradient(135deg, #1769e0, #1e40af);
-  color: #fff;font: inherit;font-weight: 700;font-size: 14.5px;
-  cursor: pointer;transition: .2s;margin-top: 10px;
-  box-shadow: 0 4px 12px rgba(23,105,224,.3);
-}
-.license-btn-primary:hover:not(:disabled){
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(23,105,224,.45);
-}
-.license-btn-primary:disabled{
-  opacity: .6;cursor: wait;transform: none;
+/* ============================================================
+   ۲۹. خطا
+============================================================ */
+.err{
+  background:rgba(239,68,68,.1);
+  color:var(--bad);
+  padding:12px;
+  border-radius:10px;
+  margin-top:12px;
+  border-right:4px solid var(--bad);
 }
 
-.license-btn-trial{
-  width: 100%;padding: 13px;border-radius: 10px;
-  border: 2px dashed var(--good);background: rgba(16,185,129,.08);
-  color: var(--good);font: inherit;font-weight: 700;
-  font-size: 14px;cursor: pointer;transition: .2s;
+/* ============================================================
+   ۳۰. Help Tooltip
+============================================================ */
+.help{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:var(--blue);
+  color:#fff;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  user-select:none;
+  line-height:1;
+  transition:transform .15s;
+  font-family:'Vazirmatn',Tahoma,sans-serif;
+  flex-shrink:0;
 }
-.license-btn-trial:hover:not(:disabled){
-  background: rgba(16,185,129,.15);
-  transform: translateY(-2px);
+.help:hover{transform:scale(1.15)}
+
+#globalTooltip{
+  position:fixed;
+  background:#1e293b;
+  color:#f1f5f9;
+  padding:12px 16px;
+  border-radius:10px;
+  font-size:12.5px;
+  font-weight:400;
+  line-height:1.8;
+  width:min(360px, 85vw);
+  text-align:right;
+  direction:rtl;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .15s, visibility .15s;
+  box-shadow:0 12px 30px rgba(0,0,0,.35);
+  z-index:999999;
+  white-space:pre-line;
 }
-.license-trial-hint{
-  font-size: 11.5px;color: var(--sub);
-  text-align: center;margin: 8px 0 0;
+body.dark #globalTooltip{
+  background:#475569;
+  color:#f8fafc;
+  border:1px solid #64748b;
+}
+#globalTooltip.show{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
 }
 
-.license-divider{
-  position: relative;text-align: center;margin: 20px 0;
+/* ============================================================
+   ۳۱. Inner Tabs (v1.6 — تب‌های داخلی تحلیل تک شرکت)
+============================================================ */
+.inner-tabs{
+  display:flex;
+  gap:6px;
+  margin-bottom:20px;
+  padding:6px;
+  background:var(--chart-bg);
+  border-radius:12px;
+  border:1px solid var(--chart-br);
+  flex-wrap:wrap;
 }
-.license-divider::before{
-  content: "";position: absolute;top: 50%;
-  left: 0;right: 0;height: 1px;background: var(--line);
+.inner-tab{
+  padding:10px 18px;
+  border-radius:9px;
+  background:transparent;
+  color:var(--sub);
+  cursor:pointer;
+  font-weight:600;
+  font-size:13.5px;
+  border:0;
+  transition:all .2s ease;
+  font-family:inherit;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
 }
-.license-divider span{
-  position: relative;background: var(--card);
-  padding: 0 14px;font-size: 12px;color: var(--sub);
-  font-weight: 500;
+.inner-tab:hover{
+  background:rgba(23,105,224,.08);
+  color:var(--blue);
 }
-
-.license-plans{
-  display: grid;grid-template-columns: repeat(3, 1fr);
-  gap: 8px;margin-bottom: 18px;
+.inner-tab.active{
+  background:var(--blue);
+  color:#fff;
+  box-shadow:0 3px 10px rgba(23,105,224,.3);
 }
-.license-plan{
-  padding: 12px 8px;border: 1.5px solid var(--line);
-  border-radius: 12px;text-align: center;
-  background: var(--chart-bg);transition: .2s;position: relative;
-}
-.license-plan:hover{border-color: var(--blue);transform: translateY(-2px)}
-.license-plan.featured{
-  border-color: #f59e0b;
-  background: linear-gradient(135deg, rgba(245,158,11,.08), rgba(245,158,11,.02));
-}
-.license-plan.featured::after{
-  content: "⭐ پرفروش";position: absolute;
-  top: -9px;right: 8px;background: #f59e0b;
-  color: #fff;font-size: 10px;padding: 2px 8px;
-  border-radius: 6px;font-weight: 700;
-}
-.plan-emoji{font-size: 22px;margin-bottom: 4px}
-.plan-name{
-  font-size: 13.5px;font-weight: 700;
-  color: var(--txt);margin-bottom: 6px;
-}
-.plan-price{
-  font-size: 13px;font-weight: 700;
-  color: var(--blue);margin-bottom: 4px;direction: rtl;
-}
-.license-plan.featured .plan-price{color: #d97706}
-.plan-info{font-size: 10.5px;color: var(--sub);line-height: 1.6}
-
-.license-contact{
-  text-align: center;padding: 14px;
-  background: var(--chart-bg);border-radius: 12px;
-  border: 1px dashed var(--line);
-}
-.license-contact p{
-  font-size: 12.5px;color: var(--sub);margin: 0 0 10px;
-}
-.license-contact-buttons{
-  display: flex;gap: 8px;justify-content: center;flex-wrap: wrap;
-}
-.contact-btn{
-  display: inline-flex;align-items: center;gap: 7px;
-  padding: 9px 16px;border-radius: 10px;
-  text-decoration: none;font-size: 13px;font-weight: 600;
-  color: #fff;transition: .2s;border: 0;
-}
-.contact-btn:hover{transform: translateY(-2px);filter: brightness(1.1)}
-.contact-telegram{
-  background: linear-gradient(135deg, #0088cc, #229ED9);
-  box-shadow: 0 4px 12px rgba(34,158,217,.3);
-}
-.contact-instagram{
-  background: linear-gradient(135deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
-  box-shadow: 0 4px 12px rgba(214,41,118,.3);
+body.dark .inner-tab.active{
+  box-shadow:0 3px 10px rgba(59,130,246,.5);
 }
 
-.license-manage-grid{
-  display: grid;gap: 8px;margin-bottom: 18px;
+.inner-panel{
+  display:none;
+  animation:innerFadeIn .25s ease;
 }
-.lm-row{
-  display: flex;justify-content: space-between;
-  padding: 10px 14px;border-radius: 10px;
-  background: var(--chart-bg);font-size: 13px;
-  border-right: 3px solid var(--blue);
+.inner-panel.active{display:block}
+@keyframes innerFadeIn{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
 }
-.lm-row span{color: var(--sub)}
-.lm-row b{color: var(--txt);font-weight:700}
+.inner-section-title{
+  margin:0 0 14px;
+  font-size:15px;
+  font-weight:700;
+  color:var(--txt);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--line);
+}
+.inner-section-title .help{width:18px;height:18px;font-size:11px}
+.inner-panel .score-wrap{margin:6px 0 10px}
+.inner-panel .one-line-note{margin-top:12px}
+.inner-panel .chart-box{margin-top:8px}
+.inner-panel .charts-row,
+.inner-panel .pie-row{margin-top:8px}
 
-.license-actions-box{
-  display: flex;gap: 8px;flex-wrap: wrap;
+/* ============================================================
+   ۳۲. Quick Metrics (v1.6 — داشبورد امتیازی)
+============================================================ */
+.quick-metrics-grid{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:12px;
 }
-.license-actions-box button{flex: 1;min-width: 130px}
-.license-btn-secondary{
-  padding: 11px;border-radius: 10px;
-  border: 1.5px solid var(--line);background: var(--chart-bg);
-  color: var(--txt);font: inherit;font-weight: 600;
-  font-size: 13px;cursor: pointer;transition: .2s;
+.qm-card{
+  position:relative;
+  padding:16px 18px;
+  border-radius:14px;
+  background:var(--chart-bg);
+  border:1px solid var(--chart-br);
+  border-right:4px solid var(--line);
+  transition:transform .18s ease, box-shadow .18s ease;
+  cursor:default;
 }
-.license-btn-secondary:hover{
-  border-color: var(--blue);color: var(--blue);
+.qm-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
 }
+body.dark .qm-card:hover{box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.qm-icon{display:none}
+.qm-label{
+  font-size:12.5px;
+  color:var(--sub);
+  font-weight:600;
+  margin-bottom:8px;
+  line-height:1.4;
+}
+.qm-value{
+  font-size:24px;
+  font-weight:700;
+  color:var(--txt);
+  direction:ltr;
+  text-align:right;
+  letter-spacing:-0.5px;
+  line-height:1.1;
+  margin-bottom:6px;
+  font-variant-numeric:tabular-nums;
+}
+.qm-change{
+  font-size:13px;
+  font-weight:600;
+  direction:rtl;
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+.qm-change span{display:inline-flex;align-items:center;gap:3px}
 
-.license-indicator{
-  position: fixed;bottom: 20px;left: 20px;
-  background: var(--card);border-radius: 14px;
-  padding: 10px 14px;display: flex;
-  align-items: center;gap: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.2);
-  z-index: 999998;font-size: 12px;
-  border: 1px solid var(--line);
-  transition: .2s;direction: rtl;
-  max-width: calc(100vw - 40px);
+/* رنگ‌ها */
+.qm-card.qm-good{
+  border-right-color:var(--good);
+  background:linear-gradient(135deg, rgba(16,185,129,.06), var(--chart-bg));
 }
-.license-indicator:hover{
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(0,0,0,.25);
+body.dark .qm-card.qm-good{
+  background:linear-gradient(135deg, rgba(52,211,153,.1), var(--chart-bg));
 }
-.license-indicator.active{border-right: 4px solid var(--good)}
-.license-indicator.danger{
-  border-right: 4px solid var(--bad);
-  background: rgba(198,40,40,.08);
-}
-.li-icon{font-size: 20px;line-height: 1}
-.li-info{flex: 1;min-width: 0}
-.li-plan{
-  font-weight: 700;font-size: 12.5px;
-  color: var(--txt);margin-bottom: 2px;
-}
-.li-meta{
-  font-size: 11px;color: var(--sub);
-  display: flex;gap: 10px;flex-wrap: wrap;
-}
-.li-btn{
-  background: var(--blue);color: #fff;border: 0;
-  border-radius: 8px;padding: 6px 12px;
-  font-size: 11px;font-weight: 600;
-  cursor: pointer;font-family: inherit;
-  white-space: nowrap;transition: .15s;
-}
-.li-btn:hover{background: #0f5bc4;transform: scale(1.05)}
-.license-indicator.danger .li-btn{background: var(--bad)}
-.license-indicator.danger .li-btn:hover{background: #a01e1e}
+.qm-change .qm-good,
+.qm-card.qm-good .qm-value{color:var(--good)}
 
-@media (max-width: 600px){
-  .license-modal-box{max-width: 100%;border-radius: 16px;max-height: 95vh}
-  .license-modal-header{padding: 22px 18px 18px}
-  .license-icon{font-size: 36px}
-  .license-modal-header h2{font-size: 17px}
-  .license-modal-body{padding: 18px}
-  .license-plans{grid-template-columns: 1fr;gap: 8px}
-  .license-plan{
-    display: grid;grid-template-columns: auto 1fr auto;
-    align-items: center;gap: 12px;
-    padding: 12px 14px;text-align: right;
-  }
-  .plan-emoji{font-size: 24px;margin: 0;grid-row: span 2}
-  .plan-name{margin: 0;font-size: 14px}
-  .plan-price{margin: 0;font-size: 13px;grid-column: 3;grid-row: 1}
-  .plan-info{grid-column: 2 / span 2;font-size: 11px;text-align: right}
-  .license-indicator{left: 10px;right: 10px;bottom: 10px;max-width: none}
+.qm-card.qm-bad{
+  border-right-color:var(--bad);
+  background:linear-gradient(135deg, rgba(198,40,40,.06), var(--chart-bg));
 }
+body.dark .qm-card.qm-bad{
+  background:linear-gradient(135deg, rgba(248,113,113,.1), var(--chart-bg));
+}
+.qm-change .qm-bad,
+.qm-card.qm-bad .qm-value{color:var(--bad)}
 
-/* ============ Print ============ */
-@media print{
-  body{background:#fff !important;color:#000 !important}
-  body.dark{background:#fff !important;color:#000 !important}
-  .wrap{max-width:100%;margin:0;padding:10px}
-  .card{
-    box-shadow:none !important;border:1px solid #ddd;
-    page-break-inside:avoid;margin:8px 0 !important;
-    padding:14px !important;
-  }
-  .topbar .actions,#drop,#cmpDrop,#mDrop,#saveModal,#saveCompareModal,#saveMonthlyModal,#addWatchModal,#saveToast,#globalTooltip,.help,#periodBox,#periodInfoBox,.tabs,.saved-controls,#savedList,#cmpSavedList,#mSavedList,#downloadAll,#uploadFile,#saveBtn,#copySummary,#cmpSaveBtn,#cmpClearBtn,#cmpAddBtn,.chart-box .legend,.market-btn-wrap,.market-hint,.main-tabs,.footer-credit,.license-modal-overlay,.license-indicator,#sendToWatchBtn,#mSendToWatchBtn,.wl-actions,.wl-report-item .rep-actions,#wlDownloadBtn,#wlUploadBtn{display:none !important}
-  .tab-panel{display:block !important}
-  .input-section{border:1px solid #ddd;background:#f9f9f9 !important;padding:10px}
-  .input-section-title{color:#000}
-  .market-field input,.market-field select{border:1px solid #ddd;background:#fff !important;color:#000 !important}
-  .chart-box{page-break-inside:avoid}
-  .analysis-item,.alert,.one-line-note,.zscore-note,.cmp-score-card,.cmp-zscore-card,.text-insight-item,.qual-box{page-break-inside:avoid}
-  table{page-break-inside:auto}
-  tr{page-break-inside:avoid}
-  h1{font-size:24px}
-  h2{font-size:15px;color:#000}
-  .sub{color:#555}
-  .metric{background:#f5f5f5 !important;border:1px solid #ddd}
-  .metric b{color:#000}
-  .summary-box{background:#f9f9f9 !important;color:#000}
-  .summary-box b{color:#000}
-  .dupont-box{background:#f5f5f5 !important;border:1px solid #ccc}
-  .dupont-box .val{color:#000}
-  .dupont-result{background:#e8f5e9 !important}
-  .dupont-result .val{color:#000}
-  .chart-box{background:#fff !important;border:1px solid #ddd}
-  .zscore-marker{background:#000}
-  .print-header{display:block !important;text-align:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #000}
-  .print-header h2{margin:0}
-  .print-header .sub{margin:4px 0 0 0;font-size:11px}
-  .cmp-table td.best-cell{background:#d1fae5 !important;color:#000 !important}
-  .cmp-table td.best-cell::before{content:""}
-  .cmp-table td.worst-cell{background:#fee2e2 !important;color:#000 !important}
-  .monthly-kpi{background:#f5f5f5 !important;border:1px solid #ddd}
-  .monthly-notes{background:#f9f9f9 !important;color:#000}
-  .wl-card{background:#f9f9f9 !important;border:1px solid #ddd}
+.qm-change .qm-neutral{
+  color:var(--sub);
+  font-weight:500;
+  font-size:12px;
 }
-.print-header{display:none}
+.qm-card.qm-empty{opacity:.65}
+.qm-card.qm-empty .qm-value{color:var(--sub)}
 
-@media(max-width:900px){
-  .market-grid{grid-template-columns:1fr 1fr}
-  .cmp-item .price-input,
-  .cmp-item .shares-input{width:120px}
-}
-@media(max-width:800px){
- .grid{grid-template-columns:1fr 1fr}
- .charts-row,.pie-row{grid-template-columns:1fr}
- .dupont{grid-template-columns:1fr}
- .dupont-op{text-align:center}
- .saved-controls{grid-template-columns:1fr}
- h1{font-size:26px}
- .main-tabs{width:100%;justify-content:center}
- .main-tab{flex:1;justify-content:center;padding:11px 14px}
- .monthly-kpi-grid{grid-template-columns:1fr 1fr}
- .wl-list{grid-template-columns:1fr}
-}
-@media(max-width:600px){
-  .market-grid{grid-template-columns:1fr}
-  h1{font-size:22px}
-  .cmp-scores{grid-template-columns:1fr}
-  .cmp-zscore-wrap{grid-template-columns:1fr}
-  .cmp-item{flex-direction:column;align-items:stretch}
-  .cmp-item .symbol-input,
-  .cmp-item .price-input,
-  .cmp-item .shares-input{width:100%;max-width:none}
-  .footer-links{flex-direction:column;width:100%}
-  .footer-link{justify-content:center;width:100%}
-  .monthly-kpi-grid{grid-template-columns:1fr}
-  .watch-mode-selector{flex-direction:column}
-  .qual-grid{grid-template-columns:1fr}
-}
-
-/* ============================================
-   🔽 کارت‌های باز/بسته شونده
-============================================ */
+/* ============================================================
+   ۳۳. Card Collapse (کارت‌های باز/بسته شونده)
+============================================================ */
 .card h2.collapsible-h2{
   cursor:pointer;
   user-select:none;
@@ -1742,9 +2128,7 @@ body.dark .monthly-notes{
   position:relative;
   padding-left:30px;
 }
-.card h2.collapsible-h2:hover{
-  color:var(--blue);
-}
+.card h2.collapsible-h2:hover{color:var(--blue)}
 .card h2.collapsible-h2 .collapse-icon{
   position:absolute;
   left:0;
@@ -1777,2398 +2161,2476 @@ body.dark .monthly-notes{
   margin:8px 0;
   transition:margin .2s ease;
 }
-.card.collapsed h2.collapsible-h2{
-  margin-bottom:0;
-}
+.card.collapsed h2.collapsible-h2{margin-bottom:0}
 
-@media print{
-  .card.collapsed > *:not(h2){display:block !important}
-  .card h2.collapsible-h2 .collapse-icon{display:none !important}
-  .card h2.collapsible-h2{padding-left:0 !important;cursor:default !important}
-}
 /* ============================================================
-   🆕 v1.5 — مقایسه با صنعت
+   ۳۴. Accordion هوشمند (v1.7 — تحلیل جامع)
 ============================================================ */
-
-/* ---------- کادر سهم اصلی ---------- */
-.industry-base-section {
-  border-right: 4px solid #f59e0b;
-  background: linear-gradient(135deg, rgba(245,158,11,.05), var(--chart-bg));
-}
-.industry-base-section .input-section-title {
-  color: #d97706;
-}
-body.dark .industry-base-section {
-  background: linear-gradient(135deg, rgba(245,158,11,.1), var(--chart-bg));
-}
-
-.base-symbol-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-/* ---------- کادر هم‌گروهی‌ها ---------- */
-.industry-peers-section {
-  border-right: 4px solid #1769e0;
-  background: linear-gradient(135deg, rgba(23,105,224,.05), var(--chart-bg));
-}
-.industry-peers-section .input-section-title {
-  color: #1769e0;
-}
-body.dark .industry-peers-section {
-  background: linear-gradient(135deg, rgba(23,105,224,.1), var(--chart-bg));
-}
-
-.peers-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-height: 60px;
-  padding: 6px;
-  border-radius: 12px;
-  transition: background .2s, box-shadow .2s;
-}
-.peers-list.hover {
-  background: rgba(23,105,224,.08);
-  box-shadow: 0 0 0 2px rgba(23,105,224,.3) inset;
-}
-
-/* ---------- آیتم هم‌گروهی ---------- */
-.peer-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--card);
-  flex-wrap: wrap;
-  transition: box-shadow .15s;
-}
-.peer-item:hover {
-  box-shadow: 0 3px 10px rgba(0,0,0,.06);
-}
-
-.peer-item .color-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.peer-item .symbol-input {
-  flex: 1;
-  min-width: 90px;
-  max-width: 130px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: var(--chart-bg);
-  color: var(--txt);
-  font: inherit;
-  font-weight: 600;
-  direction: rtl;
-}
-.peer-item .symbol-input:focus {
-  outline: 2px solid var(--blue);
-  border-color: var(--blue);
-}
-
-.peer-item .price-input,
-.peer-item .shares-input {
-  width: 130px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: var(--chart-bg);
-  color: var(--txt);
-  font: inherit;
-  direction: rtl;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-.peer-item .price-input:focus,
-.peer-item .shares-input:focus {
-  outline: 2px solid var(--blue);
-  border-color: var(--blue);
-}
-
-.peer-item .field-label {
-  font-size: 11.5px;
-  color: var(--sub);
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.peer-item .remove-btn {
-  padding: 5px 12px;
-  font-size: 12px;
-  color: var(--bad);
-  border: 1px solid var(--bad);
-  background: transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-right: auto;
-  transition: background .15s;
-}
-.peer-item .remove-btn:hover {
-  background: rgba(198,40,40,.1);
-}
-
-.peer-item .file-info {
-  font-size: 11.5px;
-  color: var(--sub);
-  direction: ltr;
-  flex-basis: 100%;
-  padding-right: 24px;
-}
-
-/* ---------- دکمه‌های اقدام ---------- */
-.industry-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 18px;
-  flex-wrap: wrap;
-  justify-content: center;
-  padding-top: 16px;
-  border-top: 1px dashed var(--line);
-}
-
-/* ---------- خلاصه جایگاه سهم اصلی ---------- */
-.base-position-summary {
-  margin-top: 6px;
-}
-
-.base-position-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-}
-
-.bp-card {
-  padding: 16px;
-  border-radius: 14px;
-  background: var(--chart-bg);
-  border: 1px solid var(--chart-br);
-  text-align: center;
-  transition: transform .15s;
-  border-top: 4px solid var(--blue);
-}
-.bp-card:hover {
-  transform: translateY(-2px);
-}
-
-.bp-card .bp-label {
-  font-size: 12px;
-  color: var(--sub);
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.bp-card .bp-value {
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.2;
-  direction: rtl;
-}
-
-.bp-card .bp-sub {
-  font-size: 11.5px;
-  color: var(--sub);
-  margin-top: 6px;
-  line-height: 1.6;
-}
-
-.bp-card.bp-base {
-  border-top-color: #f59e0b;
-  background: linear-gradient(135deg, rgba(245,158,11,.08), var(--chart-bg));
-}
-
-.bp-card.bp-rank {
-  border-top-color: #8b5cf6;
-}
-
-.bp-card.bp-better {
-  border-top-color: #16834a;
-}
-
-.bp-card.bp-worse {
-  border-top-color: #c62828;
-}
-
-.bp-card.bp-score {
-  border-top-color: #1769e0;
-}
-
-/* ---------- جدول اصلی صنعت ---------- */
-.industry-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13.5px;
-  min-width: 720px;
-}
-.industry-table th {
-  background: var(--table-head);
-  color: var(--sub);
-  font-weight: 600;
-  font-size: 12.5px;
-  padding: 10px 12px;
-  border-bottom: 2px solid var(--line);
-  text-align: center;
-  white-space: nowrap;
-}
-.industry-table th:first-child {
-  text-align: right;
-}
-.industry-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--line);
-  text-align: center;
-  color: var(--txt);
-}
-.industry-table td:first-child {
-  text-align: right;
-  font-weight: 600;
-  color: var(--sub);
-  background: var(--chart-bg);
-  font-size: 13px;
-}
-.industry-table tr:hover td {
-  background: var(--hover);
-}
-
-/* ---------- رنگ ستون سهم اصلی ---------- */
-.industry-table th.base-col,
-.industry-table td.base-col {
-  background: rgba(245,158,11,.08);
-}
-body.dark .industry-table th.base-col,
-body.dark .industry-table td.base-col {
-  background: rgba(245,158,11,.12);
-}
-
-/* ---------- ریسپانسیو ---------- */
-@media (max-width: 900px) {
-  .base-symbol-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .peer-item .price-input,
-  .peer-item .shares-input {
-    width: 110px;
-  }
-}
-
-@media (max-width: 640px) {
-  .base-symbol-grid {
-    grid-template-columns: 1fr;
-  }
-  .peer-item {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .peer-item .symbol-input,
-  .peer-item .price-input,
-  .peer-item .shares-input {
-    width: 100%;
-    max-width: none;
-  }
-  .peer-item .remove-btn {
-    margin-right: 0;
-    align-self: flex-end;
-  }
-  .base-position-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ---------- دکمه کوچک دراپ ---------- */
-.drop.drop-small {
-  padding: 14px 16px;
-  margin-top: 14px;
-}
-.drop.drop-small .drop-icon {
-  font-size: 30px;
-  margin-bottom: 4px;
-}
-.drop.drop-small .drop-text {
-  font-size: 13px;
-  margin: 2px 0 8px;
-}
-.drop.drop-small .drop-browse-btn {
-  padding: 8px 16px;
-  font-size: 12.5px;
-}
-
-/* ---------- بهبود نمایش زنگ‌های آمار ---------- */
-.industry-summary-line {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px dashed var(--line);
-  font-size: 13px;
-}
-.industry-summary-line:last-child {
-  border-bottom: 0;
-}
-.industry-summary-line .lbl {
-  color: var(--sub);
-}
-.industry-summary-line .val {
-  font-weight: 700;
-  direction: ltr;
-}
-
-/* ---------- کارت دو صنعت ---------- */
-#twoIndustriesCompareBox h2 {
-  font-size: 16px;
-  margin-bottom: 14px;
-}
-#twoIndustriesCompareBox {
-  border-top: 4px solid #8b5cf6;
-}
-
-/* ⭐ فاصله ۳۵ پیکسلی بین کارت نتیجه مقایسه و مقایسه دو صنعت */
-#compareTwoIndustriesCard {
-  margin-top: 55px !important;
-}
-
-/* ---------- چاپ (Print) ---------- */
-@media print {
-  .industry-base-section,
-  .industry-peers-section,
-  .industry-actions,
-  .peers-list,
-  #addPeerBtn,
-  #clearPeersBtn {
-    display: none !important;
-  }
-  #industryOut {
-    display: block !important;
-  }
-}
-/* ============================================================
-   🆕 v1.5 — مقایسه با صنعت
-============================================================ */
-
-/* ---------- فیکس مودال‌های جدید ---------- */
-#saveIndustryModal,
-#compareIndustriesModal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.55);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999;
-  padding: 20px;
-}
-#saveIndustryModal.show,
-#compareIndustriesModal.show {
-  display: flex;
-}
-
-#saveIndustryModal .modal-box,
-#compareIndustriesModal .modal-box {
-  background: var(--card);
-  color: var(--txt);
-  border-radius: 16px;
-  padding: 22px;
-  max-width: 440px;
-  width: 100%;
-  box-shadow: 0 20px 60px rgba(0,0,0,.4);
-}
-
-#saveIndustryModal h3,
-#compareIndustriesModal h3 {
-  margin: 0 0 12px;
-  font-size: 16px;
-}
-
-#saveIndustryModal label,
-#compareIndustriesModal label {
-  font-size: 13px;
-  color: var(--sub);
-  display: block;
-  margin-bottom: 6px;
-}
-
-#saveIndustryModal input,
-#compareIndustriesModal input,
-#compareIndustriesModal select {
-  width: 100%;
-  padding: 11px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--chart-bg);
-  color: var(--txt);
-  font: inherit;
-  direction: rtl;
-  box-sizing: border-box;
-}
-
-#saveIndustryModal input:focus,
-#compareIndustriesModal input:focus,
-#compareIndustriesModal select:focus {
-  outline: 2px solid var(--blue);
-  outline-offset: 0;
-  border-color: var(--blue);
-}
-
-#saveIndustryModal .actions,
-#compareIndustriesModal .actions {
-  display: flex;
-  justify-content: flex-start;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-/* ---------- کادر سهم اصلی ---------- */
-.industry-base-section {
-  border-right: 4px solid #f59e0b;
-  background: linear-gradient(135deg, rgba(245,158,11,.05), var(--chart-bg));
-}
-.industry-base-section .input-section-title {
-  color: #d97706;
-}
-body.dark .industry-base-section {
-  background: linear-gradient(135deg, rgba(245,158,11,.1), var(--chart-bg));
-}
-
-.base-symbol-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-/* ---------- کادر هم‌گروهی‌ها ---------- */
-.industry-peers-section {
-  border-right: 4px solid #1769e0;
-  background: linear-gradient(135deg, rgba(23,105,224,.05), var(--chart-bg));
-}
-.industry-peers-section .input-section-title {
-  color: #1769e0;
-}
-body.dark .industry-peers-section {
-  background: linear-gradient(135deg, rgba(23,105,224,.1), var(--chart-bg));
-}
-
-.peers-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-height: 60px;
-  padding: 6px;
-  border-radius: 12px;
-  transition: background .2s, box-shadow .2s;
-}
-.peers-list.hover {
-  background: rgba(23,105,224,.08);
-  box-shadow: 0 0 0 2px rgba(23,105,224,.3) inset;
-}
-
-/* ---------- آیتم هم‌گروهی ---------- */
-.peer-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--card);
-  flex-wrap: wrap;
-  transition: box-shadow .15s;
-}
-.peer-item:hover {
-  box-shadow: 0 3px 10px rgba(0,0,0,.06);
-}
-
-.peer-item .color-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.peer-item .symbol-input {
-  flex: 1;
-  min-width: 90px;
-  max-width: 130px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: var(--chart-bg);
-  color: var(--txt);
-  font: inherit;
-  font-weight: 600;
-  direction: rtl;
-}
-.peer-item .symbol-input:focus {
-  outline: 2px solid var(--blue);
-  border-color: var(--blue);
-}
-
-.peer-item .price-input,
-.peer-item .shares-input {
-  width: 130px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: var(--chart-bg);
-  color: var(--txt);
-  font: inherit;
-  direction: rtl;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-.peer-item .price-input:focus,
-.peer-item .shares-input:focus {
-  outline: 2px solid var(--blue);
-  border-color: var(--blue);
-}
-
-.peer-item .field-label {
-  font-size: 11.5px;
-  color: var(--sub);
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.peer-item .remove-btn {
-  padding: 5px 12px;
-  font-size: 12px;
-  color: var(--bad);
-  border: 1px solid var(--bad);
-  background: transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-right: auto;
-  transition: background .15s;
-}
-.peer-item .remove-btn:hover {
-  background: rgba(198,40,40,.1);
-}
-
-.peer-item .file-info {
-  font-size: 11.5px;
-  color: var(--sub);
-  direction: ltr;
-  flex-basis: 100%;
-  padding-right: 24px;
-}
-
-/* ---------- دکمه‌های اقدام ---------- */
-.industry-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 18px;
-  flex-wrap: wrap;
-  justify-content: center;
-  padding-top: 16px;
-  border-top: 1px dashed var(--line);
-}
-
-/* ---------- خلاصه جایگاه سهم اصلی ---------- */
-.base-position-summary {
-  margin-top: 6px;
-}
-
-.base-position-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-}
-
-.bp-card {
-  padding: 16px;
-  border-radius: 14px;
-  background: var(--chart-bg);
-  border: 1px solid var(--chart-br);
-  text-align: center;
-  transition: transform .15s;
-  border-top: 4px solid var(--blue);
-}
-.bp-card:hover {
-  transform: translateY(-2px);
-}
-
-.bp-card .bp-label {
-  font-size: 12px;
-  color: var(--sub);
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.bp-card .bp-value {
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.2;
-  direction: rtl;
-}
-
-.bp-card .bp-sub {
-  font-size: 11.5px;
-  color: var(--sub);
-  margin-top: 6px;
-  line-height: 1.6;
-}
-
-.bp-card.bp-base {
-  border-top-color: #f59e0b;
-  background: linear-gradient(135deg, rgba(245,158,11,.08), var(--chart-bg));
-}
-
-.bp-card.bp-rank {
-  border-top-color: #8b5cf6;
-}
-
-.bp-card.bp-better {
-  border-top-color: #16834a;
-}
-
-.bp-card.bp-worse {
-  border-top-color: #c62828;
-}
-
-.bp-card.bp-score {
-  border-top-color: #1769e0;
-}
-
-/* ---------- جدول اصلی صنعت ---------- */
-.industry-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13.5px;
-  min-width: 720px;
-}
-.industry-table th {
-  background: var(--table-head);
-  color: var(--sub);
-  font-weight: 600;
-  font-size: 12.5px;
-  padding: 10px 12px;
-  border-bottom: 2px solid var(--line);
-  text-align: center;
-  white-space: nowrap;
-}
-.industry-table th:first-child {
-  text-align: right;
-}
-.industry-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--line);
-  text-align: center;
-  color: var(--txt);
-}
-.industry-table td:first-child {
-  text-align: right;
-  font-weight: 600;
-  color: var(--sub);
-  background: var(--chart-bg);
-  font-size: 13px;
-}
-.industry-table tr:hover td {
-  background: var(--hover);
-}
-
-/* ---------- دکمه کوچک دراپ ---------- */
-.drop.drop-small {
-  padding: 14px 16px;
-  margin-top: 14px;
-}
-.drop.drop-small .drop-icon {
-  font-size: 30px;
-  margin-bottom: 4px;
-}
-.drop.drop-small .drop-text {
-  font-size: 13px;
-  margin: 2px 0 8px;
-}
-.drop.drop-small .drop-browse-btn {
-  padding: 8px 16px;
-  font-size: 12.5px;
-}
-
-/* ---------- کارت دو صنعت ---------- */
-#twoIndustriesCompareBox h2 {
-  font-size: 16px;
-  margin-bottom: 14px;
-}
-#twoIndustriesCompareBox {
-  border-top: 4px solid #8b5cf6;
-}
-
-/* ---------- ریسپانسیو ---------- */
-@media (max-width: 900px) {
-  .base-symbol-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .peer-item .price-input,
-  .peer-item .shares-input {
-    width: 110px;
-  }
-}
-
-@media (max-width: 640px) {
-  .base-symbol-grid {
-    grid-template-columns: 1fr;
-  }
-  .peer-item {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .peer-item .symbol-input,
-  .peer-item .price-input,
-  .peer-item .shares-input {
-    width: 100%;
-    max-width: none;
-  }
-  .peer-item .remove-btn {
-    margin-right: 0;
-    align-self: flex-end;
-  }
-  .base-position-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ---------- چاپ (Print) ---------- */
-@media print {
-  .industry-base-section,
-  .industry-peers-section,
-  .industry-actions,
-  .peers-list,
-  #addPeerBtn,
-  #clearPeersBtn {
-    display: none !important;
-  }
-  #industryOut {
-    display: block !important;
-  }
-}
-/* فیکس مودال‌ها با اولویت درست */
-#saveModal,
-#saveCompareModal,
-#saveMonthlyModal,
-#addWatchModal,
-#saveIndustryModal,
-#compareIndustriesModal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.55);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999;
-  padding: 20px;
-}
-
-#saveModal.show,
-#saveCompareModal.show,
-#saveMonthlyModal.show,
-#addWatchModal.show,
-#saveIndustryModal.show,
-#compareIndustriesModal.show {
-  display: flex !important;
-}
-/* ============================================================
-   🆕 v1.6 — تب‌های داخلی (تحلیل تک شرکت)
-============================================================ */
-
-/* ---------- کانتینر تب‌های داخلی ---------- */
-.inner-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 20px;
-  padding: 6px;
-  background: var(--chart-bg);
-  border-radius: 12px;
-  border: 1px solid var(--chart-br);
-  flex-wrap: wrap;
-}
-
-.inner-tab {
-  padding: 10px 18px;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--sub);
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 13.5px;
-  border: 0;
-  transition: all .2s ease;
-  font-family: inherit;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-
-.inner-tab:hover {
-  background: rgba(23,105,224,.08);
-  color: var(--blue);
-}
-
-.inner-tab.active {
-  background: var(--blue);
-  color: #fff;
-  box-shadow: 0 3px 10px rgba(23,105,224,.3);
-}
-
-body.dark .inner-tab.active {
-  box-shadow: 0 3px 10px rgba(59,130,246,.5);
-}
-
-/* ---------- پنل‌های داخلی ---------- */
-.inner-panel {
-  display: none;
-  animation: innerFadeIn .25s ease;
-}
-
-.inner-panel.active {
-  display: block;
-}
-
-@keyframes innerFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ---------- عنوان بخش داخلی ---------- */
-.inner-section-title {
-  margin: 0 0 14px;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--txt);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--line);
-}
-
-.inner-section-title .help {
-  width: 18px;
-  height: 18px;
-  font-size: 11px;
-}
-
-/* ---------- اصلاح فاصله‌ها در تب‌های داخلی ---------- */
-.inner-panel .score-wrap {
-  margin: 6px 0 10px;
-}
-
-.inner-panel .one-line-note {
-  margin-top: 12px;
-}
-
-.inner-panel .chart-box {
-  margin-top: 8px;
-}
-
-.inner-panel .charts-row,
-.inner-panel .pie-row {
-  margin-top: 8px;
-}
-
-/* ---------- ریسپانسیو تب‌های داخلی ---------- */
-@media (max-width: 800px) {
-  .inner-tabs {
-    padding: 5px;
-    gap: 4px;
-  }
-  .inner-tab {
-    padding: 9px 12px;
-    font-size: 12.5px;
-  }
-}
-
-@media (max-width: 600px) {
-  .inner-tabs {
-    justify-content: center;
-  }
-  .inner-tab {
-    flex: 1 1 calc(50% - 4px);
-    justify-content: center;
-    padding: 9px 8px;
-    font-size: 12px;
-  }
-  .inner-section-title {
-    font-size: 14px;
-  }
-}
-
-/* ---------- چاپ (Print) ---------- */
-@media print {
-  .inner-tabs {
-    display: none !important;
-  }
-  .inner-panel {
-    display: block !important;
-    page-break-inside: avoid;
-  }
-}
-/* ============================================================
-   🆕 v1.6 — کارت‌های متریک نگاه سریع (داشبورد امتیازی)
-============================================================ */
-
-.quick-metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-/* ---------- کارت متریک ---------- */
-.qm-card {
-  position: relative;
-  padding: 16px 18px;
-  border-radius: 14px;
-  background: var(--chart-bg);
-  border: 1px solid var(--chart-br);
-  border-right: 4px solid var(--line);
-  transition: transform .18s ease, box-shadow .18s ease;
-  cursor: default;
-}
-
-.qm-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0,0,0,.08);
-}
-
-body.dark .qm-card:hover {
-  box-shadow: 0 8px 20px rgba(0,0,0,.4);
-}
-
-/* ---------- آیکون ---------- */
-.qm-icon {
-  display: none;
-}
-
-/* ---------- عنوان ---------- */
-.qm-label {
-  font-size: 12.5px;
-  color: var(--sub);
-  font-weight: 600;
-  margin-bottom: 8px;
-  line-height: 1.4;
-}
-
-/* ---------- عدد اصلی ---------- */
-.qm-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--txt);
-  direction: ltr;
-  text-align: right;
-  letter-spacing: -0.5px;
-  line-height: 1.1;
-  margin-bottom: 6px;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---------- تغییر (فلش + درصد) ---------- */
-.qm-change {
-  font-size: 13px;
-  font-weight: 600;
-  direction: rtl;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.qm-change span {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-
-/* ---------- رنگ‌های وضعیت ---------- */
-
-/* سبز — خوب */
-.qm-card.qm-good {
-  border-right-color: var(--good);
-  background: linear-gradient(135deg, rgba(16,185,129,.06), var(--chart-bg));
-}
-body.dark .qm-card.qm-good {
-  background: linear-gradient(135deg, rgba(52,211,153,.1), var(--chart-bg));
-}
-.qm-change .qm-good,
-.qm-card.qm-good .qm-value {
-  color: var(--good);
-}
-
-/* قرمز — بد */
-.qm-card.qm-bad {
-  border-right-color: var(--bad);
-  background: linear-gradient(135deg, rgba(198,40,40,.06), var(--chart-bg));
-}
-body.dark .qm-card.qm-bad {
-  background: linear-gradient(135deg, rgba(248,113,113,.1), var(--chart-bg));
-}
-.qm-change .qm-bad,
-.qm-card.qm-bad .qm-value {
-  color: var(--bad);
-}
-
-/* خاکستری — بی‌تغییر */
-.qm-change .qm-neutral {
-  color: var(--sub);
-  font-weight: 500;
-  font-size: 12px;
-}
-
-/* کارت خالی (بدون داده) */
-.qm-card.qm-empty {
-  opacity: .65;
-}
-.qm-card.qm-empty .qm-value {
-  color: var(--sub);
-}
-
-/* ---------- رنگ‌بندی آیکون هر کارت ---------- */
-.qm-card.qm-good .qm-icon,
-.qm-card.qm-bad .qm-icon {
-  filter: drop-shadow(0 2px 4px currentColor);
-  opacity: .95;
-}
-
-/* ---------- ریسپانسیو ---------- */
-@media (max-width: 600px) {
-  .quick-metrics-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-  .qm-card {
-    padding: 14px 16px;
-  }
-  .qm-value {
-    font-size: 22px;
-  }
-}
-
-@media (max-width: 400px) {
-  .qm-value {
-    font-size: 20px;
-  }
-  .qm-label {
-    font-size: 12px;
-  }
-}
-
-/* ---------- چاپ (Print) ---------- */
-@media print {
-  .quick-metrics-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  .qm-card {
-    background: #f9f9f9 !important;
-    border: 1px solid #ddd !important;
-    border-right-width: 4px !important;
-    page-break-inside: avoid;
-    box-shadow: none !important;
-    transform: none !important;
-  }
-  .qm-card.qm-good {
-    border-right-color: #16834a !important;
-  }
-  .qm-card.qm-bad {
-    border-right-color: #c62828 !important;
-  }
-}
-/* ============================================================
-   🆕 v1.7 — DuPont Analysis (نسخه داستانی)
-============================================================ */
-
-/* ---------- Hero: ROE نهایی ---------- */
-.dupont-hero {
-  text-align: center;
-  padding: 20px 16px 16px;
-  background: linear-gradient(135deg, var(--chart-bg), var(--card));
-  border-radius: 14px;
-  margin-bottom: 18px;
-  border: 1px solid var(--chart-br);
-}
-
-.dupont-hero-label {
-  font-size: 12.5px;
-  color: var(--sub);
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.dupont-hero-num {
-  font-size: 42px;
-  font-weight: 700;
-  line-height: 1;
-  direction: rtl;
-  margin-bottom: 6px;
-  font-variant-numeric: tabular-nums;
-}
-
-.dupont-hero-level {
-  font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 18px;
-}
-
-/* ---------- نوار طیف ROE ---------- */
-.dupont-scale {
-  margin: 0 auto;
-  max-width: 420px;
-}
-
-.dupont-scale-bar {
-  position: relative;
-  display: flex;
-  height: 12px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--chart-br);
-  margin-bottom: 8px;
-}
-
-.dupont-scale-zone {
-  height: 100%;
-  transition: opacity .2s;
-}
-
-.zone-bad       { background: #ef4444; }
-.zone-warn      { background: #f59e0b; }
-.zone-neutral   { background: #eab308; }
-.zone-good      { background: #22c55e; }
-.zone-excellent { background: #16834a; }
-
-.dupont-scale-marker {
-  position: absolute;
-  top: -5px;
-  width: 6px;
-  height: 22px;
-  background: var(--txt);
-  border-radius: 3px;
-  border: 2px solid var(--card);
-  box-shadow: 0 2px 6px rgba(0,0,0,.3);
-  transition: left .6s ease;
-  transform: translateX(-50%);
-}
-
-.dupont-scale-ticks {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10.5px;
-  color: var(--sub);
-  direction: rtl;
-  padding: 0 4px;
-}
-
-/* ---------- عوامل (نمودار میله‌ای) ---------- */
-.dupont-factors {
-  margin-bottom: 18px;
-}
-
-.dupont-factors-title {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--txt);
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--line);
-}
-
-.dupont-factor {
-  margin-bottom: 14px;
-}
-
-.dupont-factor-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12.5px;
-  margin-bottom: 6px;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.dupont-factor-name {
-  color: var(--sub);
-  font-weight: 600;
-}
-
-.dupont-factor-value {
-  font-weight: 700;
-  direction: rtl;
-  font-variant-numeric: tabular-nums;
-}
-
-.dupont-factor-bar {
-  height: 10px;
-  background: var(--chart-br);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.dupont-factor-fill {
-  height: 100%;
-  border-radius: 6px;
-  transition: width .8s ease;
-}
-
-/* ---------- داستان مشکل ---------- */
-.dupont-story {
-  padding: 14px 16px;
-  background: var(--chart-bg);
-  border-radius: 12px;
-  border-right: 4px solid var(--blue);
-  font-size: 13.5px;
-  line-height: 1.9;
-  color: var(--txt);
-}
-
-.dupont-story-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  margin-bottom: 8px;
-}
-
-.dupont-story-icon {
-  font-size: 18px;
-}
-
-.dupont-story-text {
-  margin-bottom: 10px;
-}
-
-.dupont-story-suggestion {
-  padding-top: 8px;
-  border-top: 1px dashed var(--line);
-  font-size: 12.5px;
-  color: var(--sub);
-}
-
-.dupont-story-suggestion b {
-  color: var(--blue);
-}
-
-/* ---------- ریسپانسیو ---------- */
-@media (max-width: 600px) {
-  .dupont-hero-num {
-    font-size: 34px;
-  }
-  .dupont-hero-level {
-    font-size: 13px;
-    margin-bottom: 14px;
-  }
-  .dupont-scale-ticks {
-    font-size: 9.5px;
-  }
-  .dupont-factor-head {
-    font-size: 12px;
-  }
-  .dupont-story {
-    font-size: 12.5px;
-    line-height: 1.8;
-  }
-}
-
-/* ---------- چاپ ---------- */
-@media print {
-  .dupont-hero {
-    background: #f9f9f9 !important;
-    border: 1px solid #ddd;
-  }
-  .dupont-scale-marker {
-    background: #000 !important;
-    border-color: #fff !important;
-  }
-  .dupont-story {
-    background: #f9f9f9 !important;
-  }
-  .dupont-factor-fill {
-    /* رنگ در چاپ */
-  }
-}
-/* ============================================================
-   🆕 v1.7 — EBITDA (نسخه داستانی)
-============================================================ */
-
-/* ---------- Hero: EBITDA نهایی ---------- */
-.ebitda-hero {
-  text-align: center;
-  padding: 20px 16px 16px;
-  background: linear-gradient(135deg, var(--chart-bg), var(--card));
-  border-radius: 14px;
-  margin-bottom: 18px;
-  border: 1px solid var(--chart-br);
-}
-
-.ebitda-hero-label {
-  font-size: 12.5px;
-  color: var(--sub);
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.ebitda-hero-num {
-  font-size: 40px;
-  font-weight: 700;
-  line-height: 1;
-  direction: ltr;
-  margin-bottom: 6px;
-  font-variant-numeric: tabular-nums;
-}
-
-.ebitda-hero-level {
-  font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 18px;
-}
-
-/* ---------- نوار طیف EBITDA ---------- */
-.ebitda-scale {
-  margin: 0 auto;
-  max-width: 420px;
-}
-
-.ebitda-scale-bar {
-  position: relative;
-  display: flex;
-  height: 12px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--chart-br);
-  margin-bottom: 8px;
-}
-
-.ebitda-scale-zone {
-  height: 100%;
-  transition: opacity .2s;
-}
-
-.ebitda-scale-marker {
-  position: absolute;
-  top: -5px;
-  width: 6px;
-  height: 22px;
-  background: var(--txt);
-  border-radius: 3px;
-  border: 2px solid var(--card);
-  box-shadow: 0 2px 6px rgba(0,0,0,.3);
-  transition: left .6s ease;
-  transform: translateX(-50%);
-}
-
-.ebitda-scale-ticks {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10.5px;
-  color: var(--sub);
-  direction: rtl;
-  padding: 0 4px;
-}
-
-/* ---------- Breakdown: نمودار میله‌ای ---------- */
-.ebitda-breakdown {
-  margin-bottom: 18px;
-}
-
-.ebitda-breakdown-title {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--txt);
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--line);
-}
-
-.ebitda-item {
-  margin-bottom: 14px;
-}
-
-.ebitda-item-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12.5px;
-  margin-bottom: 6px;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.ebitda-item-name {
-  color: var(--sub);
-  font-weight: 600;
-}
-
-.ebitda-item-value {
-  font-weight: 700;
-  direction: ltr;
-  font-variant-numeric: tabular-nums;
-}
-
-.ebitda-item-bar {
-  height: 10px;
-  background: var(--chart-br);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.ebitda-item-fill {
-  height: 100%;
-  border-radius: 6px;
-  transition: width .8s ease;
-}
-
-/* ---------- جمع کل ---------- */
-.ebitda-total {
-  margin-top: 8px;
-  padding-top: 12px;
-  border-top: 2px solid var(--line);
-}
-
-.ebitda-total-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13.5px;
-  margin-bottom: 6px;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.ebitda-total-name {
-  color: var(--txt);
-  font-weight: 700;
-}
-
-.ebitda-total-value {
-  font-weight: 800;
-  font-size: 15px;
-  direction: ltr;
-  font-variant-numeric: tabular-nums;
-}
-
-.ebitda-total-bar {
-  height: 12px;
-  background: var(--chart-br);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.ebitda-total-fill {
-  height: 100%;
-  border-radius: 6px;
-  transition: width .8s ease;
-}
-
-/* ---------- داستان ---------- */
-.ebitda-story {
-  padding: 14px 16px;
-  background: var(--chart-bg);
-  border-radius: 12px;
-  border-right: 4px solid var(--blue);
-  font-size: 13.5px;
-  line-height: 1.9;
-  color: var(--txt);
-}
-
-.ebitda-story-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  margin-bottom: 8px;
-}
-
-.ebitda-story-icon {
-  font-size: 18px;
-}
-
-.ebitda-story-text {
-  margin-bottom: 10px;
-}
-
-.ebitda-story-suggestion {
-  padding-top: 8px;
-  border-top: 1px dashed var(--line);
-  font-size: 12.5px;
-  color: var(--sub);
-}
-
-.ebitda-story-suggestion b {
-  color: var(--blue);
-}
-
-/* ---------- ریسپانسیو ---------- */
-@media (max-width: 600px) {
-  .ebitda-hero-num {
-    font-size: 32px;
-  }
-  .ebitda-hero-level {
-    font-size: 13px;
-    margin-bottom: 14px;
-  }
-  .ebitda-scale-ticks {
-    font-size: 9.5px;
-  }
-  .ebitda-item-head,
-  .ebitda-total-head {
-    font-size: 12px;
-  }
-  .ebitda-story {
-    font-size: 12.5px;
-    line-height: 1.8;
-  }
-}
-
-/* ---------- چاپ ---------- */
-@media print {
-  .ebitda-hero {
-    background: #f9f9f9 !important;
-    border: 1px solid #ddd;
-  }
-  .ebitda-scale-marker {
-    background: #000 !important;
-    border-color: #fff !important;
-  }
-  .ebitda-story {
-    background: #f9f9f9 !important;
-  }
-}
-/* ============================================================
-   🆕 v1.7 — Accordion هوشمند (تحلیل جامع)
-============================================================ */
-
-/* ---------- کارت Accordion ---------- */
-.acc-card {
-  background: var(--chart-bg);
-  border: 1px solid var(--chart-br);
-  border-radius: 14px;
-  margin-bottom: 12px;
-  overflow: hidden;
-  transition: box-shadow .2s ease, border-color .2s ease;
-}
-
-.acc-card:hover {
-  border-color: var(--blue);
-  box-shadow: 0 3px 12px rgba(23,105,224,.08);
-}
-
-body.dark .acc-card:hover {
-  box-shadow: 0 3px 12px rgba(59,130,246,.15);
-}
-
-/* کارت باز */
-.acc-card.acc-open {
-  border-color: var(--blue);
-  box-shadow: 0 4px 16px rgba(23,105,224,.12);
-}
-
-body.dark .acc-card.acc-open {
-  box-shadow: 0 4px 16px rgba(59,130,246,.2);
-}
-
-/* ---------- Header (کلیک‌پذیر) ---------- */
-.acc-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  cursor: pointer;
-  user-select: none;
-  transition: background .15s ease;
-  flex-wrap: wrap;
-}
-
-.acc-header:hover {
-  background: rgba(23,105,224,.04);
-}
-
-body.dark .acc-header:hover {
-  background: rgba(59,130,246,.08);
-}
-
-.acc-header-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-}
-
-.acc-icon {
-  font-size: 20px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.acc-title {
-  font-size: 14.5px;
-  font-weight: 700;
-  color: var(--txt);
-  line-height: 1.4;
-}
-
-.acc-header-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-/* ---------- خلاصه (عدد کنار عنوان) ---------- */
-.acc-summary {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--sub);
-  direction: rtl;
-  padding: 4px 10px;
-  border-radius: 8px;
-  background: rgba(102,112,133,.1);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-  transition: all .2s ease;
-}
-
-.acc-summary.acc-summary-good {
-  background: rgba(16,185,129,.15);
-  color: var(--good);
-}
-
-.acc-summary.acc-summary-warn {
-  background: rgba(234,179,8,.15);
-  color: #a16207;
-}
-
-body.dark .acc-summary.acc-summary-warn {
-  color: #fbbf24;
-}
-
-.acc-summary.acc-summary-bad {
-  background: rgba(198,40,40,.15);
-  color: var(--bad);
-}
-
-/* ---------- فلش ---------- */
-.acc-arrow {
-  font-size: 12px;
-  color: var(--sub);
-  transition: transform .3s ease;
-  display: inline-block;
-  flex-shrink: 0;
-}
-
-.acc-card.acc-open .acc-arrow {
-  transform: rotate(180deg);
-  color: var(--blue);
-}
-
-/* ---------- Body (محتوا) ---------- */
-.acc-body {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height .4s ease, padding .3s ease, opacity .3s ease;
-  opacity: 0;
-  padding: 0 16px;
-}
-
-.acc-card.acc-open .acc-body {
-  max-height: 5000px;
-  opacity: 1;
-  padding: 4px 16px 18px;
-  border-top: 1px solid var(--line);
-  margin-top: 4px;
-}
-
-/* ---------- تنظیم فاصله‌ها داخل Accordion ---------- */
-.acc-body .score-wrap {
-  margin: 8px 0 10px;
-}
-
-.acc-body .score-num {
-  font-size: 42px;
-}
-
+.acc-card{
+  background:var(--chart-bg);
+  border:1px solid var(--chart-br);
+  border-radius:14px;
+  margin-bottom:12px;
+  overflow:hidden;
+  transition:box-shadow .2s ease, border-color .2s ease;
+}
+.acc-card:hover{
+  border-color:var(--blue);
+  box-shadow:0 3px 12px rgba(23,105,224,.08);
+}
+body.dark .acc-card:hover{box-shadow:0 3px 12px rgba(59,130,246,.15)}
+.acc-card.acc-open{
+  border-color:var(--blue);
+  box-shadow:0 4px 16px rgba(23,105,224,.12);
+}
+body.dark .acc-card.acc-open{box-shadow:0 4px 16px rgba(59,130,246,.2)}
+
+.acc-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 16px;
+  cursor:pointer;
+  user-select:none;
+  transition:background .15s ease;
+  flex-wrap:wrap;
+}
+.acc-header:hover{background:rgba(23,105,224,.04)}
+body.dark .acc-header:hover{background:rgba(59,130,246,.08)}
+
+.acc-header-right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex:1;
+  min-width:0;
+}
+.acc-icon{font-size:20px;line-height:1;flex-shrink:0}
+.acc-title{
+  font-size:14.5px;
+  font-weight:700;
+  color:var(--txt);
+  line-height:1.4;
+}
+.acc-header-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+}
+
+.acc-summary{
+  font-size:13.5px;
+  font-weight:700;
+  color:var(--sub);
+  direction:rtl;
+  padding:4px 10px;
+  border-radius:8px;
+  background:rgba(102,112,133,.1);
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+  transition:all .2s ease;
+}
+.acc-summary.acc-summary-good{
+  background:rgba(16,185,129,.15);
+  color:var(--good);
+}
+.acc-summary.acc-summary-warn{
+  background:rgba(234,179,8,.15);
+  color:#a16207;
+}
+body.dark .acc-summary.acc-summary-warn{color:#fbbf24}
+.acc-summary.acc-summary-bad{
+  background:rgba(198,40,40,.15);
+  color:var(--bad);
+}
+
+.acc-arrow{
+  font-size:12px;
+  color:var(--sub);
+  transition:transform .3s ease;
+  display:inline-block;
+  flex-shrink:0;
+}
+.acc-card.acc-open .acc-arrow{
+  transform:rotate(180deg);
+  color:var(--blue);
+}
+
+.acc-body{
+  max-height:0;
+  overflow:hidden;
+  transition:max-height .4s ease, padding .3s ease, opacity .3s ease;
+  opacity:0;
+  padding:0 16px;
+}
+.acc-card.acc-open .acc-body{
+  max-height:5000px;
+  opacity:1;
+  padding:4px 16px 18px;
+  border-top:1px solid var(--line);
+  margin-top:4px;
+}
+
+.acc-body .score-wrap{margin:8px 0 10px}
+.acc-body .score-num{font-size:42px}
 .acc-body #dupontBox,
 .acc-body #ebitdaBox,
-.acc-body #zscoreBox {
-  margin-top: 8px;
-}
+.acc-body #zscoreBox{margin-top:8px}
+.acc-body .one-line-note{margin-top:12px}
+.acc-body > h3:first-child{margin-top:0}
 
-.acc-body .one-line-note {
-  margin-top: 12px;
-}
-
-/* ---------- حذف margin بالای عنوان‌های قبلی ---------- */
-.acc-body > h3:first-child {
-  margin-top: 0;
-}
-
-/* ---------- ریسپانسیو ---------- */
-@media (max-width: 600px) {
-  .acc-header {
-    padding: 12px 14px;
-    gap: 8px;
-  }
-  .acc-icon {
-    font-size: 18px;
-  }
-  .acc-title {
-    font-size: 13px;
-  }
-  .acc-summary {
-    font-size: 12px;
-    padding: 3px 8px;
-  }
-  .acc-body {
-    padding: 0 14px;
-  }
-  .acc-card.acc-open .acc-body {
-    padding: 4px 14px 16px;
-  }
-  .acc-body .score-num {
-    font-size: 34px;
-  }
-}
-
-/* ---------- چاپ ---------- */
-@media print {
-  .acc-card {
-    border: 1px solid #ddd !important;
-    page-break-inside: avoid;
-    margin-bottom: 8px;
-  }
-  .acc-card .acc-body {
-    max-height: none !important;
-    opacity: 1 !important;
-    padding: 8px 12px 12px !important;
-    display: block !important;
-  }
-  .acc-header {
-    background: #f5f5f5 !important;
-    cursor: default;
-  }
-  .acc-arrow {
-    display: none !important;
-  }
-}
 /* ============================================================
-   🆕 v1.7.3 — فاصله کارت تحلیل‌های ذخیره‌شده
+   ۳۵. EBITDA (v1.7 — نسخه داستانی)
 ============================================================ */
-
-#savedCard {
-  margin-top: 90px !important;
+.ebitda-hero{
+  text-align:center;
+  padding:20px 16px 16px;
+  background:linear-gradient(135deg, var(--chart-bg), var(--card));
+  border-radius:14px;
+  margin-bottom:18px;
+  border:1px solid var(--chart-br);
 }
-
-/* فاصله در موبایل کمی کمتر */
-@media (max-width: 600px) {
-  #savedCard {
-    margin-top: 75px !important;
-  }
+.ebitda-hero-label{
+  font-size:12.5px;
+  color:var(--sub);
+  font-weight:600;
+  margin-bottom:6px;
 }
+.ebitda-hero-num{
+  font-size:40px;
+  font-weight:700;
+  line-height:1;
+  direction:ltr;
+  margin-bottom:6px;
+  font-variant-numeric:tabular-nums;
+}
+.ebitda-hero-level{
+  font-size:14px;
+  font-weight:700;
+  margin-bottom:18px;
+}
+.ebitda-scale{margin:0 auto;max-width:420px}
+.ebitda-scale-bar{
+  position:relative;
+  display:flex;
+  height:12px;
+  border-radius:8px;
+  overflow:hidden;
+  background:var(--chart-br);
+  margin-bottom:8px;
+}
+.ebitda-scale-zone{height:100%;transition:opacity .2s}
+.ebitda-scale-marker{
+  position:absolute;
+  top:-5px;
+  width:6px;
+  height:22px;
+  background:var(--txt);
+  border-radius:3px;
+  border:2px solid var(--card);
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
+  transition:left .6s ease;
+  transform:translateX(-50%);
+}
+.ebitda-scale-ticks{
+  display:flex;
+  justify-content:space-between;
+  font-size:10.5px;
+  color:var(--sub);
+  direction:rtl;
+  padding:0 4px;
+}
+.ebitda-breakdown{margin-bottom:18px}
+.ebitda-breakdown-title{
+  font-size:13.5px;
+  font-weight:700;
+  color:var(--txt);
+  margin-bottom:12px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--line);
+}
+.ebitda-item{margin-bottom:14px}
+.ebitda-item-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:12.5px;
+  margin-bottom:6px;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.ebitda-item-name{color:var(--sub);font-weight:600}
+.ebitda-item-value{
+  font-weight:700;
+  direction:ltr;
+  font-variant-numeric:tabular-nums;
+}
+.ebitda-item-bar{
+  height:10px;
+  background:var(--chart-br);
+  border-radius:6px;
+  overflow:hidden;
+}
+.ebitda-item-fill{
+  height:100%;
+  border-radius:6px;
+  transition:width .8s ease;
+}
+.ebitda-total{
+  margin-top:8px;
+  padding-top:12px;
+  border-top:2px solid var(--line);
+}
+.ebitda-total-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:13.5px;
+  margin-bottom:6px;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.ebitda-total-name{color:var(--txt);font-weight:700}
+.ebitda-total-value{
+  font-weight:800;
+  font-size:15px;
+  direction:ltr;
+  font-variant-numeric:tabular-nums;
+}
+.ebitda-total-bar{
+  height:12px;
+  background:var(--chart-br);
+  border-radius:6px;
+  overflow:hidden;
+}
+.ebitda-total-fill{
+  height:100%;
+  border-radius:6px;
+  transition:width .8s ease;
+}
+.ebitda-story{
+  padding:14px 16px;
+  background:var(--chart-bg);
+  border-radius:12px;
+  border-right:4px solid var(--blue);
+  font-size:13.5px;
+  line-height:1.9;
+  color:var(--txt);
+}
+.ebitda-story-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+  margin-bottom:8px;
+}
+.ebitda-story-icon{font-size:18px}
+.ebitda-story-text{margin-bottom:10px}
+.ebitda-story-suggestion{
+  padding-top:8px;
+  border-top:1px dashed var(--line);
+  font-size:12.5px;
+  color:var(--sub);
+}
+.ebitda-story-suggestion b{color:var(--blue)}
+
 /* ============================================================
-   🆕 v1.7.5 — دراپ‌زون افقی سهم اصلی
+   ۳۶. Ratio Cards (v1.8 — نسبت‌ها با نمودار افقی)
 ============================================================ */
-
-.base-drop-horizontal {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 12px 16px;
-  border: 2px dashed #98a2b3;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--chart-bg), var(--card));
-  transition: .25s ease;
-  flex-wrap: wrap;
-  position: relative;
-  cursor: pointer;
+.ratio-cards{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:12px;
 }
-
-.base-drop-horizontal:hover {
-  border-color: var(--blue);
-  background: linear-gradient(135deg, rgba(23,105,224,.05), var(--card));
-  box-shadow: 0 6px 18px rgba(23,105,224,.1);
+.ratio-card{
+  padding:10px 14px;
+  background:var(--chart-bg);
+  border:1px solid var(--chart-br);
+  border-radius:12px;
+  transition:background .15s;
 }
-
-.base-drop-horizontal.hover {
-  background: rgba(23,105,224,.08);
-  border-color: var(--blue);
-  border-style: solid;
-  box-shadow: 0 8px 24px rgba(23,105,224,.18);
+.ratio-card:hover{background:var(--hover)}
+.ratio-card-row{
+  display:grid;
+  grid-template-columns:1fr auto 2fr;
+  align-items:center;
+  gap:14px;
 }
-
-.base-drop-horizontal input[type="file"] {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
+.ratio-card-name{
+  font-size:13px;
+  font-weight:700;
+  color:var(--txt);
 }
-
-/* ---------- سمت چپ: آیکون + متن ---------- */
-.base-drop-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 200px;
+.ratio-card-value-box{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:4px 10px;
+  border-radius:8px;
+  background:rgba(102,112,133,.08);
 }
-
-.base-drop-icon {
-  font-size: 26px;
-  line-height: 1;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,.06));
-  transition: transform .3s ease;
+.ratio-card-num{
+  font-size:14px;
+  font-weight:700;
+  direction:ltr;
+  font-variant-numeric:tabular-nums;
 }
-
-.base-drop-horizontal:hover .base-drop-icon {
-  transform: scale(1.1) rotate(-5deg);
+.ratio-card-status{
+  font-size:11px;
+  font-weight:600;
+  padding:2px 7px;
+  border-radius:6px;
+  background:rgba(255,255,255,.5);
+  white-space:nowrap;
 }
-
-.base-drop-text {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--txt);
-  line-height: 1.5;
+body.dark .ratio-card-status{background:rgba(255,255,255,.08)}
+.ratio-card-bar-inline{
+  height:10px;
+  border-radius:6px;
+  overflow:hidden;
+  background:var(--chart-br);
+  position:relative;
 }
-
-/* ---------- سمت راست: دکمه + نام فایل ---------- */
-.base-drop-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-  min-width: 0;
+.ratio-card-fill-inline{
+  height:100%;
+  border-radius:6px;
+  transition:width .8s ease;
 }
-
-@media (min-width: 701px) {
-  .base-drop-right {
-    justify-content: flex-end;
-  }
+.ratio-card-hint{
+  font-size:11.5px;
+  color:var(--sub);
+  opacity:0.6;
+  line-height:1.7;
+  margin-top:8px;
+  padding-top:8px;
+  border-top:1px dashed var(--line);
+  text-align:right;
 }
+body.dark .ratio-card-hint{opacity:0.5}
 
-.base-file-info-inline {
-  display: none;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  background: rgba(16,185,129,.1);
-  border: 1px solid rgba(16,185,129,.3);
-  color: var(--good);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.base-file-info-inline.active {
-  display: inline-flex;
-}
-
-.base-file-info-inline .file-name {
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  direction: ltr;
-}
-
-/* ---------- ریسپانسیو ---------- */
-@media (max-width: 700px) {
-  .base-drop-horizontal {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-  .base-drop-left {
-    justify-content: center;
-    text-align: center;
-  }
-  .base-drop-right {
-    justify-content: center;
-  }
-  .base-file-info-inline .file-name {
-    max-width: 130px;
-  }
-}
 /* ============================================================
-   🆕 v1.7.5 — دراپ‌زون افقی هم‌گروهی‌ها
+   ۳۷. EPS (v1.8.1 — سود هر سهم + پیش‌بینی سالانه)
 ============================================================ */
-
-.peers-drop-horizontal {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 18px;
-  border: 2px dashed #98a2b3;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--chart-bg), var(--card));
-  transition: .25s ease;
-  flex-wrap: wrap;
-  position: relative;
-  cursor: pointer;
+.eps-hero{margin-top:6px}
+.eps-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin-bottom:14px;
 }
-
-.peers-drop-horizontal:hover {
-  border-color: var(--blue);
-  background: linear-gradient(135deg, rgba(23,105,224,.05), var(--card));
-  box-shadow: 0 6px 18px rgba(23,105,224,.1);
+.eps-card{
+  padding:18px 16px;
+  border-radius:14px;
+  text-align:center;
+  border:1px solid var(--chart-br);
+  transition:transform .15s, box-shadow .15s;
 }
-
-.peers-drop-horizontal.hover {
-  background: rgba(23,105,224,.08);
-  border-color: var(--blue);
-  border-style: solid;
-  box-shadow: 0 8px 24px rgba(23,105,224,.18);
+.eps-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 16px rgba(0,0,0,.08);
 }
-
-/* سمت چپ: آیکون + متن */
-.peers-drop-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 220px;
+.eps-card.eps-current{
+  background:linear-gradient(135deg, rgba(23,105,224,.06), var(--chart-bg));
+  border-top:4px solid #1769e0;
 }
-
-.peers-drop-icon {
-  font-size: 28px;
-  line-height: 1;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,.06));
-  transition: transform .3s ease;
+.eps-card.eps-annual{
+  background:linear-gradient(135deg, rgba(139,92,246,.06), var(--chart-bg));
+  border-top:4px solid #8b5cf6;
 }
-
-.peers-drop-horizontal:hover .peers-drop-icon {
-  transform: scale(1.1) rotate(-5deg);
+.eps-card-label{
+  font-size:12.5px;
+  font-weight:600;
+  color:var(--sub);
+  margin-bottom:10px;
 }
-
-.peers-drop-text {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--txt);
-  line-height: 1.5;
+.eps-card-num{
+  font-size:32px;
+  font-weight:700;
+  direction:ltr;
+  font-variant-numeric:tabular-nums;
+  line-height:1.1;
+  margin-bottom:6px;
 }
-
-.peers-drop-hint {
-  font-size: 11.5px;
-  color: var(--sub);
-  font-weight: 400;
+.eps-card-unit{
+  font-size:13px;
+  color:var(--sub);
+  margin-bottom:8px;
 }
-
-/* سمت راست: دکمه + شمارنده */
-.peers-drop-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-  min-width: 0;
+.eps-card-period{
+  font-size:11.5px;
+  color:var(--sub);
+  padding:3px 10px;
+  border-radius:6px;
+  background:rgba(102,112,133,.1);
+  display:inline-block;
+  direction:rtl;
 }
-
-/* روی موبایل هم درست باشه */
-@media (min-width: 701px) {
-  .peers-drop-right {
-    justify-content: flex-end;
-  }
+.eps-note{
+  padding:10px 14px;
+  background:rgba(23,105,224,.06);
+  border-right:3px solid var(--blue);
+  border-radius:8px;
+  font-size:12.5px;
+  line-height:1.8;
+  color:var(--txt);
 }
+body.dark .eps-note{background:rgba(59,130,246,.1)}
 
-.peers-count-badge {
-  padding: 6px 14px;
-  border-radius: 10px;
-  background: rgba(102,112,133,.15);
-  color: var(--sub);
-  font-size: 13px;
-  font-weight: 700;
-  direction: rtl;
-  font-variant-numeric: tabular-nums;
-  transition: .2s;
-}
-
-.peers-count-badge.has-some {
-  background: rgba(23,105,224,.12);
-  color: var(--blue);
-}
-
-.peers-count-badge.full {
-  background: rgba(198,40,40,.12);
-  color: var(--bad);
-}
-
-/* ---------- ریسپانسیو ---------- */
-@media (max-width: 700px) {
-  .peers-drop-horizontal {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    padding: 14px;
-  }
-  .peers-drop-left {
-    justify-content: center;
-    text-align: center;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .peers-drop-right {
-    justify-content: center;
-  }
-  .peers-drop-icon {
-    font-size: 24px;
-  }
-  .peers-drop-hint {
-    display: none;
-  }
-}
 /* ============================================================
-   🆕 v1.7.7 — کارت واحد ورود اطلاعات
+   ۳۸. v1.5 — مقایسه با صنعت
 ============================================================ */
-
-.industry-input-section {
-  border-right: 4px solid #f59e0b;
-  background: linear-gradient(135deg, rgba(245,158,11,.04), var(--chart-bg));
+.industry-input-section{
+  border-right:4px solid #f59e0b;
+  background:linear-gradient(135deg, rgba(245,158,11,.04), var(--chart-bg));
 }
-body.dark .industry-input-section {
-  background: linear-gradient(135deg, rgba(245,158,11,.08), var(--chart-bg));
+body.dark .industry-input-section{
+  background:linear-gradient(135deg, rgba(245,158,11,.08), var(--chart-bg));
 }
 
 /* ---------- زیربخش‌ها ---------- */
-.industry-sub-section {
-  padding: 16px;
-  border-radius: 12px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  margin-bottom: 16px;
+.industry-sub-section{
+  padding:16px;
+  border-radius:12px;
+  background:var(--card);
+  border:1px solid var(--line);
+  margin-bottom:16px;
+}
+.industry-sub-section:last-of-type{margin-bottom:0}
+.industry-sub-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13.5px;
+  font-weight:700;
+  color:var(--txt);
+  margin-bottom:14px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--line);
+  flex-wrap:wrap;
+}
+.sub-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:var(--blue);
+  color:#fff;
+  font-size:11.5px;
+  font-weight:700;
+  flex-shrink:0;
+}
+.industry-sub-section:first-of-type .sub-badge{background:#f59e0b}
+
+/* ---------- سهم اصلی (Base) ---------- */
+.base-symbol-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr;
+  gap:10px;
+  margin-bottom:14px;
 }
 
-.industry-sub-section:last-of-type {
-  margin-bottom: 0;
+/* دراپ افقی سهم اصلی */
+.base-drop-horizontal{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:12px 16px;
+  border:2px dashed #98a2b3;
+  border-radius:12px;
+  background:linear-gradient(135deg, var(--chart-bg), var(--card));
+  transition:.25s ease;
+  flex-wrap:wrap;
+  position:relative;
+  cursor:pointer;
+}
+.base-drop-horizontal:hover{
+  border-color:var(--blue);
+  background:linear-gradient(135deg, rgba(23,105,224,.05), var(--card));
+  box-shadow:0 6px 18px rgba(23,105,224,.1);
+}
+.base-drop-horizontal.hover{
+  background:rgba(23,105,224,.08);
+  border-color:var(--blue);
+  border-style:solid;
+  box-shadow:0 8px 24px rgba(23,105,224,.18);
+}
+.base-drop-horizontal input[type="file"]{
+  position:absolute;
+  width:1px;
+  height:1px;
+  opacity:0;
+  pointer-events:none;
+}
+.base-drop-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex:1;
+  min-width:200px;
+}
+.base-drop-icon{
+  font-size:26px;
+  line-height:1;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.06));
+  transition:transform .3s ease;
+}
+.base-drop-horizontal:hover .base-drop-icon{transform:scale(1.1) rotate(-5deg)}
+.base-drop-text{
+  font-size:13.5px;
+  font-weight:600;
+  color:var(--txt);
+  line-height:1.5;
+}
+.base-drop-right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+  flex-wrap:wrap;
+  min-width:0;
+}
+.base-file-info-inline{
+  display:none;
+  align-items:center;
+  gap:8px;
+  padding:6px 12px;
+  border-radius:8px;
+  background:rgba(16,185,129,.1);
+  border:1px solid rgba(16,185,129,.3);
+  color:var(--good);
+  font-size:12px;
+  font-weight:600;
+}
+.base-file-info-inline.active{display:inline-flex}
+.base-file-info-inline .file-name{
+  max-width:180px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  direction:ltr;
 }
 
-.industry-sub-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--txt);
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--line);
-  flex-wrap: wrap;
+/* ---------- هم‌گروهی‌ها ---------- */
+.peers-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-height:60px;
+  padding:6px;
+  border-radius:12px;
+  transition:background .2s, box-shadow .2s;
+}
+.peers-list.hover{
+  background:rgba(23,105,224,.08);
+  box-shadow:0 0 0 2px rgba(23,105,224,.3) inset;
 }
 
-.sub-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--blue);
-  color: #fff;
-  font-size: 11.5px;
-  font-weight: 700;
-  flex-shrink: 0;
+/* دراپ افقی هم‌گروهی‌ها */
+.peers-drop-horizontal{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:14px 18px;
+  border:2px dashed #98a2b3;
+  border-radius:12px;
+  background:linear-gradient(135deg, var(--chart-bg), var(--card));
+  transition:.25s ease;
+  flex-wrap:wrap;
+  position:relative;
+  cursor:pointer;
+}
+.peers-drop-horizontal:hover{
+  border-color:var(--blue);
+  background:linear-gradient(135deg, rgba(23,105,224,.05), var(--card));
+  box-shadow:0 6px 18px rgba(23,105,224,.1);
+}
+.peers-drop-horizontal.hover{
+  background:rgba(23,105,224,.08);
+  border-color:var(--blue);
+  border-style:solid;
+  box-shadow:0 8px 24px rgba(23,105,224,.18);
+}
+.peers-drop-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex:1;
+  min-width:220px;
+}
+.peers-drop-icon{
+  font-size:28px;
+  line-height:1;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.06));
+  transition:transform .3s ease;
+}
+.peers-drop-horizontal:hover .peers-drop-icon{
+  transform:scale(1.1) rotate(-5deg);
+}
+.peers-drop-text{
+  font-size:14px;
+  font-weight:600;
+  color:var(--txt);
+  line-height:1.5;
+}
+.peers-drop-hint{
+  font-size:11.5px;
+  color:var(--sub);
+  font-weight:400;
+}
+.peers-drop-right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+  flex-wrap:wrap;
+  min-width:0;
+}
+.peers-count-badge{
+  padding:6px 14px;
+  border-radius:10px;
+  background:rgba(102,112,133,.15);
+  color:var(--sub);
+  font-size:13px;
+  font-weight:700;
+  direction:rtl;
+  font-variant-numeric:tabular-nums;
+  transition:.2s;
+}
+.peers-count-badge.has-some{
+  background:rgba(23,105,224,.12);
+  color:var(--blue);
+}
+.peers-count-badge.full{
+  background:rgba(198,40,40,.12);
+  color:var(--bad);
 }
 
-.industry-sub-section:first-of-type .sub-badge {
-  background: #f59e0b;
+/* ---------- آیتم هم‌گروهی ---------- */
+.peer-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--card);
+  flex-wrap:wrap;
+  transition:box-shadow .15s;
+}
+.peer-item:hover{box-shadow:0 3px 10px rgba(0,0,0,.06)}
+.peer-item .color-dot{
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  flex-shrink:0;
+}
+.peer-item .symbol-input{
+  flex:1;
+  min-width:90px;
+  max-width:130px;
+  padding:8px 12px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--chart-bg);
+  color:var(--txt);
+  font:inherit;
+  font-weight:600;
+  direction:rtl;
+}
+.peer-item .symbol-input:focus{
+  outline:2px solid var(--blue);
+  border-color:var(--blue);
+}
+.peer-item .price-input,
+.peer-item .shares-input{
+  width:130px;
+  padding:8px 12px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--chart-bg);
+  color:var(--txt);
+  font:inherit;
+  direction:rtl;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.peer-item .price-input:focus,
+.peer-item .shares-input:focus{
+  outline:2px solid var(--blue);
+  border-color:var(--blue);
+}
+.peer-item .field-label{
+  font-size:11.5px;
+  color:var(--sub);
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.peer-item .remove-btn{
+  padding:5px 12px;
+  font-size:12px;
+  color:var(--bad);
+  border:1px solid var(--bad);
+  background:transparent;
+  border-radius:8px;
+  cursor:pointer;
+  margin-right:auto;
+  transition:background .15s;
+}
+.peer-item .remove-btn:hover{background:rgba(198,40,40,.1)}
+.peer-item .file-info{
+  font-size:11.5px;
+  color:var(--sub);
+  direction:ltr;
+  flex-basis:100%;
+  padding-right:24px;
 }
 
-/* ---------- ریسپانسیو ---------- */
-@media (max-width: 700px) {
-  .industry-sub-section {
-    padding: 12px;
-  }
-  .industry-sub-title {
-    font-size: 12.5px;
-  }
+/* ---------- دکمه‌های اقدام ---------- */
+.industry-actions{
+  display:flex;
+  gap:8px;
+  margin-top:18px;
+  flex-wrap:wrap;
+  justify-content:center;
+  padding-top:16px;
+  border-top:1px dashed var(--line);
 }
+
+/* ---------- خلاصه جایگاه سهم اصلی ---------- */
+.base-position-summary{margin-top:6px}
+.base-position-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+  gap:12px;
+}
+.bp-card{
+  padding:16px;
+  border-radius:14px;
+  background:var(--chart-bg);
+  border:1px solid var(--chart-br);
+  text-align:center;
+  transition:transform .15s;
+  border-top:4px solid var(--blue);
+}
+.bp-card:hover{transform:translateY(-2px)}
+.bp-card .bp-label{
+  font-size:12px;
+  color:var(--sub);
+  margin-bottom:8px;
+  font-weight:600;
+}
+.bp-card .bp-value{
+  font-size:22px;
+  font-weight:700;
+  line-height:1.2;
+  direction:rtl;
+}
+.bp-card .bp-sub{
+  font-size:11.5px;
+  color:var(--sub);
+  margin-top:6px;
+  line-height:1.6;
+}
+.bp-card.bp-base{
+  border-top-color:#f59e0b;
+  background:linear-gradient(135deg, rgba(245,158,11,.08), var(--chart-bg));
+}
+.bp-card.bp-rank{border-top-color:#8b5cf6}
+.bp-card.bp-better{border-top-color:#16834a}
+.bp-card.bp-worse{border-top-color:#c62828}
+.bp-card.bp-score{border-top-color:#1769e0}
+
+/* ---------- جدول اصلی صنعت ---------- */
+.industry-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13.5px;
+  min-width:720px;
+}
+.industry-table th{
+  background:var(--table-head);
+  color:var(--sub);
+  font-weight:600;
+  font-size:12.5px;
+  padding:10px 12px;
+  border-bottom:2px solid var(--line);
+  text-align:center;
+  white-space:nowrap;
+}
+.industry-table th:first-child{text-align:right}
+.industry-table td{
+  padding:10px 12px;
+  border-bottom:1px solid var(--line);
+  text-align:center;
+  color:var(--txt);
+}
+.industry-table td:first-child{
+  text-align:right;
+  font-weight:600;
+  color:var(--sub);
+  background:var(--chart-bg);
+  font-size:13px;
+}
+.industry-table tr:hover td{background:var(--hover)}
+.industry-table th.base-col,
+.industry-table td.base-col{background:rgba(245,158,11,.08)}
+body.dark .industry-table th.base-col,
+body.dark .industry-table td.base-col{background:rgba(245,158,11,.12)}
+
+/* ---------- کارت دو صنعت ---------- */
+#twoIndustriesCompareBox h2{font-size:16px;margin-bottom:14px}
+#twoIndustriesCompareBox{border-top:4px solid #8b5cf6}
+#compareTwoIndustriesCard{margin-top:55px !important}
+
 /* ============================================================
-   🆕 v1.8.1 — فاصله کارت صنایع ذخیره‌شده
+   ۳۹. کارت‌های ذخیره‌شده (v1.8 — یکسان‌سازی شده)
 ============================================================ */
-
-#industrySavedCard {
-  margin-top: 90px !important;
+#savedCard,
+#industrySavedCard{
+  padding:10px 12px !important;
+  box-shadow:0 1px 6px #0001 !important;
+  opacity:0.85;
+  border-radius:12px !important;
+  margin-top:40px !important;
+  margin-bottom:10px !important;
 }
 
-@media (max-width: 600px) {
-  #industrySavedCard {
-    margin-top: 75px !important;
-  }
-}
-/* ============================================================
-   🆕 کوچک‌تر کردن کارت‌های ذخیره‌شده (تحلیل‌ها و صنایع) — نسخه کوچیک‌تر
-============================================================ */
-
-/* کارت تحلیل‌های ذخیره‌شده */
-#savedCard {
-  padding: 10px 12px !important;
-  box-shadow: 0 1px 6px #0001 !important;
-  opacity: 0.85;
-  border-radius: 12px !important;
+#savedCard h2,
+#industrySavedCard h2{
+  font-size:13px !important;
+  margin-bottom:6px !important;
+  gap:5px !important;
 }
 
-#savedCard h2 {
-  font-size: 13px !important;
-  margin-bottom: 6px !important;
-  gap: 5px !important;
+#savedCard h2 .help,
+#industrySavedCard h2 .help{
+  width:16px !important;
+  height:16px !important;
+  font-size:10px !important;
 }
 
-#savedCard h2 .help {
-  width: 16px !important;
-  height: 16px !important;
-  font-size: 10px !important;
-}
-
-#savedCard .saved-controls {
-  gap: 5px !important;
-  margin-bottom: 8px !important;
+#savedCard .saved-controls,
+#industrySavedCard .saved-controls{
+  gap:5px !important;
+  margin-bottom:8px !important;
 }
 
 #savedCard .saved-search,
-#savedCard .saved-sort {
-  padding: 5px 8px !important;
-  font-size: 11.5px !important;
-  border-radius: 7px !important;
+#savedCard .saved-sort,
+#industrySavedCard .saved-search,
+#industrySavedCard .saved-sort{
+  padding:5px 8px !important;
+  font-size:11.5px !important;
+  border-radius:7px !important;
 }
 
-#savedCard .saved-list {
-  gap: 5px !important;
+#savedCard .saved-list,
+#industrySavedCard .saved-list{
+  gap:5px !important;
 }
 
-#savedCard .saved-item {
-  padding: 6px 9px !important;
-  gap: 6px !important;
-  border-radius: 8px !important;
+#savedCard .saved-item,
+#industrySavedCard .saved-item{
+  padding:6px 9px !important;
+  gap:6px !important;
+  border-radius:8px !important;
 }
 
-#savedCard .saved-item .name {
-  font-size: 11.5px !important;
-  min-width: 110px !important;
-  gap: 4px !important;
+#savedCard .saved-item .name,
+#industrySavedCard .saved-item .name{
+  font-size:11.5px !important;
+  min-width:110px !important;
+  gap:4px !important;
 }
 
-#savedCard .saved-item .date {
-  font-size: 10px !important;
+#savedCard .saved-item .date,
+#industrySavedCard .saved-item .date{
+  font-size:10px !important;
 }
 
-#savedCard .saved-item button {
-  padding: 3px 8px !important;
-  font-size: 10px !important;
-  border-radius: 6px !important;
+#savedCard .saved-item button,
+#industrySavedCard .saved-item button{
+  padding:3px 8px !important;
+  font-size:10px !important;
+  border-radius:6px !important;
 }
 
-#savedCard .saved-item .star {
-  font-size: 15px !important;
+#savedCard .saved-item .star,
+#industrySavedCard .saved-item .star{
+  font-size:15px !important;
 }
 
-#savedCard .saved-item .edit-name {
-  font-size: 11px !important;
+#savedCard .saved-item .edit-name,
+#industrySavedCard .saved-item .edit-name{
+  font-size:11px !important;
 }
 
 #savedCard #downloadAll,
-#savedCard #uploadFile {
-  padding: 4px 10px !important;
-  font-size: 11px !important;
-  border-radius: 7px !important;
+#savedCard #uploadFile,
+#industrySavedCard #industryDownloadAll,
+#industrySavedCard #industryUploadFile{
+  padding:4px 10px !important;
+  font-size:11px !important;
+  border-radius:7px !important;
 }
 
-#savedCard .saved-empty {
-  font-size: 11px !important;
-  padding: 8px !important;
+#savedCard .saved-empty,
+#industrySavedCard .saved-empty{
+  font-size:11px !important;
+  padding:8px !important;
 }
 
-#savedCard > div:last-child {
-  gap: 6px !important;
-  margin-top: 8px !important;
+#savedCard > div:last-child,
+#industrySavedCard > div:last-child{
+  gap:6px !important;
+  margin-top:8px !important;
 }
 
 /* ============================================================
-   کارت مقایسه‌های قبلی سهم و صنعت
+   ۴۰. کارت پشتیبان‌گیری دیدبان (یکسان‌سازی شده)
 ============================================================ */
+#wlBackupCard{
+  padding:10px 12px !important;
+  box-shadow:0 1px 6px #0001 !important;
+  opacity:0.85;
+  border-radius:12px !important;
+  margin-top:40px !important;
+  margin-bottom:10px !important;
+}
+#wlBackupCard h2{
+  font-size:13px !important;
+  margin-bottom:6px !important;
+  gap:5px !important;
+}
+#wlBackupCard h2 .help{
+  width:16px !important;
+  height:16px !important;
+  font-size:10px !important;
+}
+#wlBackupCard #wlDownloadBtn,
+#wlBackupCard #wlUploadBtn{
+  padding:4px 10px !important;
+  font-size:11px !important;
+  border-radius:7px !important;
+}
+#wlBackupCard > div{gap:6px !important}
 
-#industrySavedCard {
-  padding: 10px 12px !important;
-  box-shadow: 0 1px 6px #0001 !important;
-  opacity: 0.85;
-  border-radius: 12px !important;
+/* ============================================================
+   ۴۱. System License UI
+============================================================ */
+.license-modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.75);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999999;
+  padding:20px;
+  animation:licenseFadeIn .25s ease;
+}
+.license-modal-overlay.show{display:flex}
+@keyframes licenseFadeIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+.license-modal-box{
+  background:var(--card);
+  color:var(--txt);
+  border-radius:20px;
+  max-width:620px;
+  width:100%;
+  max-height:92vh;
+  overflow-y:auto;
+  box-shadow:0 30px 90px rgba(0,0,0,.6);
+  border:1px solid var(--line);
+  animation:licenseSlideUp .35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes licenseSlideUp{
+  from{transform:translateY(40px);opacity:0}
+  to{transform:translateY(0);opacity:1}
+}
+.license-modal-header{
+  background:linear-gradient(135deg, #1769e0, #8b5cf6);
+  color:#fff;
+  padding:26px 24px 22px;
+  border-radius:20px 20px 0 0;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.license-modal-header::before{
+  content:"";
+  position:absolute;
+  top:-50%;
+  left:-50%;
+  width:200%;
+  height:200%;
+  background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.15), transparent 60%);
+  pointer-events:none;
+}
+.license-icon{
+  font-size:42px;
+  display:block;
+  margin-bottom:6px;
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,.3));
+}
+.license-modal-header h2{
+  margin:0;
+  font-size:20px;
+  font-weight:700;
+  color:#fff;
+  justify-content:center;
+}
+.license-modal-sub{
+  margin:6px 0 0;
+  font-size:12.5px;
+  color:rgba(255,255,255,.85);
+  text-align:center;
+}
+.license-modal-body{padding:22px 24px 26px}
+.license-status-box{
+  padding:12px 16px;
+  border-radius:10px;
+  font-size:13px;
+  margin-bottom:16px;
+  line-height:1.7;
+  text-align:center;
+}
+.license-status-box.license-status-error{
+  background:rgba(198,40,40,.12);
+  color:var(--bad);
+  border-right:4px solid var(--bad);
+}
+.license-status-box.license-status-warning{
+  background:rgba(234,179,8,.12);
+  color:var(--warn);
+  border-right:4px solid var(--warn);
+}
+.license-status-box.license-status-success{
+  background:rgba(16,185,129,.12);
+  color:var(--good);
+  border-right:4px solid var(--good);
+}
+.license-section{margin-bottom:12px}
+.license-section label{
+  display:block;
+  font-size:12.5px;
+  color:var(--sub);
+  margin-bottom:6px;
+  font-weight:600;
+}
+.license-section textarea{
+  width:100%;
+  padding:12px 14px;
+  border-radius:10px;
+  border:1.5px solid var(--line);
+  background:var(--chart-bg);
+  color:var(--txt);
+  font:inherit;
+  font-size:12.5px;
+  font-family:monospace;
+  direction:ltr;
+  text-align:left;
+  resize:vertical;
+  min-height:70px;
+  transition:.2s;
+  word-break:break-all;
+  line-height:1.6;
+}
+.license-section textarea:focus{
+  outline:none;
+  border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(23,105,224,.15);
+}
+.license-section textarea::placeholder{color:var(--sub);opacity:.6}
+.license-btn-primary{
+  width:100%;
+  padding:13px;
+  border-radius:10px;
+  border:0;
+  background:linear-gradient(135deg, #1769e0, #1e40af);
+  color:#fff;
+  font:inherit;
+  font-weight:700;
+  font-size:14.5px;
+  cursor:pointer;
+  transition:.2s;
+  margin-top:10px;
+  box-shadow:0 4px 12px rgba(23,105,224,.3);
+}
+.license-btn-primary:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 6px 18px rgba(23,105,224,.45);
+}
+.license-btn-primary:disabled{opacity:.6;cursor:wait;transform:none}
+.license-btn-trial{
+  width:100%;
+  padding:13px;
+  border-radius:10px;
+  border:2px dashed var(--good);
+  background:rgba(16,185,129,.08);
+  color:var(--good);
+  font:inherit;
+  font-weight:700;
+  font-size:14px;
+  cursor:pointer;
+  transition:.2s;
+}
+.license-btn-trial:hover:not(:disabled){
+  background:rgba(16,185,129,.15);
+  transform:translateY(-2px);
+}
+.license-trial-hint{
+  font-size:11.5px;
+  color:var(--sub);
+  text-align:center;
+  margin:8px 0 0;
+}
+.license-divider{
+  position:relative;
+  text-align:center;
+  margin:20px 0;
+}
+.license-divider::before{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:0;
+  right:0;
+  height:1px;
+  background:var(--line);
+}
+.license-divider span{
+  position:relative;
+  background:var(--card);
+  padding:0 14px;
+  font-size:12px;
+  color:var(--sub);
+  font-weight:500;
+}
+.license-plans{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:8px;
+  margin-bottom:18px;
+}
+.license-plan{
+  padding:12px 8px;
+  border:1.5px solid var(--line);
+  border-radius:12px;
+  text-align:center;
+  background:var(--chart-bg);
+  transition:.2s;
+  position:relative;
+}
+.license-plan:hover{
+  border-color:var(--blue);
+  transform:translateY(-2px);
+}
+.license-plan.featured{
+  border-color:#f59e0b;
+  background:linear-gradient(135deg, rgba(245,158,11,.08), rgba(245,158,11,.02));
+}
+.license-plan.featured::after{
+  content:"⭐ پرفروش";
+  position:absolute;
+  top:-9px;
+  right:8px;
+  background:#f59e0b;
+  color:#fff;
+  font-size:10px;
+  padding:2px 8px;
+  border-radius:6px;
+  font-weight:700;
+}
+.plan-emoji{font-size:22px;margin-bottom:4px}
+.plan-name{
+  font-size:13.5px;
+  font-weight:700;
+  color:var(--txt);
+  margin-bottom:6px;
+}
+.plan-price{
+  font-size:13px;
+  font-weight:700;
+  color:var(--blue);
+  margin-bottom:4px;
+  direction:rtl;
+}
+.license-plan.featured .plan-price{color:#d97706}
+.plan-info{font-size:10.5px;color:var(--sub);line-height:1.6}
+
+.license-contact{
+  text-align:center;
+  padding:14px;
+  background:var(--chart-bg);
+  border-radius:12px;
+  border:1px dashed var(--line);
+}
+.license-contact p{
+  font-size:12.5px;
+  color:var(--sub);
+  margin:0 0 10px;
+}
+.license-contact-buttons{
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+.contact-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:9px 16px;
+  border-radius:10px;
+  text-decoration:none;
+  font-size:13px;
+  font-weight:600;
+  color:#fff;
+  transition:.2s;
+  border:0;
+}
+.contact-btn:hover{
+  transform:translateY(-2px);
+  filter:brightness(1.1);
+}
+.contact-telegram{
+  background:linear-gradient(135deg, #0088cc, #229ED9);
+  box-shadow:0 4px 12px rgba(34,158,217,.3);
+}
+.contact-instagram{
+  background:linear-gradient(135deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
+  box-shadow:0 4px 12px rgba(214,41,118,.3);
 }
 
-#industrySavedCard h2 {
-  font-size: 13px !important;
-  margin-bottom: 6px !important;
-  gap: 5px !important;
+.license-manage-grid{
+  display:grid;
+  gap:8px;
+  margin-bottom:18px;
+}
+.lm-row{
+  display:flex;
+  justify-content:space-between;
+  padding:10px 14px;
+  border-radius:10px;
+  background:var(--chart-bg);
+  font-size:13px;
+  border-right:3px solid var(--blue);
+}
+.lm-row span{color:var(--sub)}
+.lm-row b{color:var(--txt);font-weight:700}
+
+.license-actions-box{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.license-actions-box button{flex:1;min-width:130px}
+.license-btn-secondary{
+  padding:11px;
+  border-radius:10px;
+  border:1.5px solid var(--line);
+  background:var(--chart-bg);
+  color:var(--txt);
+  font:inherit;
+  font-weight:600;
+  font-size:13px;
+  cursor:pointer;
+  transition:.2s;
+}
+.license-btn-secondary:hover{
+  border-color:var(--blue);
+  color:var(--blue);
 }
 
-#industrySavedCard h2 .help {
-  width: 16px !important;
-  height: 16px !important;
-  font-size: 10px !important;
+.license-indicator{
+  position:fixed;
+  bottom:20px;
+  left:20px;
+  background:var(--card);
+  border-radius:14px;
+  padding:10px 14px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.2);
+  z-index:999998;
+  font-size:12px;
+  border:1px solid var(--line);
+  transition:.2s;
+  direction:rtl;
+  max-width:calc(100vw - 40px);
+}
+.license-indicator:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 30px rgba(0,0,0,.25);
+}
+.license-indicator.active{border-right:4px solid var(--good)}
+.license-indicator.danger{
+  border-right:4px solid var(--bad);
+  background:rgba(198,40,40,.08);
+}
+.li-icon{font-size:20px;line-height:1}
+.li-info{flex:1;min-width:0}
+.li-plan{
+  font-weight:700;
+  font-size:12.5px;
+  color:var(--txt);
+  margin-bottom:2px;
+}
+.li-meta{
+  font-size:11px;
+  color:var(--sub);
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.li-btn{
+  background:var(--blue);
+  color:#fff;
+  border:0;
+  border-radius:8px;
+  padding:6px 12px;
+  font-size:11px;
+  font-weight:600;
+  cursor:pointer;
+  font-family:inherit;
+  white-space:nowrap;
+  transition:.15s;
+}
+.li-btn:hover{
+  background:#0f5bc4;
+  transform:scale(1.05);
+}
+.license-indicator.danger .li-btn{background:var(--bad)}
+.license-indicator.danger .li-btn:hover{background:#a01e1e}
+
+/* ============================================================
+   ۴۲. Responsive
+============================================================ */
+@media (max-width: 900px){
+  .market-grid{grid-template-columns:1fr 1fr}
+  .cmp-item .price-input,
+  .cmp-item .shares-input{width:120px}
+  .base-symbol-grid{grid-template-columns:1fr 1fr}
+  .peer-item .price-input,
+  .peer-item .shares-input{width:110px}
 }
 
-#industrySavedCard .saved-controls {
-  gap: 5px !important;
-  margin-bottom: 8px !important;
+@media (max-width: 800px){
+  .grid{grid-template-columns:1fr 1fr}
+  .charts-row,
+  .pie-row{grid-template-columns:1fr}
+  .dupont{grid-template-columns:1fr}
+  .dupont-op{text-align:center}
+  .saved-controls{grid-template-columns:1fr}
+  h1{font-size:26px}
+  .main-tabs{width:100%;justify-content:center}
+  .main-tab{flex:1;justify-content:center;padding:11px 14px}
+  .monthly-kpi-grid{grid-template-columns:1fr 1fr}
+  .wl-list{grid-template-columns:1fr}
+  .inner-tabs{padding:5px;gap:4px}
+  .inner-tab{padding:9px 12px;font-size:12.5px}
 }
 
-#industrySavedCard .saved-search,
-#industrySavedCard .saved-sort {
-  padding: 5px 8px !important;
-  font-size: 11.5px !important;
-  border-radius: 7px !important;
+@media (max-width: 700px){
+  .base-drop-horizontal{
+    flex-direction:column;
+    align-items:stretch;
+    gap:12px;
+  }
+  .base-drop-left{
+    justify-content:center;
+    text-align:center;
+  }
+  .base-drop-right{justify-content:center}
+  .base-file-info-inline .file-name{max-width:130px}
+
+  .peers-drop-horizontal{
+    flex-direction:column;
+    align-items:stretch;
+    gap:12px;
+    padding:14px;
+  }
+  .peers-drop-left{
+    justify-content:center;
+    text-align:center;
+    flex-direction:column;
+    gap:6px;
+  }
+  .peers-drop-right{justify-content:center}
+  .peers-drop-icon{font-size:24px}
+  .peers-drop-hint{display:none}
+
+  .industry-sub-section{padding:12px}
+  .industry-sub-title{font-size:12.5px}
 }
 
-#industrySavedCard .saved-list {
-  gap: 5px !important;
+@media (max-width: 640px){
+  .base-symbol-grid{grid-template-columns:1fr}
+  .peer-item{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .peer-item .symbol-input,
+  .peer-item .price-input,
+  .peer-item .shares-input{
+    width:100%;
+    max-width:none;
+  }
+  .peer-item .remove-btn{
+    margin-right:0;
+    align-self:flex-end;
+  }
+  .base-position-grid{grid-template-columns:1fr}
 }
 
-#industrySavedCard .saved-item {
-  padding: 6px 9px !important;
-  gap: 6px !important;
-  border-radius: 8px !important;
-}
+@media (max-width: 600px){
+  .market-grid{grid-template-columns:1fr}
+  h1{font-size:22px}
+  .cmp-scores{grid-template-columns:1fr}
+  .cmp-zscore-wrap{grid-template-columns:1fr}
+  .cmp-item{flex-direction:column;align-items:stretch}
+  .cmp-item .symbol-input,
+  .cmp-item .price-input,
+  .cmp-item .shares-input{width:100%;max-width:none}
+  .footer-links{flex-direction:column;width:100%}
+  .footer-link{justify-content:center;width:100%}
+  .monthly-kpi-grid{grid-template-columns:1fr}
+  .watch-mode-selector{flex-direction:column}
+  .qual-grid{grid-template-columns:1fr}
+  .quick-metrics-grid{grid-template-columns:1fr;gap:10px}
+  .qm-card{padding:14px 16px}
+  .qm-value{font-size:22px}
+  .inner-tabs{justify-content:center}
+  .inner-tab{
+    flex:1 1 calc(50% - 4px);
+    justify-content:center;
+    padding:9px 8px;
+    font-size:12px;
+  }
+  .inner-section-title{font-size:14px}
+  .acc-header{padding:12px 14px;gap:8px}
+  .acc-icon{font-size:18px}
+  .acc-title{font-size:13px}
+  .acc-summary{font-size:12px;padding:3px 8px}
+  .acc-body{padding:0 14px}
+  .acc-card.acc-open .acc-body{padding:4px 14px 16px}
+  .acc-body .score-num{font-size:34px}
+  .dupont-hero-num{font-size:34px}
+  .dupont-hero-level{font-size:13px;margin-bottom:14px}
+  .dupont-scale-ticks{font-size:9.5px}
+  .dupont-factor-head{font-size:12px}
+  .dupont-story{font-size:12.5px;line-height:1.8}
+  .ebitda-hero-num{font-size:32px}
+  .ebitda-hero-level{font-size:13px;margin-bottom:14px}
+  .ebitda-scale-ticks{font-size:9.5px}
+  .ebitda-item-head,
+  .ebitda-total-head{font-size:12px}
+  .ebitda-story{font-size:12.5px;line-height:1.8}
+  .dupont-factor-row{
+    grid-template-columns:1fr auto;
+    grid-template-rows:auto auto;
+    gap:6px 10px;
+    padding:10px;
+  }
+  .dupont-factor-label{grid-column:1;font-size:12px}
+  .dupont-factor-value-box{
+    grid-column:2;
+    font-size:11.5px;
+    min-width:auto;
+    padding:3px 8px;
+  }
+  .dupont-factor-bar-inline{grid-column:1 / -1;height:10px}
+  .ratio-card{padding:9px 11px}
+  .ratio-card-row{grid-template-columns:1fr;gap:8px}
+  .ratio-card-value-box{justify-content:space-between}
+  .ratio-card-name{font-size:12.5px}
+  .ratio-card-num{font-size:13px}
+  .ratio-card-hint{font-size:11px}
+  .eps-grid{grid-template-columns:1fr;gap:10px}
+  .eps-card{padding:14px 12px}
+  .eps-card-num{font-size:26px}
+  .eps-note{font-size:11.5px}
+  .license-modal-box{max-width:100%;border-radius:16px;max-height:95vh}
+  .license-modal-header{padding:22px 18px 18px}
+  .license-icon{font-size:36px}
+  .license-modal-header h2{font-size:17px}
+  .license-modal-body{padding:18px}
+  .license-plans{grid-template-columns:1fr;gap:8px}
+  .license-plan{
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    align-items:center;
+    gap:12px;
+    padding:12px 14px;
+    text-align:right;
+  }
+  .plan-emoji{font-size:24px;margin:0;grid-row:span 2}
+  .plan-name{margin:0;font-size:14px}
+  .plan-price{margin:0;font-size:13px;grid-column:3;grid-row:1}
+  .plan-info{grid-column:2 / span 2;font-size:11px;text-align:right}
+  .license-indicator{left:10px;right:10px;bottom:10px;max-width:none}
 
-#industrySavedCard .saved-item .name {
-  font-size: 11.5px !important;
-  min-width: 110px !important;
-  gap: 4px !important;
-}
-
-#industrySavedCard .saved-item .date {
-  font-size: 10px !important;
-}
-
-#industrySavedCard .saved-item button {
-  padding: 3px 8px !important;
-  font-size: 10px !important;
-  border-radius: 6px !important;
-}
-
-#industrySavedCard .saved-item .star {
-  font-size: 15px !important;
-}
-
-#industrySavedCard .saved-item .edit-name {
-  font-size: 11px !important;
-}
-
-#industrySavedCard #industryDownloadAll,
-#industrySavedCard #industryUploadFile {
-  padding: 4px 10px !important;
-  font-size: 11px !important;
-  border-radius: 7px !important;
-}
-
-#industrySavedCard .saved-empty {
-  font-size: 11px !important;
-  padding: 8px !important;
-}
-
-#industrySavedCard > div:last-child {
-  gap: 6px !important;
-  margin-top: 8px !important;
-}
-
-/* فاصله بالای کارت‌ها */
-#savedCard,
-#industrySavedCard {
-  margin-top: 40px !important;
-  margin-bottom: 10px !important;
-}
-
-/* در موبایل هم کوچیک‌تر */
-@media (max-width: 600px) {
+  /* فاصله کارت‌های ذخیره‌شده در موبایل */
   #savedCard,
-  #industrySavedCard {
-    margin-top: 30px !important;
-    padding: 9px !important;
+  #industrySavedCard,
+  #wlBackupCard{
+    margin-top:120px !important;
+    margin-bottom:20px !important;
+    padding:9px !important;
   }
   #savedCard h2,
-  #industrySavedCard h2 {
-    font-size: 12px !important;
-  }
+  #industrySavedCard h2,
+  #wlBackupCard h2{font-size:12px !important}
   #savedCard .saved-item,
-  #industrySavedCard .saved-item {
-    padding: 5px 7px !important;
-  }
+  #industrySavedCard .saved-item{padding:5px 7px !important}
   #savedCard .saved-item .name,
-  #industrySavedCard .saved-item .name {
-    font-size: 11px !important;
-  }
+  #industrySavedCard .saved-item .name{font-size:11px !important}
+}
+
+@media (max-width: 400px){
+  .qm-value{font-size:20px}
+  .qm-label{font-size:12px}
 }
 
 /* ============================================================
-   🆕 فاصله کارت‌های ذخیره‌شده از کارت بالاشون
+   ۴۳. Print
 ============================================================ */
-
-/* دسکتاپ */
-#savedCard,
-#industrySavedCard {
-  margin-top: 40px !important;
-  margin-bottom: 10px !important;
-}
-
-/* موبایل — دو برابر */
-@media (max-width: 600px) {
-  #savedCard,
-  #industrySavedCard {
-    margin-top: 120px !important;
-    margin-bottom: 20px !important;
+@media print{
+  body{
+    background:#fff !important;
+    color:#000 !important;
   }
+  body.dark{
+    background:#fff !important;
+    color:#000 !important;
+  }
+  .wrap{max-width:100%;margin:0;padding:10px}
+  .card{
+    box-shadow:none !important;
+    border:1px solid #ddd;
+    page-break-inside:avoid;
+    margin:8px 0 !important;
+    padding:14px !important;
+  }
+  .topbar .actions,
+  #drop,
+  #cmpDrop,
+  #mDrop,
+  #saveModal,
+  #saveCompareModal,
+  #saveMonthlyModal,
+  #addWatchModal,
+  #saveToast,
+  #globalTooltip,
+  .help,
+  #periodBox,
+  #periodInfoBox,
+  .tabs,
+  .saved-controls,
+  #savedList,
+  #cmpSavedList,
+  #mSavedList,
+  #downloadAll,
+  #uploadFile,
+  #saveBtn,
+  #copySummary,
+  #cmpSaveBtn,
+  #cmpClearBtn,
+  #cmpAddBtn,
+  .chart-box .legend,
+  .market-btn-wrap,
+  .market-hint,
+  .main-tabs,
+  .footer-credit,
+  .license-modal-overlay,
+  .license-indicator,
+  #sendToWatchBtn,
+  #mSendToWatchBtn,
+  .wl-actions,
+  .wl-report-item .rep-actions,
+  #wlDownloadBtn,
+  #wlUploadBtn,
+  .industry-base-section,
+  .industry-peers-section,
+  .industry-actions,
+  .peers-list,
+  #addPeerBtn,
+  #clearPeersBtn,
+  .inner-tabs{
+    display:none !important;
+  }
+  .tab-panel{display:block !important}
+  .inner-panel{display:block !important;page-break-inside:avoid}
+  .input-section{
+    border:1px solid #ddd;
+    background:#f9f9f9 !important;
+    padding:10px;
+  }
+  .input-section-title{color:#000}
+  .market-field input,
+  .market-field select{
+    border:1px solid #ddd;
+    background:#fff !important;
+    color:#000 !important;
+  }
+  .chart-box{page-break-inside:avoid}
+  .analysis-item,
+  .alert,
+  .one-line-note,
+  .zscore-note,
+  .cmp-score-card,
+  .cmp-zscore-card,
+  .text-insight-item,
+  .qual-box{
+    page-break-inside:avoid;
+  }
+  table{page-break-inside:auto}
+  tr{page-break-inside:avoid}
+  h1{font-size:24px}
+  h2{font-size:15px;color:#000}
+  .sub{color:#555}
+  .metric{background:#f5f5f5 !important;border:1px solid #ddd}
+  .metric b{color:#000}
+  .summary-box{background:#f9f9f9 !important;color:#000}
+  .summary-box b{color:#000}
+  .dupont-box{background:#f5f5f5 !important;border:1px solid #ccc}
+  .dupont-box .val{color:#000}
+  .dupont-result{background:#e8f5e9 !important}
+  .dupont-result .val{color:#000}
+  .chart-box{background:#fff !important;border:1px solid #ddd}
+  .zscore-marker{background:#000}
+  .print-header{
+    display:block !important;
+    text-align:center;
+    margin-bottom:12px;
+    padding-bottom:10px;
+    border-bottom:2px solid #000;
+  }
+  .print-header h2{margin:0}
+  .print-header .sub{margin:4px 0 0 0;font-size:11px}
+  .cmp-table td.best-cell{background:#d1fae5 !important;color:#000 !important}
+  .cmp-table td.best-cell::before{content:""}
+  .cmp-table td.worst-cell{background:#fee2e2 !important;color:#000 !important}
+  .monthly-kpi{background:#f5f5f5 !important;border:1px solid #ddd}
+  .monthly-notes{background:#f9f9f9 !important;color:#000}
+  .wl-card{background:#f9f9f9 !important;border:1px solid #ddd}
+  .acc-card{border:1px solid #ddd !important;page-break-inside:avoid;margin-bottom:8px}
+  .acc-card .acc-body{
+    max-height:none !important;
+    opacity:1 !important;
+    padding:8px 12px 12px !important;
+    display:block !important;
+  }
+  .acc-header{background:#f5f5f5 !important;cursor:default}
+  .acc-arrow{display:none !important}
+  .card.collapsed > *:not(h2){display:block !important}
+  .card h2.collapsible-h2 .collapse-icon{display:none !important}
+  .card h2.collapsible-h2{
+    padding-left:0 !important;
+    cursor:default !important;
+  }
+  .quick-metrics-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  .qm-card{
+    background:#f9f9f9 !important;
+    border:1px solid #ddd !important;
+    border-right-width:4px !important;
+    page-break-inside:avoid;
+    box-shadow:none !important;
+    transform:none !important;
+  }
+  .qm-card.qm-good{border-right-color:#16834a !important}
+  .qm-card.qm-bad{border-right-color:#c62828 !important}
+  .dupont-hero{
+    background:#f9f9f9 !important;
+    border:1px solid #ddd;
+  }
+  .dupont-scale-marker{
+    background:#000 !important;
+    border-color:#fff !important;
+  }
+  .dupont-story{background:#f9f9f9 !important}
+  .ebitda-hero{
+    background:#f9f9f9 !important;
+    border:1px solid #ddd;
+  }
+  .ebitda-scale-marker{
+    background:#000 !important;
+    border-color:#fff !important;
+  }
+  .ebitda-story{background:#f9f9f9 !important}
+  #industryOut{display:block !important}
 }
+
+.print-header{display:none}
+
+
 /* ============================================================
-   🆕 کارت پشتیبان‌گیری دیدبان — هم‌اندازه کارت‌های ذخیره‌شده
+   🆕 نسبت‌های صنعت — سبک DuPont (افقی، فشرده، رنگی)
 ============================================================ */
 
-#wlBackupCard {
-  padding: 10px 12px !important;
-  box-shadow: 0 1px 6px #0001 !important;
-  opacity: 0.85;
-  border-radius: 12px !important;
-  margin-top: 40px !important;
-  margin-bottom: 10px !important;
-}
-
-#wlBackupCard h2 {
-  font-size: 13px !important;
+.ratio-dupont-row {
+  grid-template-columns: 130px auto 1fr !important;
+  padding: 10px 14px !important;
   margin-bottom: 6px !important;
-  gap: 5px !important;
 }
 
-#wlBackupCard h2 .help {
-  width: 16px !important;
-  height: 16px !important;
-  font-size: 10px !important;
+.ratio-dupont-row .dupont-factor-label {
+  font-size: 12.5px;
+  min-width: 130px;
 }
 
-#wlBackupCard #wlDownloadBtn,
-#wlBackupCard #wlUploadBtn {
-  padding: 4px 10px !important;
-  font-size: 11px !important;
-  border-radius: 7px !important;
+.ratio-dupont-row .dupont-factor-value-box {
+  font-size: 12px;
+  min-width: 170px;
+  padding: 4px 12px;
+  text-align: center;
+  font-weight: 700;
 }
 
-#wlBackupCard > div {
-  gap: 6px !important;
+.ratio-bar-relative {
+  position: relative;
+  height: 14px !important;
 }
 
-@media (max-width: 600px) {
-  #wlBackupCard {
-    margin-top: 120px !important;
-    margin-bottom: 20px !important;
-    padding: 9px !important;
+.ratio-bar-relative .dupont-factor-fill-inline {
+  height: 100%;
+  border-radius: 6px;
+  transition: width .8s ease;
+}
+
+/* نشانگر میانگین — واضح‌تر */
+.ratio-avg-marker {
+  position: absolute;
+  top: -8px;
+  width: 4px;
+  height: 32px;
+  background: #ffffff;
+  border: 2px solid #1f2937;
+  border-radius: 3px;
+  transform: translateX(-50%);
+  transition: left .5s ease;
+  z-index: 5;
+  cursor: help;
+  box-shadow: 0 2px 8px rgba(0,0,0,.5);
+}
+
+body.dark .ratio-avg-marker {
+  background: #1f2937;
+  border-color: #ffffff;
+}
+
+/* فلش کوچک بالای خط میانگین */
+.ratio-avg-marker::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #1f2937;
+}
+
+body.dark .ratio-avg-marker::before {
+  border-top-color: #ffffff;
+}
+
+/* برچسب «میانگین» بالای خط */
+.ratio-avg-marker-label {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 800;
+  color: #1f2937;
+  white-space: nowrap;
+  pointer-events: none;
+  background: #ffffff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1.5px solid #1f2937;
+  box-shadow: 0 2px 5px rgba(0,0,0,.15);
+  letter-spacing: 0;
+}
+
+body.dark .ratio-avg-marker-label {
+  background: #1f2937;
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+/* راهنما */
+.ratio-inline-legend {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: rgba(102,112,133,.06);
+  border-radius: 8px;
+  font-size: 11.5px;
+  color: var(--sub);
+}
+
+.ratio-inline-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ratio-inline-legend i {
+  display: inline-block;
+}
+
+/* موبایل */
+@media (max-width: 700px) {
+  .ratio-dupont-row {
+    grid-template-columns: 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    gap: 6px 10px;
+    padding: 10px 12px !important;
   }
-  #wlBackupCard h2 {
-    font-size: 12px !important;
+  .ratio-dupont-row .dupont-factor-label {
+    grid-column: 1;
+    font-size: 12px;
+    min-width: auto;
+  }
+  .ratio-dupont-row .dupont-factor-value-box {
+    grid-column: 2;
+    font-size: 11.5px;
+    min-width: auto;
+    padding: 3px 8px;
+  }
+  .ratio-dupont-row .ratio-bar-relative {
+    grid-column: 1 / -1;
+    height: 12px !important;
+    margin-top: 4px;
+  }
+  .ratio-avg-marker-label {
+    display: none;
+  }
+}
+
+
+
+
+
+
+/* ============================================================
+   🆕 رتبه‌بندی بصری — سبک DuPont
+============================================================ */
+
+/* ⭐ برنده کلی */
+.rank-winner-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(245,158,11,.12), rgba(245,158,11,.04));
+  border: 2px solid rgba(245,158,11,.4);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.rank-winner-icon {
+  font-size: 42px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(245,158,11,.4));
+}
+
+.rank-winner-text {
+  flex: 1;
+  min-width: 120px;
+}
+
+.rank-winner-label {
+  font-size: 11.5px;
+  color: var(--sub);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.rank-winner-symbol {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.rank-winner-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 18px;
+  font-weight: 800;
+  direction: rtl;
+}
+
+/* ⭐ کارت‌های رتبه‌بندی */
+.rank-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.rank-card {
+  position: relative;
+  padding: 16px 14px 14px;
+  background: var(--chart-bg);
+  border: 1px solid var(--chart-br);
+  border-radius: 14px;
+  text-align: center;
+  transition: transform .15s, box-shadow .15s;
+  border-top: 4px solid #94a3b8;
+}
+
+.rank-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+}
+
+.rank-card.rank-base {
+  background: linear-gradient(135deg, rgba(245,158,11,.08), var(--chart-bg));
+  border-color: rgba(245,158,11,.5);
+}
+
+.rank-card.rank-gold {
+  background: linear-gradient(135deg, rgba(245,158,11,.12), var(--chart-bg));
+}
+
+.rank-card.rank-silver {
+  background: linear-gradient(135deg, rgba(148,163,184,.12), var(--chart-bg));
+}
+
+.rank-card.rank-bronze {
+  background: linear-gradient(135deg, rgba(180,83,9,.1), var(--chart-bg));
+}
+
+.rank-card-medal {
+  font-size: 28px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.rank-card-symbol {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  word-break: break-all;
+}
+
+.rank-card-score {
+  font-size: 30px;
+  font-weight: 800;
+  direction: ltr;
+  line-height: 1;
+  margin-bottom: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-card-score-label {
+  font-size: 10.5px;
+  color: var(--sub);
+  margin-bottom: 10px;
+}
+
+.rank-card-bar {
+  height: 6px;
+  background: var(--chart-br);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.rank-card-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width .8s ease;
+}
+
+.rank-card-level {
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+/* ⭐ بخش معیارها */
+.rank-criteria-box {
+  padding: 16px;
+  background: var(--chart-bg);
+  border: 1px solid var(--chart-br);
+  border-radius: 14px;
+  margin-bottom: 16px;
+}
+
+.rank-criteria-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--txt);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.rank-criteria-group {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--line);
+}
+
+.rank-criteria-group:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.rank-criteria-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rank-criteria-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--txt);
+}
+
+.rank-criteria-dir {
+  font-size: 10.5px;
+  color: var(--sub);
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(102,112,133,.1);
+}
+
+/* ⭐ ردیف‌های رتبه */
+.rank-row {
+  display: grid;
+  grid-template-columns: 40px 100px auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  transition: background .15s;
+}
+
+.rank-row:hover {
+  background: rgba(102,112,133,.05);
+}
+
+.rank-row.rank-row-base {
+  background: rgba(245,158,11,.08);
+  border-right: 3px solid var(--warn);
+}
+
+.rank-row-pos {
+  font-size: 16px;
+  text-align: center;
+  line-height: 1;
+}
+
+.rank-row-num {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  border-radius: 50%;
+  background: rgba(102,112,133,.15);
+  color: var(--sub);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.rank-row-symbol {
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-row-value {
+  font-size: 12.5px;
+  font-weight: 700;
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  white-space: nowrap;
+  min-width: 75px;
+}
+
+.rank-row-bar {
+  height: 10px;
+  background: var(--chart-br);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.rank-row-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width .8s ease;
+}
+
+/* ⭐ راهنما */
+.rank-legend {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: rgba(102,112,133,.06);
+  border-radius: 10px;
+  font-size: 11.5px;
+  color: var(--sub);
+}
+
+.rank-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rank-legend i {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+
+/* موبایل */
+@media (max-width: 700px) {
+  .rank-winner-banner {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .rank-winner-icon {
+    font-size: 32px;
+  }
+  .rank-winner-symbol {
+    font-size: 17px;
+  }
+  .rank-winner-score {
+    font-size: 15px;
+  }
+
+  .rank-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .rank-card {
+    padding: 12px 10px;
+  }
+  .rank-card-medal {
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+  .rank-card-symbol {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  .rank-card-score {
+    font-size: 24px;
+  }
+
+  .rank-criteria-box {
+    padding: 12px;
+  }
+
+  .rank-row {
+    grid-template-columns: 32px 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 6px 8px;
+    padding: 8px 10px;
+  }
+  .rank-row-pos {
+    grid-column: 1;
+    grid-row: 1;
+    font-size: 14px;
+  }
+  .rank-row-symbol {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 12px;
+  }
+  .rank-row-value {
+    grid-column: 3;
+    grid-row: 1;
+    font-size: 12px;
+  }
+  .rank-row-bar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    height: 8px;
+  }
+}
+
+
+/* ============================================================
+   🆕 رتبه عددی جایگزین مدال
+============================================================ */
+
+.rank-card-num {
+  font-size: 36px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  margin-bottom: 12px !important;
+  direction: ltr !important;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* در موبایل کوچیک‌تر */
+@media (max-width: 700px) {
+  .rank-card-num {
+    font-size: 28px !important;
+    margin-bottom: 8px !important;
+  }
+}
+
+
+/* ============================================================
+   🆕 Hero کارت جایگاه سهم + امتیاز + Z-Score
+============================================================ */
+
+.base-position-hero {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) auto minmax(200px, 1.5fr);
+  align-items: center;
+  gap: 20px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, var(--chart-bg), var(--card));
+  border: 1px solid var(--chart-br);
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+.bph-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bph-symbol {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.bph-industry {
+  font-size: 12px;
+  color: var(--sub);
+}
+
+.bph-score {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bph-score-num {
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1;
+  direction: rtl;
+  font-variant-numeric: tabular-nums;
+}
+
+.bph-score-label {
+  font-size: 11.5px;
+  color: var(--sub);
+  margin-top: 4px;
+}
+
+.bph-score-status {
+  font-size: 13.5px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.bph-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bph-bar {
+  height: 14px;
+  background: var(--chart-br);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bph-bar.bph-bar-zscore {
+  background: linear-gradient(90deg,
+    rgba(198,40,40,.2) 0%, rgba(198,40,40,.2) 45%,
+    rgba(234,179,8,.2) 45%, rgba(234,179,8,.2) 75%,
+    rgba(22,131,74,.2) 75%, rgba(22,131,74,.2) 100%);
+}
+
+.bph-bar-fill {
+  height: 100%;
+  border-radius: 8px;
+  transition: width .8s ease;
+}
+
+.bph-bar-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--sub);
+  direction: ltr;
+}
+
+/* ⭐ کارت‌های اطلاعاتی */
+.score-info-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.score-info-card {
+  padding: 10px 12px;
+  background: var(--chart-bg);
+  border: 1px solid var(--chart-br);
+  border-radius: 12px;
+  text-align: center;
+  border-top: 3px solid #94a3b8;
+}
+
+.score-info-card.sic-good { border-top-color: #16834a; }
+.score-info-card.sic-bad { border-top-color: #c62828; }
+
+.sic-label {
+  font-size: 11px;
+  color: var(--sub);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.sic-num {
+  font-size: 19px;
+  font-weight: 800;
+  direction: ltr;
+  line-height: 1.1;
+  margin-bottom: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sic-sub {
+  font-size: 10.5px;
+  color: var(--sub);
+  line-height: 1.4;
+}
+
+.score-info-card {
+  padding: 12px 14px;
+  background: var(--chart-bg);
+  border: 1px solid var(--chart-br);
+  border-radius: 12px;
+  text-align: center;
+  border-top: 3px solid #94a3b8;
+}
+
+.score-info-card.sic-good {
+  border-top-color: #16834a;
+}
+
+.score-info-card.sic-bad {
+  border-top-color: #c62828;
+}
+
+.sic-label {
+  font-size: 11.5px;
+  color: var(--sub);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.sic-num {
+  font-size: 22px;
+  font-weight: 800;
+  direction: ltr;
+  line-height: 1;
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sic-sub {
+  font-size: 11px;
+  color: var(--sub);
+  line-height: 1.4;
+}
+
+/* ⭐ ردیف با پس‌زمینه سهم اصلی */
+.rank-row-base-row {
+  background: rgba(245,158,11,.08) !important;
+  border-right: 3px solid var(--warn);
+}
+
+/* ⭐ در ردیف‌های DuPont که ستون اسم شامل شماره رتبه هم هست */
+.ratio-dupont-row .dupont-factor-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: auto;
+}
+
+.ratio-dupont-row .dupont-factor-label .rank-row-num {
+  flex-shrink: 0;
+}
+
+/* موبایل */
+@media (max-width: 700px) {
+  .base-position-hero {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .bph-score-num {
+    font-size: 30px;
+  }
+
+  .bph-symbol {
+    font-size: 17px;
+  }
+
+  .score-info-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .sic-num {
+    font-size: 20px;
   }
 }

@@ -118,6 +118,7 @@
   <div class="main-tabs">
     <button class="main-tab active" data-maintab="single" onclick="switchMainTab('single')">📊 تحلیل تک شرکت</button>
     <button class="main-tab" data-maintab="compare" onclick="switchMainTab('compare')">📈 مقایسه با صنعت</button>
+    <button class="main-tab" data-maintab="industries" onclick="switchMainTab('industries')">⚖️ مقایسه صنایع</button>
     <button class="main-tab" data-maintab="watchlist" onclick="switchMainTab('watchlist')">👁️ دیدبان</button>
   </div>
 
@@ -280,6 +281,21 @@
       </div>
       <div class="acc-body">
         <div id="zscoreBox"></div>
+      </div>
+    </div>
+    <div class="acc-card" data-acc="eps">
+      <div class="acc-header">
+        <div class="acc-header-right">
+          <span class="acc-icon">📈</span>
+          <span class="acc-title">سود هر سهم (EPS) — پیش‌بینی سالانه</span>
+        </div>
+        <div class="acc-header-left">
+          <span class="acc-summary" id="accEpsSummary">—</span>
+          <span class="acc-arrow">▼</span>
+        </div>
+      </div>
+      <div class="acc-body">
+        <div id="epsBox"></div>
       </div>
     </div>
 
@@ -497,29 +513,28 @@
     <h2>📊 نتیجه مقایسه</h2>
 
     <div class="inner-tabs">
-      <button class="inner-tab active" data-indinner="position" onclick="window.indSwitchTab('position')">🎯 جایگاه سهم</button>
-      <button class="inner-tab" data-indinner="scores" onclick="window.indSwitchTab('scores')">🎯 امتیاز سلامت</button>
+      <button class="inner-tab active" data-indinner="scores" onclick="window.indSwitchTab('scores')">🎯 امتیاز سلامت</button>
       <button class="inner-tab" data-indinner="zscore" onclick="window.indSwitchTab('zscore')">🛡️ Altman Z-Score</button>
       <button class="inner-tab" data-indinner="table" onclick="window.indSwitchTab('table')">📊 جدول اصلی</button>
       <button class="inner-tab" data-indinner="ranking" onclick="window.indSwitchTab('ranking')">🏆 رتبه‌بندی</button>
     </div>
 
-    <div class="inner-panel active" data-indpanel="position">
-      <div id="basePositionSummary" class="base-position-summary"></div>
-    </div>
-
-    <div class="inner-panel" data-indpanel="scores">
+    <!-- تب ۱: امتیاز سلامت مالی -->
+    <div class="inner-panel active" data-indpanel="scores">
       <div id="industryScores" class="cmp-scores"></div>
     </div>
 
+    <!-- تب ۲: Altman Z-Score -->
     <div class="inner-panel" data-indpanel="zscore">
       <div id="industryZScore" class="cmp-zscore-wrap"></div>
     </div>
 
+    <!-- تب ۳: جدول اصلی -->
     <div class="inner-panel" data-indpanel="table">
       <div id="industryMainTable" class="cmp-table-wrap"></div>
     </div>
 
+    <!-- تب ۴: رتبه‌بندی -->
     <div class="inner-panel" data-indpanel="ranking">
       <div id="industryRanking" class="cmp-table-wrap"></div>
     </div>
@@ -528,18 +543,6 @@
 
 </div>
 
-<!-- کارت مقایسه دو صنعت -->
-<div class="card" id="compareTwoIndustriesCard">
-  <h2>⚖️ مقایسه دو صنعت</h2>
-  <p style="font-size:13px;color:var(--sub);margin:0 0 14px">
-    دو صنعت ذخیره‌شده رو با هم مقایسه کن.
-  </p>
-  <div style="display:flex;justify-content:center;padding:8px 0">
-    <button id="compareTwoIndustriesBtn" class="primary">⚖️ مقایسه دو صنعت</button>
-  </div>
-</div>
-
-<!-- کارت صنایع ذخیره‌شده — آخرین کارت تب مقایسه -->
 <div class="card" id="industrySavedCard">
   <h2>📚 مقایسه‌های قبلی سهم و صنعت <span class="help" data-tip="هر صنعتی که ذخیره کنی اینجا نگه داشته می‌شه.&#10;می‌تونی بعداً باهاش مقایسه کنی.">?</span></h2>
   <div class="saved-controls">
@@ -558,13 +561,25 @@
     <input id="industryUploadInput" type="file" accept=".json" style="display:none">
   </div>
 </div>
-
 </div><!-- /tabCompare -->
 
-<!-- ================== تب ۳: دیدبان ================== -->
+<!-- ================== تب ۳: مقایسه صنایع ================== -->
+<div id="tabIndustries" class="tab-panel">
+
+  <div class="card" id="compareTwoIndustriesCard">
+    <h2>⚖️ انتخاب صنایع</h2>
+    <p style="font-size:13px;color:var(--sub);margin:0 0 14px">
+      برای مقایسه، دو صنعت باید از قبل توی تب «مقایسه با صنعت» ذخیره شده باشن.
+    </p>
+    <div style="display:flex;justify-content:center;padding:8px 0">
+      <button id="compareTwoIndustriesBtn" class="primary">⚖️ انتخاب و مقایسه</button>
+    </div>
+  </div>
+
+</div><!-- /tabIndustries -->
+
+<!-- ================== تب ۴: دیدبان ================== -->
 <div id="tabWatchlist" class="tab-panel">
-
-
 
   <div class="card">
     <h2>📊 پرتفوی <span class="help" data-tip="این سهم‌ها رو از تب «تحلیل تک شرکت» با دکمه 👁️ اضافه کردی.">?</span></h2>
@@ -590,8 +605,6 @@
     <div id="wlDetailBody"></div>
   </div>
 </div>
-
-
 
 </div><!-- /tabWatchlist -->
 

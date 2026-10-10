@@ -1,10 +1,6 @@
 /* ============================================================
-   compare.js — منطق تب «مقایسه با صنعت»  |  v1.9.0
+   compare.js — منطق تب «مقایسه با صنعت»  |  v2.1.0
    وابسته به: app.js (window.KodalHelpers)
-   تغییرات v1.9.0:
-   - فیکس باز شدن خودکار تب نتیجه مقایسه
-   - اتصال مستقیم دکمه‌های داخلی به تابع
-   - نمایش خودکار تب «جایگاه سهم» بعد از مقایسه
 ============================================================ */
 
 (function(){
@@ -12,14 +8,6 @@
 
   const H = window.KodalHelpers || {};
   const $ = id => document.getElementById(id);
-
-  /* ---------- کمک‌کننده: خواندن ایمن رنگ‌ها ---------- */
-  function _c(name){
-    try{
-      const fn = H && H[name];
-      return typeof fn === 'function' ? fn() : '#888888';
-    }catch(e){ return '#888888'; }
-  }
 
   /* ---------- کمک‌کننده: فرمت عدد ---------- */
   function _fmtNumInput(value){
@@ -61,13 +49,13 @@
   /* ---------- رنگ‌ها ---------- */
   const BASE_COLOR = '#f59e0b';
   const PEER_COLORS = ['#1769e0', '#10b981', '#8b5cf6', '#ec4899', '#06b6d4'];
+  const MAX_PEERS = 5;
 
   /* ---------- State ---------- */
   let BASE = { file: null, parsed: null, symbol: '', industry: '', price: null, shares: null };
   let PEERS = [];
   let INDUSTRY_RESULTS = null;
   let INDUSTRY_SAVED = [];
-  const MAX_PEERS = 5;
 
   const INDUSTRY_STORAGE_KEY = 'kodal_industries_v1';
 
@@ -187,6 +175,18 @@
         if(!f) return;
         await loadBaseFile(f);
       });
+
+      const browseBtn = drop.querySelector('.drop-browse-btn');
+      if(browseBtn){
+        browseBtn.onclick = (e) => {
+          e.stopPropagation();
+          if(baseFileInput) baseFileInput.click();
+        };
+      }
+      drop.addEventListener('click', (e) => {
+        if(e.target.closest('button')) return;
+        if(baseFileInput) baseFileInput.click();
+      });
     }
   }
 
@@ -203,7 +203,9 @@
       const maxPer = Math.max(...Object.values(parsed).filter(a => Array.isArray(a)).map(a => a.length));
       parsed._periods = Math.min(Math.max(maxPer, 1), 5);
 
-      const detected = detectPeriod(lines);
+      const detected = H.detectPeriodFromLines
+        ? H.detectPeriodFromLines(lines)
+        : { label: null, year: null, months: null };
       parsed._detectedInfo = detected;
       parsed._detectedPeriod = detected.label;
 
@@ -239,10 +241,6 @@
         errBox.textContent = 'خطا در فایل سهم اصلی: ' + (e.message || e);
       }
     }
-  }
-
-  function detectPeriod(lines){
-    return { label: null, year: null, months: null };
   }
 
   /* ============================================================
@@ -607,14 +605,11 @@
   }
 
   /* ============================================================
-     ⭐ اجرای مقایسه — فیکس شده
+     ۴. اجرای مقایسه
   ============================================================ */
   window.runIndustryCompare = function(){
-    console.log('🎯 runIndustryCompare شروع شد');
-
     if(window.License){
       const status = window.License.getStatus();
-      console.log('🔐 وضعیت لایسنس:', status.state);
       if(status.state !== 'active'){
         window.License.open();
         if(window.showToast) window.showToast('لایسنس فعال نیست یا اعتبار تموم شده', true);
@@ -630,14 +625,12 @@
     }
 
     if(!BASE.parsed){
-      console.log('❌ BASE.parsed خالیه');
       const errBox = $('industryErr');
       if(errBox){ errBox.style.display = 'block'; errBox.textContent = 'اول فایل سهم اصلی رو بارگذاری کن.'; }
       return;
     }
 
     const validPeers = PEERS.filter(p => p.parsed);
-    console.log('👥 تعداد هم‌گروهی معتبر:', validPeers.length);
 
     if(validPeers.length < 2){
       const errBox = $('industryErr');
@@ -671,172 +664,70 @@
     });
 
     INDUSTRY_RESULTS = { base, peers };
-    console.log('📊 نتایج محاسبه شد');
 
-    // نمایش کارت نتیجه
     const out = $('industryOut');
-    if(out){
-      out.style.display = 'block';
-      console.log('✅ کارت نتیجه نمایش داده شد');
-    } else {
-      console.error('❌ عنصر industryOut پیدا نشد!');
-      return;
-    }
+    if(!out) return;
+    out.style.display = 'block';
 
-    // رندر محتوا
-    try{
-      renderIndustryOutput();
-      console.log('✅ محتوا رندر شد');
-    }catch(err){
-      console.error('❌ خطا در رندر:', err);
-    }
+    renderIndustryOutput();
 
-    // دکمه ذخیره
     const saveBtn = $('saveIndustryBtn');
     if(saveBtn){
       saveBtn.style.display = 'inline-block';
       saveBtn.disabled = false;
     }
 
-    // اسکرول فوری به کارت
     setTimeout(() => {
       const top = out.getBoundingClientRect().top + window.pageYOffset - 20;
       window.scrollTo(0, top);
     }, 250);
   };
 
-  // اتصال دکمه به تابع
-  function bindCompareButton(){
-    const btn = $('compareIndustryGo');
-    if(btn){
-      btn.onclick = window.runIndustryCompare;
-      console.log('✅ دکمه «مقایسه با صنعت» وصل شد');
-    } else {
-      console.error('❌ دکمه compareIndustryGo پیدا نشد');
-    }
-  }
-
   /* ============================================================
-     ۴. رندر خروجی
+     ۵. رندر خروجی
   ============================================================ */
   function renderIndustryOutput(){
-    try{ renderBasePosition(); }catch(e){ console.error('renderBasePosition:', e); }
     try{ renderIndustryScores(); }catch(e){ console.error('renderIndustryScores:', e); }
     try{ renderIndustryZScore(); }catch(e){ console.error('renderIndustryZScore:', e); }
     try{ renderIndustryMainTable(); }catch(e){ console.error('renderIndustryMainTable:', e); }
     try{ renderIndustryRanking(); }catch(e){ console.error('renderIndustryRanking:', e); }
 
-    // ⭐ فعال‌سازی تب اول به صورت خودکار
-    window.indSwitchTab('position');
+    // ⭐ فعال کردن تب اول به صورت مستقیم
+    setTimeout(() => {
+      const container = document.querySelector('#industryOut');
+      if(!container) return;
+      const tabs = container.querySelectorAll('.inner-tab');
+      const panels = container.querySelectorAll('.inner-panel');
+      tabs.forEach(t => t.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      const firstTab = container.querySelector('.inner-tab[data-indinner="scores"]');
+      const firstPanel = container.querySelector('.inner-panel[data-indpanel="scores"]');
+      if(firstTab) firstTab.classList.add('active');
+      if(firstPanel) firstPanel.classList.add('active');
+    }, 50);
   }
 
   /* ============================================================
-     ⭐ سوییچ تب‌های داخلی (داخلی کارت نتیجه مقایسه)
+     ⭐ سوییچ تب داخلی — global
   ============================================================ */
   window.indSwitchTab = function(target){
-    const tabs = document.querySelectorAll('#industryOut .inner-tab');
-    const panels = document.querySelectorAll('#industryOut .inner-panel');
+    const container = document.querySelector('#industryOut');
+    if(!container) return;
+
+    const tabs = container.querySelectorAll('.inner-tab');
+    const panels = container.querySelectorAll('.inner-panel');
 
     tabs.forEach(t => t.classList.remove('active'));
     panels.forEach(p => p.classList.remove('active'));
 
-    const tab = document.querySelector('#industryOut .inner-tab[data-indinner="' + target + '"]');
+    const tab = container.querySelector('.inner-tab[data-indinner="' + target + '"]');
     if(tab) tab.classList.add('active');
 
-    const panel = document.querySelector('#industryOut .inner-panel[data-indpanel="' + target + '"]');
+    const panel = container.querySelector('.inner-panel[data-indpanel="' + target + '"]');
     if(panel) panel.classList.add('active');
   };
 
-  /* ============================================================
-     جایگاه سهم اصلی
-  ============================================================ */
-  function renderBasePosition(){
-    const box = $('basePositionSummary');
-    if(!box) return;
-
-    const { base, peers } = INDUSTRY_RESULTS;
-
-    const criteria = [
-      { key: 'netMargin', getter: r => r.r.netMargin, dir: 'higher' },
-      { key: 'roe', getter: r => r.r.roe, dir: 'higher' },
-      { key: 'currentRatio', getter: r => r.r.currentRatio, dir: 'higher' },
-      { key: 'debtToEquity', getter: r => r.r.debtToEquity, dir: 'lower' },
-      { key: 'cfoToNet', getter: r => r.r.cfoToNet, dir: 'higher' },
-      { key: 'score', getter: r => r.score, dir: 'higher' },
-    ];
-
-    const all = [base, ...peers];
-
-    const scores = all.map(() => 0);
-    criteria.forEach(c => {
-      const vals = all.map(r => _cmpVal(c.getter(r)));
-      const valid = vals.map((v, i) => ({ v, i })).filter(x => x.v != null);
-      if(valid.length < 2) return;
-
-      valid.sort((a, b) => c.dir === 'higher' ? b.v - a.v : a.v - b.v);
-
-      let idx = 0;
-      while(idx < valid.length){
-        let j = idx;
-        while(j < valid.length && valid[j].v === valid[idx].v) j++;
-        if(j - idx === 1){
-          scores[valid[idx].i] += valid.length - 1 - idx;
-        }
-        idx = j;
-      }
-    });
-
-    const baseScore = scores[0];
-    const sortedScores = [...scores].sort((a, b) => b - a);
-    const baseRank = sortedScores.indexOf(baseScore) + 1;
-    const total = all.length;
-    const betterThan = scores.filter(s => s < baseScore).length;
-    const worseThan = scores.filter(s => s > baseScore).length;
-    const totalPossible = criteria.length * (total - 1);
-
-    const rankPercent = baseRank === 1 ? '🥇' : baseRank === 2 ? '🥈' : baseRank === 3 ? '🥉' : '🎖️';
-    const posClass = baseRank <= total / 2 ? 'good' : 'bad';
-    const posColor = posClass === 'good' ? 'var(--good)' : 'var(--bad)';
-    const posLabel = baseRank <= total / 2 ? 'بهتر از میانگین صنعت' : 'ضعیف‌تر از میانگین صنعت';
-
-    const betterPct = total > 1 ? (betterThan / (total - 1)) * 100 : 0;
-    const worsePct = total > 1 ? (worseThan / (total - 1)) * 100 : 0;
-
-    let html = `
-      <div class="base-position-grid">
-        <div class="bp-card bp-base">
-          <div class="bp-label">  سهم اصلی</div>
-          <div class="bp-value" style="color:${BASE_COLOR}">${base.symbol}</div>
-        </div>
-
-        <div class="bp-card bp-rank">
-          <div class="bp-label">  رتبه در صنعت</div>
-          <div class="bp-value" style="color:${posColor}">
-            ${rankPercent} ${H.toFa(baseRank)} از ${H.toFa(total)}
-          </div>
-        </div>
-
-        <div class="bp-card bp-better">
-          <div class="bp-label">  بهتر از</div>
-          <div class="bp-value" style="color:var(--good)">${H.toFa(betterThan)} سهم</div>
-        </div>
-
-        <div class="bp-card bp-worse">
-          <div class="bp-label">  ضعیف‌تر از</div>
-          <div class="bp-value" style="color:var(--bad)">${H.toFa(worseThan)} سهم</div>
-        </div>
-
-        <div class="bp-card bp-score">
-          <div class="bp-label">  امتیاز کل</div>
-          <div class="bp-value">${H.toFa(baseScore)}</div>
-          <div class="bp-sub">از ${H.toFa(totalPossible)} امتیاز ممکن</div>
-        </div>
-      </div>
-    `;
-
-    box.innerHTML = html;
-  }
-
+  /* ---------- امتیازهای سلامت ---------- */
   function renderIndustryScores(){
     const box = $('industryScores');
     if(!box) return;
@@ -856,44 +747,43 @@
     const sortedScores = [...allScores].sort((a, b) => b - a);
     const rank = baseScore != null ? sortedScores.indexOf(baseScore) + 1 : null;
 
-    let html = `
-    <div class="cmp-score-card" style="border-top-color:${BASE_COLOR}">
-      <div class="symbol">
-        <span class="color-dot" style="background:${BASE_COLOR}"></span>
+    box.innerHTML = `
+      <div class="cmp-score-card" style="border-top-color:${BASE_COLOR}">
+        <div class="symbol">
+          <span class="color-dot" style="background:${BASE_COLOR}"></span>
           ${base.symbol}
+        </div>
+        <div class="num" style="color:${baseLvl.color}">${baseScore == null ? '—' : H.toFa(baseScore)}</div>
+        ${rank ? `<div class="lvl" style="color:var(--sub);font-size:11.5px;margin-top:6px">رتبه ${H.toFa(rank)} از ${H.toFa(allScores.length)}</div>` : ''}
       </div>
-      <div class="num" style="color:${baseLvl.color}">${baseScore == null ? '—' : H.toFa(baseScore)}</div>
-      ${rank ? `<div class="lvl" style="color:var(--sub);font-size:11.5px;margin-top:6px">رتبه ${H.toFa(rank)} از ${H.toFa(allScores.length)}</div>` : ''}
-    </div>
 
-    <div class="cmp-score-card" style="border-top-color:#94a3b8">
-      <div class="symbol">
-        <span class="color-dot" style="background:#94a3b8"></span>
+      <div class="cmp-score-card" style="border-top-color:#94a3b8">
+        <div class="symbol">
+          <span class="color-dot" style="background:#94a3b8"></span>
           میانگین صنعت
+        </div>
+        <div class="num" style="color:#94a3b8">${avgScore == null ? '—' : H.toFa(Math.round(avgScore))}</div>
       </div>
-      <div class="num" style="color:#94a3b8">${avgScore == null ? '—' : H.toFa(Math.round(avgScore))}</div>
-    </div>
 
-    <div class="cmp-score-card" style="border-top-color:#16834a">
-      <div class="symbol">
-        <span class="color-dot" style="background:#16834a"></span>
+      <div class="cmp-score-card" style="border-top-color:#16834a">
+        <div class="symbol">
+          <span class="color-dot" style="background:#16834a"></span>
           بهترین صنعت
+        </div>
+        <div class="num" style="color:#16834a">${bestScore == null ? '—' : H.toFa(bestScore)}</div>
       </div>
-      <div class="num" style="color:#16834a">${bestScore == null ? '—' : H.toFa(bestScore)}</div>
-    </div>
 
-    <div class="cmp-score-card" style="border-top-color:#c62828">
-      <div class="symbol">
-        <span class="color-dot" style="background:#c62828"></span>
+      <div class="cmp-score-card" style="border-top-color:#c62828">
+        <div class="symbol">
+          <span class="color-dot" style="background:#c62828"></span>
           بدترین صنعت
+        </div>
+        <div class="num" style="color:#c62828">${worstScore == null ? '—' : H.toFa(worstScore)}</div>
       </div>
-      <div class="num" style="color:#c62828">${worstScore == null ? '—' : H.toFa(worstScore)}</div>
-    </div>
-  `;
-
-    box.innerHTML = html;
+    `;
   }
 
+  /* ---------- Altman Z-Score ---------- */
   function renderIndustryZScore(){
     const box = $('industryZScore');
     if(!box) return;
@@ -909,23 +799,20 @@
           <div class="cmp-zscore-card" style="border-top-color:${color}">
             <div class="symbol">
               <span class="color-dot" style="background:${color}"></span>
-              ${isBase ? '  ' : ''}${r.symbol}
+              ${isBase ? '🎯 ' : ''}${r.symbol}
             </div>
             <div class="num" style="color:var(--sub)">—</div>
           </div>
         `;
       }
 
-      let zoneColor;
-      if(z > 2.99){ zoneColor = '#16834a'; }
-      else if(z >= 1.81){ zoneColor = '#eab308'; }
-      else { zoneColor = '#c62828'; }
+      const zoneColor = z > 2.99 ? '#16834a' : z >= 1.81 ? '#eab308' : '#c62828';
 
       return `
         <div class="cmp-zscore-card" style="border-top-color:${color}">
           <div class="symbol">
             <span class="color-dot" style="background:${color}"></span>
-            ${isBase ? '  ' : ''}${r.symbol}
+            ${isBase ? '🎯 ' : ''}${r.symbol}
           </div>
           <div class="num" style="color:${zoneColor}">${H.num2(z)}</div>
         </div>
@@ -943,7 +830,7 @@
         <div class="cmp-zscore-card" style="border-top-color:#94a3b8">
           <div class="symbol">
             <span class="color-dot" style="background:#94a3b8"></span>
-              میانگین صنعت
+            میانگین صنعت
           </div>
           <div class="num" style="color:${zoneAvgColor}">${H.num2(avgZ)}</div>
         </div>
@@ -970,7 +857,7 @@
         <div class="cmp-zscore-card" style="border-top-color:#c62828">
           <div class="symbol">
             <span class="color-dot" style="background:#c62828"></span>
-              بدترین صنعت
+            بدترین صنعت
           </div>
           <div class="num" style="color:${zWorst}">${H.num2(worstZ)}</div>
         </div>
@@ -980,6 +867,7 @@
     box.innerHTML = html;
   }
 
+  /* ---------- جدول اصلی ---------- */
   const MAIN_RATIOS = [
     { key: 'grossMargin',   label: 'حاشیه سود ناخالص',   getter: r => r.r.grossMargin,   dir: 'higher', fmt: 'pct' },
     { key: 'opMargin',      label: 'حاشیه سود عملیاتی',  getter: r => r.r.opMargin,      dir: 'higher', fmt: 'pct' },
@@ -1011,14 +899,7 @@
 
     const { base, peers } = INDUSTRY_RESULTS;
 
-    let html = '<table class="cmp-table industry-table"><thead><tr>';
-    html += '<th>نسبت</th>';
-    html += `<th style="color:${BASE_COLOR}">  ${base.symbol}</th>`;
-    html += '<th style="color:#94a3b8">  میانگین صنعت</th>';
-    html += '<th style="color:#16834a">  بهترین</th>';
-    html += '<th style="color:#c62828">  بدترین</th>';
-    html += '<th>جایگاه سهم اصلی</th>';
-    html += '</tr></thead><tbody>';
+    let html = '<div class="dupont-factors" style="margin-top:6px">';
 
     MAIN_RATIOS.forEach(ratio => {
       const baseVal = _cmpVal(ratio.getter(base));
@@ -1028,44 +909,71 @@
       const bestVal = best(peerVals, ratio.dir);
       const worstVal = worst(peerVals, ratio.dir);
 
-      let rank = null, totalWithBase = null;
-      if(baseVal != null && peerVals.length > 0){
-        const allVals = [baseVal, ...peerVals];
-        const sorted = [...allVals].sort((a, b) => ratio.dir === 'higher' ? b - a : a - b);
-        rank = sorted.indexOf(baseVal) + 1;
-        totalWithBase = allVals.length;
-      }
-
-      let posHtml = '—';
-      if(rank != null){
-        const isGood = rank <= totalWithBase / 2;
-        const posColor = isGood ? 'var(--good)' : 'var(--bad)';
-        posHtml = `<span style="color:${posColor};font-weight:700">${H.toFa(rank)} از ${H.toFa(totalWithBase)}</span>`;
-      }
-
-      let vsAvg = '';
+      let color = '#94a3b8';
+      let label = '—';
       if(baseVal != null && avgVal != null && avgVal !== 0){
         const diff = ((baseVal - avgVal) / Math.abs(avgVal)) * 100;
         const isBetter = ratio.dir === 'higher' ? diff > 0 : diff < 0;
-        const color = isBetter ? 'var(--good)' : 'var(--bad)';
-        const sign = diff > 0 ? '+' : '';
-        vsAvg = `<div style="font-size:11px;color:${color};margin-top:2px">${sign}${H.toFa(diff.toFixed(1))}٪ نسبت به میانگین</div>`;
+        const absDiff = Math.abs(diff);
+
+        if(isBetter){
+          if(absDiff > 30){ color = '#16834a'; label = 'خیلی بهتر از میانگین'; }
+          else if(absDiff > 10){ color = '#22c55e'; label = 'بهتر از میانگین'; }
+          else { color = '#84cc16'; label = 'کمی بهتر از میانگین'; }
+        } else {
+          if(absDiff > 30){ color = '#c62828'; label = 'خیلی ضعیف‌تر'; }
+          else if(absDiff > 10){ color = '#ef4444'; label = 'ضعیف‌تر از میانگین'; }
+          else { color = '#f59e0b'; label = 'کمی ضعیف‌تر'; }
+        }
       }
 
-      html += '<tr>';
-      html += `<td>${ratio.label}</td>`;
-      html += `<td style="color:${BASE_COLOR};font-weight:700;background:rgba(245,158,11,.08)">${formatRatioValue(baseVal, ratio.fmt)}${vsAvg}</td>`;
-      html += `<td>${formatRatioValue(avgVal, ratio.fmt)}</td>`;
-      html += `<td style="color:var(--good)">${formatRatioValue(bestVal, ratio.fmt)}</td>`;
-      html += `<td style="color:var(--bad)">${formatRatioValue(worstVal, ratio.fmt)}</td>`;
-      html += `<td>${posHtml}</td>`;
-      html += '</tr>';
+      let basePct = 50, avgPct = 50;
+      if(bestVal != null && worstVal != null && bestVal !== worstVal){
+        const range = Math.abs(bestVal - worstVal);
+        if(ratio.dir === 'higher'){
+          basePct = baseVal != null ? Math.max(5, Math.min(100, ((baseVal - worstVal) / range) * 100)) : 50;
+          avgPct = avgVal != null ? Math.max(5, Math.min(100, ((avgVal - worstVal) / range) * 100)) : 50;
+        } else {
+          basePct = baseVal != null ? Math.max(5, Math.min(100, ((worstVal - baseVal) / range) * 100)) : 50;
+          avgPct = avgVal != null ? Math.max(5, Math.min(100, ((worstVal - avgVal) / range) * 100)) : 50;
+        }
+      } else {
+        basePct = 60;
+        avgPct = 40;
+      }
+
+      const baseDisplay = formatRatioValue(baseVal, ratio.fmt);
+      const avgDisplay = formatRatioValue(avgVal, ratio.fmt);
+
+      html += `
+        <div class="dupont-factor-row ratio-dupont-row">
+          <div class="dupont-factor-label">${ratio.label}</div>
+          <div class="dupont-factor-value-box" style="color:${color}">
+            ${baseDisplay} — ${label}
+          </div>
+          <div class="dupont-factor-bar-inline ratio-bar-relative">
+            <div class="dupont-factor-fill-inline" style="width:${basePct}%;background:${color}"></div>
+            <div class="ratio-avg-marker" style="left:${avgPct}%" title="میانگین صنعت: ${avgDisplay}">
+              <span class="ratio-avg-marker-label">میانگین</span>
+            </div>
+          </div>
+        </div>
+      `;
     });
 
-    html += '</tbody></table>';
+    html += '</div>';
+
+    html += `
+      <div class="ratio-inline-legend" style="margin-top:14px">
+        <span><i style="background:${BASE_COLOR};width:14px;height:3px;border-radius:2px"></i> سهم اصلی</span>
+        <span><i style="background:#1f2937;width:3px;height:12px;border-radius:2px"></i> میانگین صنعت</span>
+      </div>
+    `;
+
     box.innerHTML = html;
   }
 
+  /* ---------- رتبه‌بندی ---------- */
   function renderIndustryRanking(){
     const box = $('industryRanking');
     if(!box) return;
@@ -1109,82 +1017,152 @@
 
     const totalPossible = criteria.length * (all.length - 1);
     const maxScore = ranked.length ? ranked[0].totalScore : 0;
-    const winners = ranked.filter(r => r.totalScore === maxScore);
 
-    const rankMap = new Map();
-    let currentRank = 0;
-    let prevScore = null;
+    let cardsHtml = '<div class="rank-cards">';
+
     ranked.forEach((r, i) => {
-      if(r.totalScore !== prevScore){
-        currentRank = i;
-        prevScore = r.totalScore;
-      }
-      rankMap.set(r, currentRank);
-    });
-
-    let html = '<table class="cmp-table"><thead><tr>';
-    html += '<th>رتبه</th><th>شرکت</th><th>امتیاز</th>';
-    criteria.forEach(c => html += `<th>${c.label}</th>`);
-    html += '</tr></thead><tbody>';
-
-    ranked.forEach((r) => {
-      const rank = rankMap.get(r);
-      const rankClass = rank === 0 ? 'cmp-rank-1' : rank === 1 ? 'cmp-rank-2' : rank === 2 ? 'cmp-rank-3' : '';
+      const rank = i + 1;
+      const rankClass = rank === 1 ? 'rank-gold' : rank === 2 ? 'rank-silver' : rank === 3 ? 'rank-bronze' : 'rank-normal';
       const isBase = r.isBase;
-      const rowStyle = isBase
-        ? `background:rgba(245,158,11,.08);font-weight:600`
-        : '';
 
-      html += `<tr style="${rowStyle}">`;
-      html += `<td><span class="${rankClass}">${H.toFa(rank + 1)}</span></td>`;
-      html += `<td style="color:${r.color};font-weight:700;text-align:right">${isBase ? '🎯 ' : ''}${r.symbol}</td>`;
-      html += `<td style="background:transparent;color:${r.color};font-weight:700">${H.toFa(r.totalScore)}</td>`;
+      const powerPct = maxScore > 0 ? (r.totalScore / maxScore) * 100 : 0;
 
-      criteria.forEach(c => {
-        const rawV = c.getter(r);
-        const cv = _cmpVal(rawV);
-        const allCmp = all.map(x => _cmpVal(c.getter(x))).filter(x => x != null);
-        let cls = '';
-        if(cv != null && allCmp.length >= 2){
-          const maxV = Math.max(...allCmp), minV = Math.min(...allCmp);
-          if(maxV !== minV){
-            const isBest = c.dir === 'higher' ? cv === maxV : cv === minV;
-            const isWorst = c.dir === 'higher' ? cv === minV : cv === maxV;
-            if(isBest) cls = 'best-cell';
-            else if(isWorst) cls = 'worst-cell';
-          }
-        }
-        const display = formatRatioValue(rawV, c.fmt);
-        html += `<td class="${cls}">${display}</td>`;
-      });
-      html += `</tr>`;
+      let color = '#94a3b8';
+      let levelLabel = '—';
+      const scoreRatio = maxScore > 0 ? r.totalScore / maxScore : 0;
+      if(scoreRatio >= 0.9){ color = '#16834a'; levelLabel = 'پیشتاز'; }
+      else if(scoreRatio >= 0.7){ color = '#22c55e'; levelLabel = 'قوی'; }
+      else if(scoreRatio >= 0.5){ color = '#eab308'; levelLabel = 'متوسط'; }
+      else if(scoreRatio >= 0.3){ color = '#f59e0b'; levelLabel = 'ضعیف'; }
+      else { color = '#c62828'; levelLabel = 'عقب‌مانده'; }
+
+      cardsHtml += `
+        <div class="rank-card ${rankClass} ${isBase ? 'rank-base' : ''}" style="border-top-color:${color}">
+          <div class="rank-card-medal rank-card-num" style="color:${color}">${H.toFa(rank)}</div>
+          <div class="rank-card-symbol" style="color:${isBase ? BASE_COLOR : r.color}">
+            ${isBase ? '🎯 ' : ''}${r.symbol}
+          </div>
+          <div class="rank-card-score" style="color:${color}">
+            ${H.toFa(r.totalScore)}
+          </div>
+          <div class="rank-card-score-label">از ${H.toFa(totalPossible)}</div>
+          <div class="rank-card-bar">
+            <div class="rank-card-bar-fill" style="width:${powerPct}%;background:${color}"></div>
+          </div>
+          <div class="rank-card-level" style="color:${color}">${levelLabel}</div>
+        </div>
+      `;
     });
 
-    html += '</tbody></table>';
+    cardsHtml += '</div>';
 
-    if(ranked.length){
-      if(winners.length === 1 && maxScore > 0){
-        const w = winners[0];
-        html = `<div class="one-line-note" style="margin-bottom:12px">
-            <b>برنده کلی:</b> <span style="color:${w.color};font-weight:700">${w.isBase ? '🎯 ' : ''}${w.symbol}</span>
-          با امتیاز <b>${H.toFa(w.totalScore)}</b> از ${H.toFa(totalPossible)}.
-        </div>` + html;
-      } else if(maxScore === 0){
-        html = `<div class="one-line-note" style="margin-bottom:12px">
-          🤝 هیچ شرکتی برتری انحصاری نداره.
-        </div>` + html;
-      } else {
-        html = `<div class="one-line-note" style="margin-bottom:12px">
-          🤝 برندگان مشترک با امتیاز <b>${H.toFa(maxScore)}</b> از ${H.toFa(totalPossible)}.
-        </div>` + html;
-      }
+    let criteriaHtml = '<div class="rank-criteria-box">';
+    criteriaHtml += '<div class="rank-criteria-title">📊 مقایسه معیار به معیار (به ترتیب رتبه)</div>';
+    criteriaHtml += '<div class="dupont-factors" style="margin-top:6px">';
+
+    criteria.forEach(c => {
+      const sorted = [...ranked].sort((a, b) => {
+        const va = _cmpVal(c.getter(a));
+        const vb = _cmpVal(c.getter(b));
+        if(va == null) return 1;
+        if(vb == null) return -1;
+        return c.dir === 'higher' ? vb - va : va - vb;
+      });
+
+      const vals = sorted.map(x => _cmpVal(c.getter(x))).filter(v => v != null);
+      const maxV = vals.length ? Math.max(...vals) : 0;
+      const minV = vals.length ? Math.min(...vals) : 0;
+
+      criteriaHtml += `
+        <div class="rank-criteria-group">
+          <div class="rank-criteria-header">
+            <span class="rank-criteria-name">${c.label}</span>
+            <span class="rank-criteria-dir">${c.dir === 'higher' ? '⬆ بالاتر بهتر' : '⬇ پایین‌تر بهتر'}</span>
+          </div>
+      `;
+
+      sorted.forEach((r, i) => {
+        const v = _cmpVal(c.getter(r));
+        const isBase = r.isBase;
+        const rank = i + 1;
+
+        let pct = 0;
+        if(v != null && maxV !== minV){
+          if(c.dir === 'higher'){
+            pct = Math.max(5, ((v - minV) / (maxV - minV)) * 100);
+          } else {
+            pct = Math.max(5, ((maxV - v) / (maxV - minV)) * 100);
+          }
+        } else if(v != null){
+          pct = 100;
+        }
+
+        let color;
+        if(rank === 1) color = '#16834a';
+        else if(rank <= Math.ceil(sorted.length / 2)) color = '#22c55e';
+        else if(rank === sorted.length) color = '#c62828';
+        else color = '#f59e0b';
+
+        const display = formatRatioValue(v, c.fmt);
+
+        criteriaHtml += `
+          <div class="rank-row ${isBase ? 'rank-row-base' : ''}">
+            <div class="rank-row-pos">
+              <span class="rank-row-num" style="background:${color}22;color:${color}">${H.toFa(rank)}</span>
+            </div>
+            <div class="rank-row-symbol" style="color:${isBase ? BASE_COLOR : r.color}">
+              ${isBase ? '🎯 ' : ''}${r.symbol}
+            </div>
+            <div class="rank-row-value" style="color:${color}">
+              ${display}
+            </div>
+            <div class="rank-row-bar">
+              <div class="rank-row-bar-fill" style="width:${pct}%;background:${color}"></div>
+            </div>
+          </div>
+        `;
+      });
+
+      criteriaHtml += '</div>';
+    });
+
+    criteriaHtml += '</div></div>';
+
+    let winnerHtml = '';
+    if(ranked.length && maxScore > 0){
+      const w = ranked[0];
+      winnerHtml = `
+        <div class="rank-winner-banner">
+          <div class="rank-winner-icon">🏆</div>
+          <div class="rank-winner-text">
+            <div class="rank-winner-label">برنده کلی</div>
+            <div class="rank-winner-symbol" style="color:${w.isBase ? BASE_COLOR : w.color}">
+              ${w.isBase ? '🎯 ' : ''}${w.symbol}
+            </div>
+          </div>
+          <div class="rank-winner-score">
+            <span style="color:${BASE_COLOR}">${H.toFa(w.totalScore)}</span>
+            <span style="color:var(--sub);font-size:12px">از ${H.toFa(totalPossible)}</span>
+          </div>
+        </div>
+      `;
     }
 
-    box.innerHTML = html;
+    const legendHtml = `
+      <div class="rank-legend">
+        <span><i style="background:#16834a"></i> رتبه ۱ (بهترین)</span>
+        <span><i style="background:#22c55e"></i> نیمه بالا</span>
+        <span><i style="background:#f59e0b"></i> نیمه پایین</span>
+        <span><i style="background:#c62828"></i> آخر</span>
+        <span><i style="background:${BASE_COLOR}"></i> 🎯 سهم اصلی</span>
+      </div>
+    `;
+
+    box.innerHTML = winnerHtml + cardsHtml + criteriaHtml + legendHtml;
   }
 
   /* ============================================================
-     ۵. ذخیره و بازیابی صنایع
+     ۶. ذخیره و بازیابی صنایع
   ============================================================ */
   function openSaveIndustryModal(){
     if(!INDUSTRY_RESULTS){
@@ -1383,7 +1361,7 @@
       return;
     }
     const data = {
-      version: '1.9.0',
+      version: '2.1.0',
       type: 'kodal_industries',
       exportDate: new Date().toISOString(),
       count: INDUSTRY_SAVED.length,
@@ -1427,7 +1405,7 @@
   }
 
   /* ============================================================
-     ۶. مقایسه دو صنعت
+     ۷. مقایسه دو صنعت
   ============================================================ */
   function openCompareIndustriesModal(){
     if(INDUSTRY_SAVED.length < 2){
@@ -1479,10 +1457,7 @@
     closeCompareIndustriesModal();
 
     const card = document.getElementById('compareTwoIndustriesCard');
-    if(!card){
-      if(window.showToast) window.showToast('کارت مقایسه دو صنعت پیدا نشد', true);
-      return;
-    }
+    if(!card) return;
 
     let existing = document.getElementById('twoIndustriesCompareBox');
     if(existing) existing.remove();
@@ -1554,11 +1529,13 @@
   }
 
   /* ============================================================
-     ۷. اتصال دکمه‌ها
+     ۸. اتصال دکمه‌ها
   ============================================================ */
   function bindButtons(){
-    // ⭐ دکمه اصلی مقایسه
-    bindCompareButton();
+    const compareBtn = $('compareIndustryGo');
+    if(compareBtn){
+      compareBtn.onclick = window.runIndustryCompare;
+    }
 
     const saveBtn = $('saveIndustryBtn');
     if(saveBtn) saveBtn.onclick = openSaveIndustryModal;
@@ -1636,7 +1613,7 @@
   }
 
   /* ============================================================
-     ۸. تغییر تم
+     ۹. تغییر تم
   ============================================================ */
   window.onThemeChange = function(){
     if(INDUSTRY_RESULTS) renderIndustryOutput();
@@ -1651,10 +1628,6 @@
     bindButtons();
     renderPeers();
     renderIndustrySaved();
-
-    // ⭐ اتصال مجدد دکمه‌ها بعد از لود کامل
-    setTimeout(bindCompareButton, 500);
-    setTimeout(bindCompareButton, 1500);
   }
 
   if(document.readyState === 'loading'){
@@ -1663,6 +1636,6 @@
     init();
   }
 
-  console.log('%c📈 compare.js v1.9.0 لود شد', 'color:#f59e0b;font-weight:bold');
+  console.log('%c📈 compare.js v2.1.0 لود شد', 'color:#f59e0b;font-weight:bold');
 
 })();

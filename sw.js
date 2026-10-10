@@ -1,12 +1,12 @@
 /* ============================================================
    sw.js — Service Worker برای تحلیلگر کدال
-   نسخه: v1.3.0-beta
+   نسخه: v1.8.5
    استراتژی:
    - App Shell (index.html, CSS, JS, فونت‌ها): Cache First
    - سایر فایل‌ها: Network First با fallback به cache
 ============================================================ */
 
-const CACHE_VERSION = 'kodal-v1.8.5-beta';
+const CACHE_VERSION = 'kodal-v1.8.5';
 const CACHE_NAME = CACHE_VERSION;
 
 // فایل‌های اصلی که همیشه کش می‌شن (App Shell)
@@ -36,7 +36,6 @@ self.addEventListener('install', (event) => {
         console.error('❌ SW: Cache failed', err);
       })
   );
-  // فعال‌سازی فوری نسخه جدید
   self.skipWaiting();
 });
 
@@ -61,25 +60,21 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // فقط درخواست‌های GET رو مدیریت کن
-  if(request.method !== 'GET') return;
+  if (request.method !== 'GET') return;
+  if (url.origin !== self.location.origin) return;
 
-  // فقط از همون دامنه (خودمون)
-  if(url.origin !== self.location.origin) return;
-
-  // فایل‌های App Shell: Cache First
   const isAppShell = PRECACHE_URLS.some(p => {
     const normalized = p.replace('./', '');
     return url.pathname.endsWith(normalized) || url.pathname.endsWith('/');
   });
 
-  if(isAppShell){
+  if (isAppShell) {
     event.respondWith(
       caches.match(request)
         .then(cached => {
-          if(cached) return cached;
+          if (cached) return cached;
           return fetch(request).then(response => {
-            if(response && response.status === 200){
+            if (response && response.status === 200) {
               const responseClone = response.clone();
               caches.open(CACHE_NAME).then(cache => cache.put(request, responseClone));
             }
@@ -91,11 +86,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // بقیه فایل‌ها: Network First
   event.respondWith(
     fetch(request)
       .then(response => {
-        if(response && response.status === 200 && response.type === 'basic'){
+        if (response && response.status === 200 && response.type === 'basic') {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(request, responseClone));
         }
@@ -103,9 +97,8 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(() => {
         return caches.match(request).then(cached => {
-          if(cached) return cached;
-          // اگه فایل HTML خواست و آفلاین بود، index.html برگردون
-          if(request.destination === 'document'){
+          if (cached) return cached;
+          if (request.destination === 'document') {
             return caches.match('./index.html');
           }
         });
@@ -115,10 +108,10 @@ self.addEventListener('fetch', (event) => {
 
 // پیام از صفحه: پاک کردن کش و رفرش
 self.addEventListener('message', (event) => {
-  if(event.data && event.data.type === 'SKIP_WAITING'){
+  if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  if(event.data && event.data.type === 'CLEAR_CACHE'){
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
     caches.keys().then(keys => {
       keys.forEach(key => caches.delete(key));
     });
