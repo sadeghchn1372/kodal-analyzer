@@ -4634,3 +4634,72 @@ body.dark .ratio-avg-marker-label {
     font-size: 20px;
   }
 }
+/* ============================================================
+   🆕 فیکس نمایش EPS در موبایل
+============================================================ */
+
+@media (max-width: 700px) {
+  /* مطمئن شو کارت EPS ارتفاع کافی داره */
+  .acc-card[data-acc="eps"] .acc-body {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* grid رو به صورت تک ستونی */
+  .eps-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* خود کارت‌ها */
+  .eps-card {
+    padding: 14px 12px !important;
+    min-height: auto !important;
+  }
+
+  /* عدد بزرگ EPS */
+  .eps-card-num {
+    font-size: 26px !important;
+    line-height: 1.1 !important;
+  }
+
+  /* برچسب */
+  .eps-card-label {
+    font-size: 12px !important;
+    margin-bottom: 8px !important;
+  }
+
+  /* واحد و دوره */
+  .eps-card-unit {
+    font-size: 12px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .eps-card-period {
+    font-size: 11px !important;
+    padding: 2px 8px !important;
+  }
+
+  /* متن توضیحات */
+  .eps-note {
+    font-size: 11.5px !important;
+    line-height: 1.7 !important;
+    padding: 10px 12px !important;
+    margin-top: 10px !important;
+  }
+
+  /* دکمه باز شدن EPS (اگه هست) */
+  .acc-card[data-acc="eps"] .acc-header {
+    flex-wrap: wrap;
+  }
+}
+
+/* فیکس خاص برای موبایل‌های کوچیک */
+@media (max-width: 400px) {
+  .eps-card-num {
+    font-size: 22px !important;
+  }
+  .eps-card-label {
+    font-size: 11px !important;
+  }
+}
