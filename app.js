@@ -3127,4 +3127,32 @@ window.restoreFromExternal = function(reportData){
 
 })();
 
+/* ============================================================
+   🆕 پیام‌های سازنده (Modal)
+============================================================ */
+window.openMessageModal = function(){
+  const modal = document.getElementById('messageModal');
+  if(modal) modal.classList.add('show');
+};
+
+window.closeMessageModal = function(){
+  const modal = document.getElementById('messageModal');
+  if(modal) modal.classList.remove('show');
+};
+
+document.addEventListener('click', (e) => {
+  const modal = document.getElementById('messageModal');
+  if(modal && e.target === modal){
+    modal.classList.remove('show');
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape'){
+    const modal = document.getElementById('messageModal');
+    if(modal && modal.classList.contains('show')){
+      modal.classList.remove('show');
+    }
+  }
+});
 console.log('%c🎯 app.js v2.0.0 لود شد', 'color:#1769e0;font-weight:bold');

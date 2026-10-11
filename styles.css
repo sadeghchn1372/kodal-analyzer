@@ -4723,3 +4723,102 @@ body.dark .ratio-avg-marker-label {
 .ratio-hint-answer {
   animation: hintAnswerFade .4s ease;
 }
+
+/* ============================================================
+   🆕 دکمه پیام‌ها در فوتر
+============================================================ */
+.footer-message {
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: all .2s ease;
+  direction: ltr;
+}
+.footer-message:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
+}
+
+/* ============================================================
+   🆕 مودال پیام‌ها
+============================================================ */
+#messageModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 20px;
+}
+#messageModal.show {
+  display: flex !important;
+}
+#messageModal .message-modal-box {
+  background: var(--card);
+  color: var(--txt);
+  border-radius: 16px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 88vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+}
+.message-modal-header {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(5, 150, 105, 0.04));
+}
+.message-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--txt);
+}
+.message-modal-body {
+  padding: 18px 22px;
+  overflow-y: auto;
+  font-size: 13.5px;
+  line-height: 2;
+}
+.message-modal-body p {
+  margin: 0 0 12px;
+}
+.message-modal-body h4 {
+  margin: 16px 0 10px;
+  font-size: 14px;
+  color: var(--blue);
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--line);
+}
+.message-modal-body b {
+  color: var(--txt);
+}
+.message-modal-footer {
+  text-align: center;
+  font-weight: 700;
+  color: var(--good);
+  margin-top: 14px !important;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+#messageModal .actions {
+  padding: 14px 22px;
+  border-top: 1px solid var(--line);
+  background: var(--chart-bg);
+  display: flex;
+  justify-content: flex-end;
+}
