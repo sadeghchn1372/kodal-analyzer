@@ -1,81 +1,20 @@
 /* ============================================================
-   app.js — منطق اصلی تحلیل تک شرکت  |  v2.0.0
+   app.js — منطق اصلی تحلیل تک شرکت  |  v2.1.0
+   وابسته به: helpers.js + ui-modal.js
 ============================================================ */
 
-/* ---------- Utility ---------- */
+/* ---------- Utility (از helpers.js) ---------- */
 const $ = id => document.getElementById(id);
-const fa2en = s => String(s).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
-                       .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+const H = window.KodalHelpers;
+const { fa2en, toFa, norm, toNum, toman, tomanText, pct, num2, ratio, escapeHtml } = H;
 
-const FA_DIGITS = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
-function toFa(input){
-  if(input == null) return input;
-  return String(input).replace(/[0-9]/g, d => FA_DIGITS[Number(d)]);
-}
-
-function norm(x){
-  return fa2en(String(x??''))
-   .replace(/\u200c|\u200f|\u200e/g,'')
-   .replace(/[يى]/g,'ی').replace(/[ك]/g,'ک')
-   .replace(/[ۀة]/g,'ه').replace(/[أإٱآ]/g,'ا')
-   .replace(/[ؤ]/g,'و').replace(/[ئ]/g,'ی')
-   .replace(/[\u064B-\u0652\u0640]/g,'')
-   .replace(/[()（）\[\]]/g,'')
-   .replace(/[،,:;٫.]+/g,'')
-   .replace(/\s+/g,'')
-   .toLowerCase();
-}
-function toNum(x){
-  if(x == null) return null;
-  let s = fa2en(String(x).trim());
-  if(!s) return null;
-  
-  // ⭐ پرانتز یا منفی
-  let neg = /^\(.*\)$/.test(s) || s.includes('−') || /^-/.test(s);
-  
-  // ⭐ حذف همه کاراکترهای غیرعددی به جز نقطه
-  s = s.replace(/[()−\-–—]/g,'').replace(/[٬،,]/g,'').replace(/[^\d.]/g,'');
-  
-  if(!s) return null;
-  const n = Number(s);
-  return Number.isFinite(n) ? (neg ? -n : n) : null;
-}
-
-const toman = x => {
-  if(x == null) return '—';
-  const billionToman = x / 10000;
-  if(Math.abs(billionToman) < 1){
-    const millionToman = Math.round(x / 10);
-    return '<bdi dir="ltr">' + toFa(millionToman.toLocaleString('en-US')) + ' M</bdi>';
-  }
-  const roundedBillion = Math.round(billionToman);
-  return '<bdi dir="ltr">' + toFa(roundedBillion.toLocaleString('en-US')) + ' B</bdi>';
-};
-
-const tomanText = x => {
-  if(x == null) return '—';
-  const billionToman = x / 10000;
-  if(Math.abs(billionToman) < 1){
-    return toFa(Math.round(x / 10).toLocaleString('en-US')) + ' M';
-  }
-  return toFa(Math.round(billionToman).toLocaleString('en-US')) + ' B';
-};
-
-const pct   = x => x==null ? '—' : toFa((x*100).toFixed(1))+'٪';
-const num2  = x => x==null ? '—' : toFa(x.toFixed(2));
-const ratio = (a,b) => (a!=null && b!=null && b!==0) ? a/b : null;
 function extractNumbers(line){
   const normalized = fa2en(line);
-  
-  // ⭐ مرحله ۱: حذف الگوهای تاریخ
+
   const withoutDates = normalized
-    // تاریخ کامل: 1405/03/31 یا 1405-03-31 یا 1405.03.31
     .replace(/\d{4}\s*[\/\-\.]\s*\d{1,2}\s*[\/\-\.]\s*\d{1,2}/g, ' ')
-    // سال/ماه: 1405/03
     .replace(/\d{4}\s*[\/\-\.]\s*\d{1,2}(?!\d)/g, ' ')
-    // «۶ ماهه» (عدد ماه قبل از کلمه ماهه)
     .replace(/\d{1,2}\s*ماهه/g, ' ')
-    // سال تنها در وسط فاصله‌ها: 1403 (با word boundary)
     .replace(/(?:^|[\s|])\d{4}(?=[\s|]|$)/g, ' ');
 
   const matches = withoutDates.match(/[\(\（]?\s*[\-−]?\s*[\d][\d,٬،.]*\s*[\)\）]?/g) || [];
@@ -83,10 +22,7 @@ function extractNumbers(line){
 }
 
 function formatNumberInput(value){
-  const clean = fa2en(String(value)).replace(/[^\d]/g, '');
-  if(!clean) return '';
-  const withComma = clean.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return toFa(withComma);
+  return H.formatNumberInput(value);
 }
 
 function attachNumberFormatter(inputEl){
@@ -112,7 +48,7 @@ function attachNumberFormatter(inputEl){
   });
 }
 
-/* ----545465------ Help Tooltip ---------- */
+/* ---------- Help Tooltip ---------- */
 (function initHelpTooltip(){
   const tooltip = document.getElementById('globalTooltip');
   if(!tooltip) return;
@@ -171,8 +107,6 @@ function attachNumberFormatter(inputEl){
 /* ---------- Global State ---------- */
 let file = null;
 let PARSED = null;
-window.PARSED = null;
-// ⭐ متغیرهای گلوبال برای دسترسی از کنسول
 window.PARSED = null;
 let MARKET = {
   symbol: '',
@@ -288,6 +222,7 @@ attachNumberFormatter($('stockCount'));
 
 /* ---------- Storage (Saved Analyses) ---------- */
 const STORAGE_KEY = 'kodal_analyses_v1';
+const MAX_SAVED = 200;
 let STORAGE_AVAILABLE = false;
 
 (function testStorage(){
@@ -315,7 +250,7 @@ function saveToStorage(list){
     return true;
   }catch(e){
     if(e.name === 'QuotaExceededError'){
-      showToast('⚠️ حافظه مرورگر پر شده — قدیمی‌ها رو حذف کن', true);
+      showToast('⚠️ حافظه مرورگر پر شده — چند تحلیل قدیمی رو حذف کن یا فایل بکاپ بگیر', true);
     }
     return false;
   }
@@ -377,11 +312,18 @@ window.toggleStar = function(idx){
   renderSaved();
 };
 
-window.editName = function(idx){
+window.editName = async function(idx){
   if(!SAVED_LIST[idx]) return;
   const current = SAVED_LIST[idx].name;
-  const newName = prompt('اسم جدید:', current);
-  if(newName && newName.trim()){
+  const newName = await KodalUI.prompt({
+    title: 'ویرایش نام تحلیل',
+    icon: '✏️',
+    message: 'اسم جدید رو وارد کن:',
+    value: current,
+    placeholder: 'اسم تحلیل...',
+    confirmText: 'ذخیره',
+  });
+  if(newName != null && newName.trim()){
     SAVED_LIST[idx].name = newName.trim();
     saveToStorage(SAVED_LIST);
     renderSaved();
@@ -396,11 +338,19 @@ document.addEventListener('change', (e) => {
   if(e.target.id === 'savedSort') renderSaved();
 });
 
-window.deleteAnalysis = function(idx){
-  if(!confirm('این تحلیل حذف بشه؟')) return;
+window.deleteAnalysis = async function(idx){
+  const ok = await KodalUI.confirm({
+    title: 'حذف تحلیل',
+    icon: '🗑️',
+    message: 'این تحلیل برای همیشه حذف می‌شه. مطمئنی؟',
+    confirmText: 'بله، حذف کن',
+    danger: true,
+  });
+  if(!ok) return;
   SAVED_LIST.splice(idx, 1);
   saveToStorage(SAVED_LIST);
   renderSaved();
+  showToast('✅ تحلیل حذف شد');
 };
 
 window.restoreAnalysis = function(idx){
@@ -409,7 +359,7 @@ window.restoreAnalysis = function(idx){
   try{
     PARSED = JSON.parse(JSON.stringify(item.parsed));
     PARSED._periods = item.periods || 3;
-    window.PARSED = PARSED;   // ⭐ اضافه شده
+    window.PARSED = PARSED;
     if(item.market){
       MARKET = {
         symbol: item.market.symbol||'',
@@ -483,7 +433,7 @@ function uploadAnalyses(file){
         const isDup = SAVED_LIST.some(x => x.name === item.name && x.date === item.date);
         if(!isDup){ SAVED_LIST.unshift(item); added++; }
       });
-      if(SAVED_LIST.length > 50) SAVED_LIST.length = 50;
+      if(SAVED_LIST.length > MAX_SAVED) SAVED_LIST.length = MAX_SAVED;
       saveToStorage(SAVED_LIST);
       renderSaved();
       showToast(`✅ ${toFa(added)} تحلیل اضافه شد (مجموع: ${toFa(SAVED_LIST.length)})`);
@@ -529,9 +479,23 @@ function closeSaveModal(){ $('saveModal').classList.remove('show'); }
 if($('saveBtn')) $('saveBtn').onclick = openSaveModal;
 if($('saveCancel')) $('saveCancel').onclick = closeSaveModal;
 
-if($('saveConfirm')) $('saveConfirm').onclick = () => {
+if($('saveConfirm')) $('saveConfirm').onclick = async () => {
   const name = ($('saveNameInput').value || '').trim();
   if(!name){ showToast('اسم خالی نباشه', true); return; }
+
+  if(SAVED_LIST.length >= MAX_SAVED){
+    const oldest = SAVED_LIST[SAVED_LIST.length - 1];
+    const ok = await KodalUI.confirm({
+      title: 'لیست ذخیره‌شده پره',
+      icon: '⚠️',
+      message: `حداکثر ${toFa(MAX_SAVED)} تحلیل قابل ذخیره‌ست.<br><br>قدیمی‌ترین: <b>${escapeHtml(oldest?.name || '—')}</b><br><br>اگه ادامه بدی، قدیمی‌ترین تحلیل‌ها خودکار حذف می‌شن. اول یه بکاپ بگیر!`,
+      confirmText: 'باشه، ادامه بده',
+      cancelText: 'انصراف',
+      danger: true,
+    });
+    if(!ok) return;
+  }
+
   try{
     SAVED_LIST.unshift({
       name: name,
@@ -541,7 +505,15 @@ if($('saveConfirm')) $('saveConfirm').onclick = () => {
       starred: false,
       market: {...MARKET},
     });
-    if(SAVED_LIST.length > 50) SAVED_LIST.length = 50;
+
+    if(SAVED_LIST.length > MAX_SAVED){
+      const removedCount = SAVED_LIST.length - MAX_SAVED;
+      SAVED_LIST.length = MAX_SAVED;
+      setTimeout(() => {
+        showToast(`⚠️ ${toFa(removedCount)} تحلیل قدیمی حذف شد (سقف ${toFa(MAX_SAVED)} تایی)`);
+      }, 500);
+    }
+
     const saved = saveToStorage(SAVED_LIST);
     renderSaved();
     closeSaveModal();
@@ -604,7 +576,6 @@ if($('drop')){
     $('err').style.display = 'none';
   });
 
-  // کلیک روی drop = باز کردن فایل سلکت
   const browseBtn = $('drop').querySelector('.drop-browse-btn');
   if(browseBtn){
     browseBtn.onclick = (e) => {
@@ -709,7 +680,6 @@ const LABELS = {
   totalLiab: [
     /^جمع\s*بدهی/, 
     /^جمع\s*بدهي/,
-    // ✅ جدید: با نگاتیو لوک‌اِهد که با جاری/غیرجاری اشتباه نشه
     /جمع\s*بدهی(?![\u200c\s]*های[\u200c\s]*جاری)(?![\u200c\s]*های[\u200c\s]*غیرجاری)(?![\u200c\s]*جاری)(?![\u200c\s]*غیرجاری)/,
     /جمع\s*بدهي(?![\u200c\s]*هاي[\u200c\s]*جاري)(?![\u200c\s]*هاي[\u200c\s]*غيرجاري)(?![\u200c\s]*جاري)(?![\u200c\s]*غيرجاري)/,
   ],
@@ -717,7 +687,6 @@ const LABELS = {
     /^جمع\s*حقوق\s*مالکانه/, 
     /^جمع\s*حقوق\s*صاحبان\s*سهام/, 
     /^جمع\s*حقوق\s*مالکانه\s*و\s*بدهی/,
-    // ✅ جدید: برای مواقعی که ^ کار نمی‌کنه
     /جمع\s*حقوق[\u200c\s]*صاحبان[\u200c\s]*سهام/,
     /جمع\s*حقوق[\u200c\s]*مالکانه/,
   ],
@@ -742,20 +711,13 @@ function matchLabel(line){
   return null;
 }
 function extractBestValues(nums, periods, preferLargest){
-  // ⭐ مرحله ۱: حذف سال‌های شمسی، ماه، روز
   let filtered = nums.filter(v => {
     if(v == null) return false;
-    // سال شمسی
     if(v >= 1390 && v <= 1420) return false;
-    // ماه (1-12) — فقط اگه عدد کوچیک باشه
-    // (این رو نگه می‌داریم چون ممکنه مقدار واقعی سود باشه،
-    //  ولی در extractNumbers فیلتر می‌کنیم)
-    // خیلی کوچیک
     if(Math.abs(v) < 10 && !preferLargest) return false;
     return true;
   });
 
-  // اگه خیلی کم شد، برگرد به فیلتر اصلی
   if(filtered.length < periods){
     filtered = nums.filter(v => v != null && !(v >= 1390 && v <= 1420));
   }
@@ -781,7 +743,6 @@ function extractBestValues(nums, periods, preferLargest){
     return filtered.slice(bestStart, bestStart + periods);
   }
 
-  // ⭐ پیش‌فرض: بزرگ‌ترین عدد رو پیدا کن و از همون‌جا ۳ تا بردار
   const bigs = filtered.filter(v => Math.abs(v) >= 1000);
   if(bigs.length >= 1){
     const firstBig = filtered.indexOf(bigs[0]);
@@ -894,23 +855,18 @@ function detectPeriodFromLines(lines){
 
   return { label, year: detectedYear, months: detectedMonths };
 }
+
 function parseItems(lines){
   const items = {};
   const periods = 3;
 
-  // ⭐ مرحله ۱: پیدا کردن محدوده صورت تلفیقی
-  // راهکار: وقتی «تلفیقی» توی عنوان صورت‌ها دیده شد،
-  // اون بخش رو تلفیقی حساب می‌کنیم.
-  // ⭐ قانون طلایی: صورت‌های تلفیقی همیشه **قبل از** غیرتلفیقی میان.
-
-  let firstConsolidated = -1;   // اولین جای «تلفیقی»
-  let firstNonConsolidated = -1; // اولین جای صورت بدون «تلفیقی» (بعد از تلفیقی)
+  let firstConsolidated = -1;
+  let firstNonConsolidated = -1;
   let lastConsolidatedEnd = -1;
 
   for(let i = 0; i < lines.length; i++){
     const n = norm(lines[i]);
 
-    // تشخیص شروع صورت‌های تلفیقی
     const isConsolidatedHeader = 
       /^صورت\s*سود\s*و\s*زيان\s*تلفيقي/.test(n) ||
       /^صورت\s*سود\s*و\s*زيان\s*جامع\s*تلفيقي/.test(n) ||
@@ -919,7 +875,6 @@ function parseItems(lines){
       /^صورت\s*جريان\s*هاي\s*نقدي\s*تلفيقي/.test(n) ||
       /^صورت\s*جريان\s*هاي\s*نقدي\s*تلفيقي/.test(n);
 
-    // تشخیص شروع صورت‌های غیرتلفیقی (بدون کلمه تلفیقی)
     const isNonConsolidatedHeader =
       /^صورت\s*سود\s*و\s*زيان$/.test(n) ||
       /^صورت\s*سود\s*و\s*زيان\s*جامع$/.test(n) ||
@@ -940,35 +895,22 @@ function parseItems(lines){
     }
   }
 
-  // ⭐ محدوده تلفیقی: از firstConsolidated تا firstNonConsolidated (اگه وجود داره)
   let consolidatedStart = firstConsolidated;
   let consolidatedEnd = (firstNonConsolidated > firstConsolidated) 
                         ? firstNonConsolidated 
                         : lines.length;
 
-  console.log('🔍 تشخیص محدوده:');
-  console.log('  - اولین صورت تلفیقی:', firstConsolidated);
-  console.log('  - آخرین صورت تلفیقی:', lastConsolidatedEnd);
-  console.log('  - اولین صورت غیرتلفیقی:', firstNonConsolidated);
-  console.log('  - محدوده استفاده:', consolidatedStart, '→', consolidatedEnd);
-
-  // ⭐ مرحله ۲: انتخاب خطوط
-  // ⭐⭐⭐ اگه تلفیقی پیدا شد: به ترتیب معکوس (پایین‌ترها ترجیح)
-  // ولی همه از بخش تلفیقی
   const linesToSearch = [];
   if(consolidatedStart >= 0){
     for(let i = consolidatedStart; i < consolidatedEnd; i++){
       linesToSearch.push({ line: lines[i], index: i });
     }
-    console.log(`✅ ${linesToSearch.length} خط از بخش تلفیقی`);
   } else {
     for(let i = 0; i < lines.length; i++){
       linesToSearch.push({ line: lines[i], index: i });
     }
-    console.log('⚠️ تلفیقی پیدا نشد — همه خطوط');
   }
 
-  // ⭐ مرحله ۳: جمع‌آوری match‌ها
   const allMatches = {};
   for(const { line, index } of linesToSearch){
     const key = matchLabel(line);
@@ -979,18 +921,15 @@ function parseItems(lines){
     allMatches[key].push({ line, nums, lineIndex: index });
   }
 
-  // ⭐ مرحله ۴: انتخاب بهترین
   for(const key in allMatches){
     const matches = allMatches[key];
     matches.forEach(m => {
       m.priority = calculatePriority(key, m.line, m.nums);
     });
 
-    // ⭐ مرتب‌سازی: priority بالاتر، بعد **خط بالا‌تر** (index کوچیک‌تر)
-    // این برعکس قبله: چون می‌خوایم اولین match (بالاترین) رو بگیریم
     matches.sort((a, b) => {
       if(b.priority !== a.priority) return b.priority - a.priority;
-      return a.lineIndex - b.lineIndex;  // ← خط بالاتر ترجیح
+      return a.lineIndex - b.lineIndex;
     });
 
     const best = matches[0];
@@ -1007,8 +946,6 @@ function parseItems(lines){
     }
 
     items[key] = filtered;
-
-    console.log(`📌 ${key}: [${filtered}] ← خط ${best.lineIndex}: "${best.line.substring(0, 70)}"`);
   }
 
   return items;
@@ -1017,12 +954,10 @@ function calculatePriority(key, line, nums){
   let priority = 0;
   const n = norm(line);
 
-  // ⭐ رد کردن خطوط با تاریخ کامل
   if(/\d{4}\s*[\/\-\.]\s*\d{1,2}\s*[\/\-\.]\s*\d{1,2}/.test(line)){
     priority -= 1000;
   }
 
-  // ⭐ رد کردن خطوط ناخواسته
   if(/دوره\s*\d+\s*ماهه|تجديد|گزارش\s*شده|منتهي\s*به/.test(n)){
     priority -= 800;
   }
@@ -1031,24 +966,16 @@ function calculatePriority(key, line, nums){
   }
   if(line.length > 120) priority -= 30;
 
-  // ⭐ پاداش اعداد معقول
   const realNums = nums.filter(v => !(v >= 1390 && v <= 1420));
   if(realNums.length >= 2 && realNums.length <= 4) priority += 20;
 
-  // ═══════════════════════════════════════════════
-  // ⭐⭐⭐ netProfit — منطق بسیار سختگیرانه
-  // ═══════════════════════════════════════════════
   if(key === 'netProfit'){
-    // ⭐ پاداش بالا برای «سود(زيان) خالص» تنها (بدون هیچ کلمه اضافی)
     if(/^سود\s*\(?زيان\)?\s*خالص$/.test(n)) priority += 2000;
     if(/^سود\s*\(?زیان\)?\s*خالص$/.test(n)) priority += 2000;
-    
-    // ⭐ پاداش پایین‌تر برای حالت‌های دیگه
     if(/^سود.*زيان.*خالص$/.test(n)) priority += 500;
     if(/^سود\s*خالص$/.test(n)) priority += 500;
     if(/^سود.*خالص$/.test(n)) priority += 300;
 
-    // ⭐⭐ رد کردن قوی این خطوط:
     if(/عمليات\s*در\s*حال\s*تداوم/.test(n)) priority -= 2000;
     if(/عمليات\s*متوقف/.test(n)) priority -= 2000;
     if(/قابل\s*انتساب/.test(n)) priority -= 1500;
@@ -1060,7 +987,6 @@ function calculatePriority(key, line, nums){
     if(/گزارش\s*شده|تجديد|متوقف|سهام/.test(n)) priority -= 1500;
   }
 
-  // ⭐ equity — پاداش خط «جمع حقوق مالکانه» خالص
   if(key === 'equity'){
     if(/^جمع\s*حقوق\s*مالکانه$/.test(n)) priority += 2000;
     if(/^جمع\s*حقوق\s*صاحبان\s*سهام$/.test(n)) priority += 2000;
@@ -1071,7 +997,6 @@ function calculatePriority(key, line, nums){
     if(/مانده|تغييرات|اصلاح/.test(n)) priority -= 1500;
   }
 
-  // ⭐ revenue
   if(key === 'revenue'){
     if(/^درامدهای\s*عملیاتی$/.test(n)) priority += 2000;
     if(/^درامد\s*عملیاتی$/.test(n)) priority += 2000;
@@ -1080,43 +1005,36 @@ function calculatePriority(key, line, nums){
     if(/سال\s*مالي|روند\s*فروش/.test(n)) priority -= 2000;
   }
 
-  // ⭐ totalAssets
   if(key === 'totalAssets'){
     if(/^جمع\s*دارايي‌ها$/.test(n)) priority += 2000;
     if(/^جمع\s*دارايي‌هاي\s*(جاري|غيرجاري)$/.test(n)) priority -= 1000;
   }
 
-  // ⭐ totalLiab
   if(key === 'totalLiab'){
     if(/^جمع\s*بدهي‌ها$/.test(n)) priority += 2000;
     if(/^جمع\s*بدهي‌هاي\s*(جاري|غيرجاري)$/.test(n)) priority -= 1000;
   }
 
-  // ⭐ currentAssets
   if(key === 'currentAssets'){
     if(/^جمع\s*دارايي‌هاي\s*جاري$/.test(n)) priority += 2000;
   }
 
-  // ⭐ currentLiab
   if(key === 'currentLiab'){
     if(/^جمع\s*بدهي‌هاي\s*جاري$/.test(n)) priority += 2000;
   }
 
-  // ⭐ cogs
   if(key === 'cogs'){
     if(/^بهاى\s*تمام\s*شده\s*درآمدهاي\s*عملياتي$/.test(n)) priority += 2000;
     if(/^بهاي\s*تمام\s*شده\s*درامدهاي\s*عملياتي$/.test(n)) priority += 2000;
     if(/كلاي\s*توليد|كلاي\s*فروش|خدمات|جمع\s*بهای|جدول|برآورد/.test(n)) priority -= 1500;
   }
 
-  // ⭐ opProfit
   if(key === 'opProfit'){
     if(/^سود\s*\(?زيان\)?\s*عملياتى$/.test(n)) priority += 2000;
     if(/^سود\s*عملياتى$/.test(n)) priority += 2000;
     if(/عمليات\s*در\s*حال\s*تداوم|قبل\s*از\s*ماليات|قبل\s*از\s*احتساب/.test(n)) priority -= 1500;
   }
 
-  // ⭐ grossProfit
   if(key === 'grossProfit'){
     if(/^سود\s*\(?زيان\)?\s*ناخالص$/.test(n)) priority += 2000;
     if(/^سود\s*ناخالص$/.test(n)) priority += 2000;
@@ -1124,7 +1042,6 @@ function calculatePriority(key, line, nums){
 
   return priority;
 }
-
 
 const HINTS = {
   'نسبت جاری': {
@@ -1275,16 +1192,11 @@ const HINTS = {
     warn: 'سود متوسطی',
     bad: 'سود کمی',
   },
-
   'پوشش بهره نقدی': {
     dynamic: true,
     template: 'شرکت با پول نقد واقعی، {v} برابر هزینه بهره‌اش رو می‌تونه بده',
   },
 };
-
-
-
-
 
 /* ---------- Chart Colors ---------- */
 function chartTextColor(){ return document.body.classList.contains('dark') ? '#94a3b8' : '#64748b'; }
@@ -1395,14 +1307,13 @@ function scoreLevel(s){
 }
 
 /* ============================================================
-   DuPont Analysis
+   DuPont Analysis — با تحلیل دلیل منفی بودن equity
 ============================================================ */
 function renderDuPont(v){
   const box = $('dupontBox');
   const noteEl = $('dupontNote');
   if(!box) return;
 
-  // ⭐ محاسبه مقادیر جایگزین اگه خالی بودن
   const eq = (v.eq != null) ? v.eq
             : ((v.ta != null && v.tl != null) ? (v.ta - v.tl) : null);
 
@@ -1417,18 +1328,79 @@ function renderDuPont(v){
   const em = ratio(ta, eq);
   const roe = (eq != null && eq > 0) ? ratio(v.net, eq) : null;
 
-  // ⭐ لاگ برای دیباگ
-  console.log('🎯 DuPont:', { revenue: v.revenue, net: v.net, ta: ta, eq: eq, nm, at, em, roe });
-
-  // ⭐ حقوق مالکانه منفی یا صفر
+  // ⭐ حقوق مالکانه منفی یا صفر — تحلیل کامل دلیل
   if(eq != null && eq <= 0){
+    const retainedEarnings = v.re;
+    const capital = v.capital;
+    const totalLiab = tl;
+    const totalAssets = ta;
+
+    const reasons = [];
+
+    if(retainedEarnings != null && retainedEarnings < 0){
+      reasons.push({
+        icon: '📉',
+        title: 'زیان انباشته',
+        desc: `شرکت در سال‌های گذشته زیان‌های پشت‌سرهم داده و این زیان‌ها روی هم جمع شدن: <b>${toman(retainedEarnings)}</b>. این زیان‌ها سرمایه شرکت رو خورده.`,
+      });
+    }
+
+    if(totalLiab != null && totalAssets != null){
+      const debtToAsset = totalLiab / totalAssets;
+      if(debtToAsset > 1){
+        reasons.push({
+          icon: '⛓️',
+          title: 'بدهی بیشتر از دارایی',
+          desc: `جمع بدهی‌ها (${toman(totalLiab)}) از جمع دارایی‌ها (${toman(totalAssets)}) بیشتره. یعنی اگه همه دارایی‌ها رو بفروشن، بازم بدهی مونده.`,
+        });
+      }
+    }
+
+    if(v.net != null && v.net < 0){
+      reasons.push({
+        icon: '🔻',
+        title: 'زیان در دوره جاری',
+        desc: `شرکت همین الان هم داره زیان می‌ده: <b>${toman(v.net)}</b>. این زیان جدید، سرمایه رو بازم کم می‌کنه.`,
+      });
+    }
+
+    if(capital != null && capital > 0 && totalAssets != null){
+      const ratioCap = capital / totalAssets;
+      if(ratioCap < 0.1){
+        reasons.push({
+          icon: '🏦',
+          title: 'سرمایه اسمی ناچیز',
+          desc: `سرمایه اسمی شرکت (${toman(capital)}) نسبت به کل دارایی‌هاش خیلی کمه. این یعنی شرکت بیشتر با پول طلبکارها می‌چرخه.`,
+        });
+      }
+    }
+
+    if(reasons.length === 0){
+      reasons.push({
+        icon: '❓',
+        title: 'اطلاعات کافی نیست',
+        desc: 'علت دقیق منفی بودن حقوق مالکانه از داده‌های موجود مشخص نشد. برای بررسی دقیق‌تر، صورت‌های مالی کامل رو مطالعه کن.',
+      });
+    }
+
+    const reasonHtml = reasons.map(r => `
+      <div class="dne-reason">
+        <div class="dne-reason-head">
+          <span class="dne-reason-icon">${r.icon}</span>
+          <b>${r.title}</b>
+        </div>
+        <div class="dne-reason-desc">${r.desc}</div>
+      </div>
+    `).join('');
+
     box.innerHTML = `
       <div class="dupont-negative-equity">
         <span class="dne-icon">🚨</span>
         <div class="dne-title">حقوق مالکانه منفی یا صفر</div>
         <div class="dne-subtitle">
-          این شرکت بدهی‌هاش بیشتر از دارایی‌هاشه. نسبت بازدهی در این حالت معنی نداره.
+          یعنی بدهی‌های شرکت از دارایی‌هاش بیشتره. نسبت ROE در این حالت <b>معنی نداره</b> و نباید محاسبه بشه.
         </div>
+
         <div class="dne-stats">
           <div class="dne-stat">
             <div class="dne-stat-label">حقوق مالکانه</div>
@@ -1440,8 +1412,16 @@ function renderDuPont(v){
           </div>
           <div class="dne-stat">
             <div class="dne-stat-label">جمع بدهی</div>
-            <div class="dne-stat-value">${toman(tl)}</div>
+            <div class="dne-stat-value negative">${toman(tl)}</div>
           </div>
+        </div>
+
+        <div class="dne-explain">
+          <div class="dne-explain-title">🔍 چرا حقوق مالکانه منفی شده؟</div>
+          ${reasonHtml}
+          <span class="dne-note">
+            ⚠️ <b>هشدار:</b> حقوق مالکانه منفی یکی از جدی‌ترین علامت‌های خطر در تحلیل بنیادی محسوب می‌شه. اگه سهامدارش هستی، حتماً با کارشناس مشورت کن.
+          </span>
         </div>
       </div>
     `;
@@ -1449,7 +1429,6 @@ function renderDuPont(v){
     return;
   }
 
-  // ⭐ اگه داده کافی نبود
   if(nm == null || at == null || em == null || roe == null){
     const items = [
       ['درآمد عملیاتی', v.revenue],
@@ -1466,7 +1445,6 @@ function renderDuPont(v){
     return;
   }
 
-  // ⭐ سطح‌بندی ROE
   let roeLevel, roeColor, roeLabel;
   if(roe < 0){ roeLevel = 'bad'; roeColor = '#c62828'; roeLabel = 'زیان‌ده'; }
   else if(roe < 0.05){ roeLevel = 'bad'; roeColor = '#c62828'; roeLabel = 'خیلی ضعیف'; }
@@ -1477,14 +1455,12 @@ function renderDuPont(v){
 
   const roePos = Math.max(0, Math.min(100, (roe / 0.40) * 100));
 
-  // ⭐ امتیاز حاشیه سود
   let nmScore, nmColor, nmLabel;
   if(nm < 0.05){ nmScore = Math.max(5, (nm / 0.05) * 25); nmColor = '#c62828'; nmLabel = 'ضعیف'; }
   else if(nm < 0.10){ nmScore = 25 + ((nm - 0.05) / 0.05) * 25; nmColor = '#f59e0b'; nmLabel = 'متوسط'; }
   else if(nm < 0.20){ nmScore = 50 + ((nm - 0.10) / 0.10) * 30; nmColor = '#eab308'; nmLabel = 'خوب'; }
   else { nmScore = Math.min(100, 80 + ((nm - 0.20) / 0.20) * 20); nmColor = '#16834a'; nmLabel = 'عالی'; }
 
-  // ⭐ امتیاز گردش دارایی
   let atScore, atColor, atLabel;
   if(at < 0.1){ atScore = Math.max(3, (at / 0.1) * 15); atColor = '#c62828'; atLabel = 'خیلی ضعیف'; }
   else if(at < 0.3){ atScore = 15 + ((at - 0.1) / 0.2) * 20; atColor = '#ef4444'; atLabel = 'ضعیف'; }
@@ -1492,14 +1468,12 @@ function renderDuPont(v){
   else if(at < 1.5){ atScore = 65 + ((at - 0.7) / 0.8) * 25; atColor = '#22c55e'; atLabel = 'خوب'; }
   else { atScore = Math.min(100, 90 + ((at - 1.5) / 1) * 10); atColor = '#16834a'; atLabel = 'عالی'; }
 
-  // ⭐ امتیاز اهرم مالی
   let emScore, emColor, emLabel;
   if(em < 1.5){ emScore = 70; emColor = '#22c55e'; emLabel = 'محافظه‌کارانه'; }
   else if(em < 2.5){ emScore = 90; emColor = '#16834a'; emLabel = 'متعادل'; }
   else if(em < 4){ emScore = 60; emColor = '#f59e0b'; emLabel = 'اهرم بالا'; }
   else { emScore = 30; emColor = '#c62828'; emLabel = 'پرخطر'; }
 
-  // ⭐ داستان
   let problemText = '';
   let problemIcon = '';
   let problemTitle = '';
@@ -1540,7 +1514,6 @@ function renderDuPont(v){
     problemSuggestion = `بهبود یکی از سه عامل (سودآوری، فروش، یا بدهی) می‌تونه بازدهی رو بهتر کنه.`;
   }
 
-  // ⭐ رندر
   box.innerHTML = `
     <div class="dupont-hero">
       <div class="dupont-hero-label">بازدهی سهامدار (ROE)</div>
@@ -1878,7 +1851,7 @@ function renderZScore(v){
 }
 
 /* ============================================================
-   EPS — سود هر سهم + پیش‌بینی سالانه
+   EPS
 ============================================================ */
 function renderEPS(v){
   const box = $('epsBox');
@@ -1955,7 +1928,7 @@ function renderEPS(v){
 }
 
 /* ============================================================
-   نگاه سریع — متریک‌های تفسیرشده
+   نگاه سریع
 ============================================================ */
 function renderQuickMetrics(){
   const box = document.getElementById('quickMetrics');
@@ -2246,7 +2219,7 @@ if($('go')) $('go').onclick = async () => {
     const lines = await getLines(file);
     if(!lines.length) throw Error('هیچ خطی استخراج نشد.');
     PARSED = parseItems(lines);
-    window.PARSED = PARSED;   // ⭐ اضافه شده
+    window.PARSED = PARSED;
     const found = Object.keys(PARSED).length;
     if(!found) throw Error('هیچ قلمی شناسایی نشد.');
     const maxPer = Math.max(...Object.values(PARSED).filter(a => Array.isArray(a)).map(a => a.length));
@@ -2292,7 +2265,7 @@ if($('go')) $('go').onclick = async () => {
 function val(k, i){ return PARSED?.[k]?.[i] ?? null; }
 
 /* ============================================================
-   rebuildAllCharts — تابع مشترک برای نمودارها
+   rebuildAllCharts
 ============================================================ */
 function rebuildAllCharts(){
   if(!PARSED) return;
@@ -2360,7 +2333,7 @@ function render(ci){
     inv: val('inventory',ci), recv: val('receivables',ci), cash: val('cash',ci), sti: val('shortTermInv',ci),
     nonCL: val('nonCurrentLiab',ci), cl: val('currentLiab',ci), tl: val('totalLiab',ci),
     eq: val('equity',ci), re: val('retainedEarnings',ci), ltd: val('longTermDebt',ci),
-    pay: val('payables',ci),   // ⭐ جدید
+    pay: val('payables',ci),
     cfo: val('cfo',ci), cfi: val('cfi',ci), cff: val('cff',ci), capex: val('capex',ci),
     deprec: val('depreciation',ci),
   };
@@ -2419,20 +2392,17 @@ function render(ci){
   const growthNet = (v.net != null && prevNet != null && prevNet !== 0)
     ? (v.net - prevNet) / Math.abs(prevNet) : null;
 
-    const cogsAbs = (v.cogs != null) ? Math.abs(v.cogs) : null;
-    const dso = (v.recv && v.revenue) ? 365 * (v.recv / v.revenue) : null;
-    const dio = (v.inv && cogsAbs) ? 365 * (v.inv / cogsAbs) : null;
-    const dpo = (cogsAbs && v.pay) ? 365 * (v.pay / Math.abs(cogsAbs)) : null;
-    console.log('DEBUG render:', { cogsAbs, dso, dio, dpo, recv: v.recv, inv: v.inv, pay: v.pay, revenue: v.revenue });
-    const ccc = (dso != null && dio != null && dpo != null) ? (dso + dio - dpo) : null;
+  const cogsAbs = (v.cogs != null) ? Math.abs(v.cogs) : null;
+  const dso = (v.recv && v.revenue) ? 365 * (v.recv / v.revenue) : null;
+  const dio = (v.inv && cogsAbs) ? 365 * (v.inv / cogsAbs) : null;
+  const dpo = (cogsAbs && v.pay) ? 365 * (v.pay / Math.abs(cogsAbs)) : null;
+  const ccc = (dso != null && dio != null && dpo != null) ? (dso + dio - dpo) : null;
 
   const roce = (v.opProfit != null && v.ta != null && v.cl != null && (v.ta - v.cl) !== 0)
     ? v.opProfit / (v.ta - v.cl) : null;
 
   const peg = (pe != null && growthNet != null && growthNet > 0)
     ? pe / (growthNet * 100) : null;
-
-
 
   const cashInterestCoverage = (v.cfo != null && v.financeCost != null && Math.abs(v.financeCost) > 0)
     ? v.cfo / Math.abs(v.financeCost) : null;
@@ -2501,8 +2471,6 @@ function render(ci){
     return 'good';
   };
 
-
-
   function tableFor(list){
     return '<div class="ratio-cards">' + list.map(([name,x,bad,warn])=>{
       const c = statusClass(x, bad, warn);
@@ -2535,19 +2503,11 @@ function render(ci){
     }).join('') + '</div>';
   }
 
-
-
-
-
-
-  /* ⭐ فرمت‌کننده مقدار برای نسبت‌های پویا */
   function formatDynamicValue(name, x){
     if(x == null || !isFinite(x)) return '—';
 
-    // این ۴ نسبت: عدد بدون ٪ (چون جمله خودش «از هر ۱۰۰ تومن...» داره)
     const noPercentSign = /^(بدهی به دارایی|حاشیه سود ناخالص|حاشیه سود عملیاتی|حاشیه سود خالص)$/.test(name);
 
-    // نسبت‌های درصدی
     if(/حاشیه|ROA|ROE|ROCE|بدهی به دارایی|CFO به درآمد|نرخ رشد/.test(name)){
       const pctVal = x * 100;
       const rounded = Math.abs(pctVal) >= 1 ? Math.round(pctVal) : null;
@@ -2555,29 +2515,23 @@ function render(ci){
       if(rounded !== null){
         return toFa(rounded.toLocaleString('en-US')) + (noPercentSign ? '' : '٪');
       }
-      // اگه < ۱ بود، دست‌نخورده با ۲ رقم اعشار
       return toFa(pctVal.toFixed(2)) + (noPercentSign ? '' : '٪');
     }
 
-    // نسبت‌های روز
     if(/روز|CCC|چرخه تبدیل/.test(name)){
       return toFa(Math.round(x)) + ' روز';
     }
 
-    // EPS (ریال)
     if(name === 'EPS'){
       return toFa(Math.round(x).toLocaleString('en-US')) + ' ریال';
     }
 
-    // بقیه: عدد ساده
     if(Math.abs(x) >= 1){
       return toFa(Math.round(x).toLocaleString('en-US'));
     }
     return num2(x);
   }
 
-
-  /* ⭐ توضیحات پویا — جای {v} رو با عدد واقعی پر می‌کنه */
   function makeHintDynamic(name, hint, status, x){
     if(!hint) return '';
 
@@ -2630,10 +2584,6 @@ function render(ci){
 
     return hint;
   }
-
-
-
-
 
   document.querySelectorAll('#tabSingle .tab').forEach(t => {
     t.onclick = () => {
@@ -2784,12 +2734,6 @@ function render(ci){
   renderAlerts(v);
   updatePrintHeader();
 }
-
-
-
-
-
-
 
 /* ---------- Summary ---------- */
 function renderSummary(v, extras){
@@ -2964,7 +2908,7 @@ document.querySelectorAll('.main-tab').forEach(tab => {
 });
 
 /* ---------- KodalHelpers ---------- */
-window.KodalHelpers = {
+window.KodalHelpers = Object.assign(window.KodalHelpers || {}, {
   getLines,
   parseItems,
   calcScore,
@@ -2983,7 +2927,7 @@ window.KodalHelpers = {
   chartBaseColor,
   chartLabelColor,
   detectPeriodFromLines,
-};
+});
 
 /* ============================================================
    Send to Watchlist
@@ -3189,23 +3133,19 @@ window.KodalHelpers = {
       otherOpInc: val('otherOpInc',ci),
     };
 
-    // ⭐ Fallback ها برای پر کردن مقادیر خالی
     let eqFinal = v.eq;
     if(eqFinal == null && v.ta != null && v.tl != null){
       eqFinal = v.ta - v.tl;
-      console.log('🔧 equity محاسبه شد (ta - tl):', eqFinal);
     }
 
     let taFinal = v.ta;
     if(taFinal == null && v.ca != null && v.nonCA != null){
       taFinal = v.ca + v.nonCA;
-      console.log('🔧 totalAssets محاسبه شد (ca + nonCA):', taFinal);
     }
 
     let tlFinal = v.tl;
     if(tlFinal == null && v.cl != null && v.nonCL != null){
       tlFinal = v.cl + v.nonCL;
-      console.log('🔧 totalLiab محاسبه شد (cl + nonCL):', tlFinal);
     }
 
     const vFixed = Object.assign({}, v, {
@@ -3467,7 +3407,7 @@ window.restoreFromExternal = function(reportData){
 })();
 
 /* ============================================================
-   🆕 پیام‌های سازنده (Modal)
+   پیام‌های سازنده (Modal)
 ============================================================ */
 window.openMessageModal = function(){
   const modal = document.getElementById('messageModal');
@@ -3494,4 +3434,4 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
-console.log('%c🎯 app.js v2.0.0 لود شد', 'color:#1769e0;font-weight:bold');
+console.log('%c🎯 app.js v2.1.0 لود شد', 'color:#1769e0;font-weight:bold');

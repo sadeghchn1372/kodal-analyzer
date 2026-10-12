@@ -1,6 +1,6 @@
 /* ============================================================
    sw.js — Service Worker برای تحلیلگر کدال
-   نسخه: v1.8.5
+   نسخه: v2.0.4
    استراتژی:
    - App Shell (index.html, CSS, JS, فونت‌ها): Cache First
    - سایر فایل‌ها: Network First با fallback به cache

@@ -4939,3 +4939,55 @@ body.dark .ratio-avg-marker-label {
     font-size: 12px;
   }
 }
+/* ============================================================
+   🆕 DuPont negative equity — لیست دلایل
+============================================================ */
+.dne-explain-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--txt);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+}
+
+.dne-reason {
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: var(--card);
+  border-radius: 10px;
+  border-right: 3px solid #c62828;
+  text-align: right;
+}
+
+.dne-reason:last-of-type {
+  margin-bottom: 14px;
+}
+
+.dne-reason-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--txt);
+  margin-bottom: 6px;
+}
+
+.dne-reason-icon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.dne-reason-desc {
+  font-size: 12.5px;
+  color: var(--sub);
+  line-height: 1.85;
+}
+
+.dne-reason-desc b {
+  color: var(--txt);
+  font-weight: 700;
+  direction: ltr;
+  display: inline-block;
+}

@@ -7,11 +7,9 @@
 (function(){
   'use strict';
 
-  const H = window.KodalHelpers || {};
+  const H = window.KodalHelpers;
   const $ = id => document.getElementById(id);
-  const toFa = H.toFa || (x => String(x).replace(/[0-9]/g, d => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]));
-  const fa2en = H.fa2en || (s => String(s).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
-                                       .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
+  const { toFa, fa2en, escapeHtml, toNum, toman } = H;
 
   const PERIOD_NAMES = { 3: '۳ ماهه', 6: '۶ ماهه', 9: '۹ ماهه', 12: 'سالانه' };
 
@@ -66,11 +64,7 @@
   function makeId(){
     return 'wl_' + Date.now() + '_' + Math.floor(Math.random()*1000);
   }
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, c => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-    })[c]);
-  }
+
   function fmtB(x){
     if(x == null || !isFinite(x)) return '—';
     const b = x / 10000;
@@ -650,10 +644,17 @@
     }, 300);
   };
 
-  window.wlDeleteReport = function(itemId, reportId){
+  window.wlDeleteReport = async function(itemId, reportId){
     const item = WATCHLIST.analysis.find(w => w.id === itemId);
     if(!item) return;
-    if(!confirm('این گزارش از دیدبان حذف بشه؟')) return;
+    const ok = await KodalUI.confirm({
+      title: 'حذف گزارش',
+      icon: '🗑️',
+      message: 'این گزارش از دیدبان حذف بشه؟',
+      confirmText: 'بله، حذف کن',
+      danger: true,
+    });
+    if(!ok) return;
     item.reports = item.reports.filter(r => r.id !== reportId);
     saveWatchlist();
     renderWatchlist();
@@ -663,10 +664,17 @@
     if(window.showToast) window.showToast('✅ حذف شد');
   };
 
-  window.wlEditIndustry = function(id){
+  window.wlEditIndustry = async function(id){
     const item = WATCHLIST.analysis.find(w => w.id === id);
     if(!item) return;
-    const nn = prompt('صنعت جدید:', item.industry || '');
+    const nn = await KodalUI.prompt({
+      title: 'ویرایش صنعت',
+      icon: '✏️',
+      message: 'صنعت جدید رو وارد کن:',
+      value: item.industry || '',
+      placeholder: 'مثلاً: فلزات اساسی',
+      confirmText: 'ذخیره',
+    });
     if(nn != null){
       item.industry = nn.trim();
       saveWatchlist();
@@ -676,11 +684,18 @@
     }
   };
 
-  window.wlDelete = function(id){
+  window.wlDelete = async function(id){
     const item = WATCHLIST.analysis.find(w => w.id === id);
     if(!item) return;
     const cnt = item.reports?.length || 0;
-    if(!confirm(`سهم «${item.symbol}» و ${toFa(cnt)} گزارشش حذف بشه؟`)) return;
+    const ok = await KodalUI.confirm({
+      title: 'حذف سهم از دیدبان',
+      icon: '🗑️',
+      message: `سهم «<b>${escapeHtml(item.symbol)}</b>» و <b>${toFa(cnt)}</b> گزارشش حذف بشه؟`,
+      confirmText: 'بله، حذف کن',
+      danger: true,
+    });
+    if(!ok) return;
     WATCHLIST.analysis = WATCHLIST.analysis.filter(w => w.id !== id);
     saveWatchlist();
     renderWatchlist();
