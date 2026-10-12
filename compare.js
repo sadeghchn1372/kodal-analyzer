@@ -1,5 +1,5 @@
 /* ============================================================
-   compare.js — منطق تب «مقایسه با صنعت»  |  v2.1.0
+   compare.js — منطق تب «مقایسه با صنعت»  |  v2.1.1
    وابسته به: app.js (window.KodalHelpers)
 ============================================================ */
 
@@ -531,6 +531,10 @@
       net: parsed?.['netProfit']?.[1] ?? null,
     };
 
+    // ⭐ جدید: تشخیص دوره و محاسبه ضریب سالانه‌سازی
+    const detectedMonths = parsed?._detectedInfo?.months || 12;
+    const annualizeFactor = 12 / detectedMonths;
+
     const r = {
       currentRatio: H.ratio(v.ca, v.cl),
       quickRatio: H.ratio((v.ca ?? 0) - (v.inv ?? 0), v.cl),
@@ -567,16 +571,19 @@
     }
 
     const MILLION = 1_000_000;
-    const netRial = (v.net != null) ? v.net * MILLION : null;
-    const eqRial = (v.eq != null) ? v.eq * MILLION : null;
-    const revRial = (v.revenue != null) ? v.revenue * MILLION : null;
-    const tlRial = (v.tl != null) ? v.tl * MILLION : null;
-    const cashRial = (v.cash != null) ? v.cash * MILLION : null;
 
+    // ⭐⭐ نکته اصلی: ضرب در annualizeFactor برای جریان‌های دوره‌ای
+    const netRial = (v.net != null) ? v.net * MILLION * annualizeFactor : null;
+    const revRial = (v.revenue != null) ? v.revenue * MILLION * annualizeFactor : null;
     const ebitdaVal = (v.opProfit != null)
       ? (v.opProfit + (v.deprec != null ? Math.abs(v.deprec) : 0))
       : null;
-    const ebitdaRial = (ebitdaVal != null) ? ebitdaVal * MILLION : null;
+    const ebitdaRial = (ebitdaVal != null) ? ebitdaVal * MILLION * annualizeFactor : null;
+
+    // ⚠️ اینا موجودی هستن (Balance Sheet) — سالانه‌سازی نمی‌شن
+    const eqRial = (v.eq != null) ? v.eq * MILLION : null;
+    const tlRial = (v.tl != null) ? v.tl * MILLION : null;
+    const cashRial = (v.cash != null) ? v.cash * MILLION : null;
 
     const marketCap = (price != null && shares != null) ? price * shares : null;
     const eps = (netRial != null && shares != null && shares !== 0) ? netRial / shares : null;
@@ -594,6 +601,8 @@
     return {
       v, r, revGrowth, score, zscore,
       val: { marketCap, eps, pe, pb, ps, ev, evEbitda },
+      detectedMonths,
+      annualizeFactor,
     };
   }
 
@@ -692,7 +701,6 @@
     try{ renderIndustryMainTable(); }catch(e){ console.error('renderIndustryMainTable:', e); }
     try{ renderIndustryRanking(); }catch(e){ console.error('renderIndustryRanking:', e); }
 
-    // ⭐ فعال کردن تب اول به صورت مستقیم
     setTimeout(() => {
       const container = document.querySelector('#industryOut');
       if(!container) return;
@@ -1361,7 +1369,7 @@
       return;
     }
     const data = {
-      version: '2.1.0',
+      version: '2.1.1',
       type: 'kodal_industries',
       exportDate: new Date().toISOString(),
       count: INDUSTRY_SAVED.length,
@@ -1636,6 +1644,6 @@
     init();
   }
 
-  console.log('%c📈 compare.js v2.1.0 لود شد', 'color:#f59e0b;font-weight:bold');
+  console.log('%c📈 compare.js v2.1.1 لود شد', 'color:#f59e0b;font-weight:bold');
 
 })();

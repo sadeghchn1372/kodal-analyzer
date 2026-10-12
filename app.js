@@ -647,8 +647,8 @@ async function getLines(f){
 
 /* ---------- Labels ---------- */
 const LABELS = {
-  revenue:          [/درامدهای\s*عملیاتی/, /درامد\s*عملیاتی/, /فروش\s*خالص/, /عملیات\s*در\s*حال\s*تداوم.*درامد/, /درامد\s*حاصل\s*از\s*فروش/],
-  cogs:             [/بهای?\s*تمام\s*شده\s*درامد/, /بهای?\s*تمام\s*شده/, /بهای?\s*تمام\s*شده\s*کالای\s*فروش/],
+  cogs: [/^بهای?\s*تمام\s*شده\s*درآمدهای?\s*عملیاتی/, /^بهای?\s*تمام\s*شده\s*درامدهای?\s*عملیاتی/],
+  revenue: [/^درامدهای\s*عملیاتی\s*\|/, /^درامدهای\s*عملیاتی$/, /^درامد\s*عملیاتی\s*\|/, /^درامد\s*عملیاتی$/, /^فروش\s*خالص$/, /^فروش\s*خالص\s*\|/],
   grossProfit:      [/سود.*ناخالص/, /سود\s*ناخالص/],
   opEx:             [/هزینه.*فروش.*اداری/, /هزینه.*ادارى/, /هزینه.*فروش/],
   otherOpInc:       [/سایر\s*درامدها(?!\s*و\s*هزینه\s*غیر)/],
@@ -685,10 +685,24 @@ const LABELS = {
     /^جمع\s*بدهی\s*جاری/, /^جمع\s*بدهی‌های\s*جاری/,
     /^بدهی‌های\s*جاری/, /^بدهي\s*هاي\s*جاري/,
   ],
-  totalLiab:        [/^جمع\s*بدهی/, /^جمع\s*بدهي/],
-  equity:           [/^جمع\s*حقوق\s*مالکانه/, /^جمع\s*حقوق\s*صاحبان\s*سهام/, /^جمع\s*حقوق\s*مالکانه\s*و\s*بدهی/],
+  totalLiab: [
+    /^جمع\s*بدهی/, 
+    /^جمع\s*بدهي/,
+    // ✅ جدید: با نگاتیو لوک‌اِهد که با جاری/غیرجاری اشتباه نشه
+    /جمع\s*بدهی(?![\u200c\s]*های[\u200c\s]*جاری)(?![\u200c\s]*های[\u200c\s]*غیرجاری)(?![\u200c\s]*جاری)(?![\u200c\s]*غیرجاری)/,
+    /جمع\s*بدهي(?![\u200c\s]*هاي[\u200c\s]*جاري)(?![\u200c\s]*هاي[\u200c\s]*غيرجاري)(?![\u200c\s]*جاري)(?![\u200c\s]*غيرجاري)/,
+  ],
+  equity: [
+    /^جمع\s*حقوق\s*مالکانه/, 
+    /^جمع\s*حقوق\s*صاحبان\s*سهام/, 
+    /^جمع\s*حقوق\s*مالکانه\s*و\s*بدهی/,
+    // ✅ جدید: برای مواقعی که ^ کار نمی‌کنه
+    /جمع\s*حقوق[\u200c\s]*صاحبان[\u200c\s]*سهام/,
+    /جمع\s*حقوق[\u200c\s]*مالکانه/,
+  ],
   retainedEarnings: [/^سود.*انباشته/, /^سود.*انباشته/],
   longTermDebt:     [/^تسهیلات\s*مالی\s*بلندمدت/, /^پرداختنی.*بلندمدت/],
+  payables:         [/^پرداختنی.*تجاری/, /^پرداختني.*تجاري/, /^حساب.*پرداختنی/, /^حساب.*پرداختني/],
   cfo:              [/جریان.*خالص.*نقد.*فعالیت.*عملیاتی/, /جریان.*نقد.*عملیاتی/, /جریان\s*خالص\s*ورود.*نقد/],
   cfi:              [/جریان.*خالص.*نقد.*فعالیت.*سرمایه.?گذاری/],
   cff:              [/جریان.*خالص.*نقد.*فعالیت.*تامین\s*مالی/, /جریان.*خالص.*نقد.*فعالیت.*تأمین\s*مالی/],
@@ -846,29 +860,96 @@ function detectPeriodFromLines(lines){
 function parseItems(lines){
   const items = {};
   const periods = 3;
-  for(const line of lines){
+
+  // ⭐ مرحله ۱: همه‌ی match‌ها رو جمع کن (نه فقط اولی)
+  const allMatches = {};   // { key: [ { line, nums, priority } ] }
+
+  for(let i = 0; i < lines.length; i++){
+    const line = lines[i];
     const key = matchLabel(line);
     if(!key) continue;
     const nums = extractNumbers(line);
     if(!nums.length) continue;
 
+    if(!allMatches[key]) allMatches[key] = [];
+    allMatches[key].push({ line, nums, lineIndex: i });
+  }
+
+  // ⭐ مرحله ۲: برای هر key، بهترین match رو انتخاب کن
+  for(const key in allMatches){
+    const matches = allMatches[key];
+
+    // محاسبه priority برای هر match
+    matches.forEach(m => {
+      m.priority = calculatePriority(key, m.line, m.nums);
+    });
+
+    // مرتب‌سازی: اول priority، بعد به ترتیب معکوس خط (آخرین خط اول)
+    matches.sort((a, b) => {
+      if(b.priority !== a.priority) return b.priority - a.priority;
+      // اگه priority یکسان بود، اون که خطش پایین‌تره (index بزرگ‌تر) رو انتخاب کن
+      return b.lineIndex - a.lineIndex;
+    });
+
+    // انتخاب بهترین match
+    const best = matches[0];
     let filtered;
+
     if(key === 'eps'){
-      filtered = nums.slice(0, periods).filter(v => Math.abs(v) < 1e6);
+      filtered = best.nums.slice(0, periods).filter(v => Math.abs(v) < 1e6);
     } else if(key === 'capital'){
-      filtered = nums.slice(0, periods);
+      filtered = best.nums.slice(0, periods);
     } else if(key === 'cash'){
-      filtered = extractBestValues(nums, periods, true);
+      filtered = extractBestValues(best.nums, periods, true);
     } else {
-      filtered = extractBestValues(nums, periods, false);
+      filtered = extractBestValues(best.nums, periods, false);
     }
 
-    if(!items[key]) items[key] = [];
-    for(let i=0;i<filtered.length;i++){
-      if(items[key][i] === undefined || items[key][i] === null) items[key][i] = filtered[i];
-    }
+    items[key] = filtered;
   }
+
   return items;
+}
+
+/* ⭐ تابع محاسبه priority برای هر match */
+function calculatePriority(key, line, nums){
+  let priority = 0;
+  const n = norm(line);
+
+  // ⭐ پاداش: اگه خط فقط label باشه (بدون اعداد اضافی)، اولویت بالاتره
+  const numCount = nums.length;
+  if(numCount >= 2 && numCount <= 4) priority += 20;
+  if(numCount > 6) priority -= 30;   // خطوط شلوغ مثل جدول‌های چندستونه
+
+  // ⭐ پاداش مخصوص هر key
+  if(key === 'revenue'){
+    // خطوطی که فقط «درآمدهای عملیاتی» هستن (بدون ذکر دوره)
+    if(/^درامدهای\s*عملیاتی$/.test(n)) priority += 100;
+    if(/^درامد\s*عملیاتی$/.test(n)) priority += 100;
+    if(/^فروش\s*خالص$/.test(n)) priority += 50;
+    // خطوطی که «جمع فروش داخلی» دارن، اولویت کمتری
+    if(/جمع\s*فروش/.test(n)) priority -= 100;
+    if(/پیش‌بینی|برآورد|تعداد/.test(n)) priority -= 50;
+  }
+
+  if(key === 'cogs'){
+    // فقط ردیف‌هایی که دقیقاً «بهای تمام شده درآمدهای عملیاتی» هستن
+    if(/^بهاى\s*تمام\s*شده\s*درامدهاي\s*عملياتي$/.test(n)) priority += 100;
+    if(/^بهاي\s*تمام\s*شده\s*درامدهاي\s*عملياتي$/.test(n)) priority += 100;
+    // ردیف‌های دیگه رو کم‌اولویت کن
+    if(/كالاي\s*تولید|كالاي\s*فروش|خدمات|جمع\s*بهای|مبلغ\s*بهای\s*تمام|جدول|برآورد|انتظار/.test(n)) priority -= 100;
+  }
+
+  if(key === 'netProfit'){
+    // فقط «سود(زیان) خالص» (بدون عملیات در حال تداوم یا گزارش شده)
+    if(/^سود.*زيان.*\s*خالص$/.test(n)) priority += 100;
+    if(/عملیات\s*در\s*حال\s*تداوم|گزارش\s*شده|تجديد|هر\s*سهم/.test(n)) priority -= 80;
+  }
+
+  // ⭐ پاداش کلی: خطوط کوتاه (label خالص) بهترن
+  if(line.length < 50) priority += 10;
+
+  return priority;
 }
 
 
@@ -2052,6 +2133,7 @@ function render(ci){
     inv: val('inventory',ci), recv: val('receivables',ci), cash: val('cash',ci), sti: val('shortTermInv',ci),
     nonCL: val('nonCurrentLiab',ci), cl: val('currentLiab',ci), tl: val('totalLiab',ci),
     eq: val('equity',ci), re: val('retainedEarnings',ci), ltd: val('longTermDebt',ci),
+    pay: val('payables',ci),   // ⭐ جدید
     cfo: val('cfo',ci), cfi: val('cfi',ci), cff: val('cff',ci), capex: val('capex',ci),
     deprec: val('depreciation',ci),
   };
@@ -2110,10 +2192,12 @@ function render(ci){
   const growthNet = (v.net != null && prevNet != null && prevNet !== 0)
     ? (v.net - prevNet) / Math.abs(prevNet) : null;
 
-  const dso = (v.recv && v.revenue) ? 365 * (v.recv / v.revenue) : null;
-  const dio = (v.inv && v.cogs) ? 365 * (v.inv / v.cogs) : null;
-  const dpo = (v.cogs && v.tl) ? 365 * (v.tl / v.cogs) : null;
-  const ccc = (dso != null && dio != null && dpo != null) ? (dso + dio - dpo) : null;
+    const cogsAbs = (v.cogs != null) ? Math.abs(v.cogs) : null;
+    const dso = (v.recv && v.revenue) ? 365 * (v.recv / v.revenue) : null;
+    const dio = (v.inv && cogsAbs) ? 365 * (v.inv / cogsAbs) : null;
+    const dpo = (cogsAbs && v.pay) ? 365 * (v.pay / Math.abs(cogsAbs)) : null;
+    console.log('DEBUG render:', { cogsAbs, dso, dio, dpo, recv: v.recv, inv: v.inv, pay: v.pay, revenue: v.revenue });
+    const ccc = (dso != null && dio != null && dpo != null) ? (dso + dio - dpo) : null;
 
   const roce = (v.opProfit != null && v.ta != null && v.cl != null && (v.ta - v.cl) !== 0)
     ? v.opProfit / (v.ta - v.cl) : null;
