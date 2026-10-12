@@ -1,5 +1,9 @@
 /* ============================================================
-   app.js — منطق اصلی تحلیل تک شرکت  |  v2.0.0
+   app.js — منطق اصلی تحلیل تک شرکت  |  v2.0.3
+   تغییرات v2.0.3:
+   - اصلاح netMargin مشکوک (بالای ۵۰٪ و ۱۰۰٪) در همه‌جا
+   - هشدار جدید برای سود غیرعملیاتی در alerts
+   - رنگ کارت quick metrics برای netMargin مشکوک
 ============================================================ */
 
 /* ---------- Utility ---------- */
@@ -61,6 +65,48 @@ const pct   = x => x==null ? '—' : toFa((x*100).toFixed(1))+'٪';
 const num2  = x => x==null ? '—' : toFa(x.toFixed(2));
 const ratio = (a,b) => (a!=null && b!=null && b!==0) ? a/b : null;
 
+/* ⭐ نسبت آنی — فقط وقتی همه اجزا موجود باشن */
+const quickRatio = (ca, inv, cl) => {
+  if(ca == null || inv == null || cl == null || cl === 0) return null;
+  return (ca - inv) / cl;
+};
+
+/* ⭐ ROE امن — فقط وقتی equity مثبت باشه (equity منفی = شرکت ورشکسته) */
+const safeROE = (net, eq) => {
+  if(net == null || eq == null || eq <= 0) return null;
+  return net / eq;
+};
+
+/* ⭐⭐⭐ v2.0.3 — تحلیل هوشمند netMargin ⭐⭐⭐ */
+/* وقتی سود از فعالیت اصلی نمیاد (بالای ۵۰٪ یا ۱۰۰٪)، باید هشدار بده نه تحسین */
+function analyzeNetMargin(nm){
+  if(nm == null) return { type: 'neutral', color: '#94a3b8', label: '—', isSuspicious: false, severity: 0 };
+
+  // زیان
+  if(nm < 0)         return { type: 'bad',     color: '#c62828', label: 'زیان‌ده',      isSuspicious: false, severity: 0 };
+
+  // 🚨 مشکوک — بالای ۱۰۰٪ (یعنی سود بیشتر از فروش!)
+  if(nm > 1.0)       return { type: 'bad',     color: '#c62828', label: 'مشکوک — سود غیرعملیاتی', isSuspicious: true, severity: 2 };
+
+  // ⚠️ بالا — بین ۵۰٪ تا ۱۰۰٪
+  if(nm > 0.5)       return { type: 'warn',    color: '#f59e0b', label: 'بالا — بررسی کن',   isSuspicious: true, severity: 1 };
+
+  // ✅ عالی — ۲۰٪ تا ۵۰٪
+  if(nm >= 0.2)      return { type: 'good',    color: '#16834a', label: 'عالی',           isSuspicious: false, severity: 0 };
+
+  // ✅ قوی — ۱۵٪ تا ۲۰٪
+  if(nm >= 0.15)     return { type: 'good',    color: '#22c55e', label: 'قوی',            isSuspicious: false, severity: 0 };
+
+  // ✅ متعارف — ۸٪ تا ۱۵٪
+  if(nm >= 0.08)     return { type: 'good',    color: '#84cc16', label: 'متعارف',         isSuspicious: false, severity: 0 };
+
+  // ⚠️ پایین — ۳٪ تا ۸٪
+  if(nm >= 0.03)     return { type: 'warn',    color: '#eab308', label: 'پایین',          isSuspicious: false, severity: 0 };
+
+  // 🚨 ضعیف — زیر ۳٪
+  return               { type: 'bad',     color: '#c62828', label: 'خیلی ضعیف',      isSuspicious: false, severity: 0 };
+}
+
 function extractNumbers(line){
   const matches = fa2en(line).match(/[\(\（]?\s*[\-−]?\s*[\d][\d,٬،.]*\s*[\)\）]?/g) || [];
   return matches.map(toNum).filter(v => v !== null);
@@ -96,7 +142,7 @@ function attachNumberFormatter(inputEl){
   });
 }
 
-/* ----545465------ Help Tooltip ---------- */
+/* ---------- Help Tooltip ---------- */
 (function initHelpTooltip(){
   const tooltip = document.getElementById('globalTooltip');
   if(!tooltip) return;
@@ -431,7 +477,7 @@ function downloadAllAnalyses(){
     return;
   }
   const data = {
-    version: '2.0.0',
+    version: '2.0.3',
     exportDate: new Date().toISOString(),
     count: SAVED_LIST.length,
     analyses: SAVED_LIST,
@@ -583,7 +629,6 @@ if($('drop')){
     $('err').style.display = 'none';
   });
 
-  // کلیک روی drop = باز کردن فایل سلکت
   const browseBtn = $('drop').querySelector('.drop-browse-btn');
   if(browseBtn){
     browseBtn.onclick = (e) => {
@@ -688,7 +733,6 @@ const LABELS = {
   totalLiab: [
     /^جمع\s*بدهی/, 
     /^جمع\s*بدهي/,
-    // ✅ جدید: با نگاتیو لوک‌اِهد که با جاری/غیرجاری اشتباه نشه
     /جمع\s*بدهی(?![\u200c\s]*های[\u200c\s]*جاری)(?![\u200c\s]*های[\u200c\s]*غیرجاری)(?![\u200c\s]*جاری)(?![\u200c\s]*غیرجاری)/,
     /جمع\s*بدهي(?![\u200c\s]*هاي[\u200c\s]*جاري)(?![\u200c\s]*هاي[\u200c\s]*غيرجاري)(?![\u200c\s]*جاري)(?![\u200c\s]*غيرجاري)/,
   ],
@@ -696,7 +740,6 @@ const LABELS = {
     /^جمع\s*حقوق\s*مالکانه/, 
     /^جمع\s*حقوق\s*صاحبان\s*سهام/, 
     /^جمع\s*حقوق\s*مالکانه\s*و\s*بدهی/,
-    // ✅ جدید: برای مواقعی که ^ کار نمی‌کنه
     /جمع\s*حقوق[\u200c\s]*صاحبان[\u200c\s]*سهام/,
     /جمع\s*حقوق[\u200c\s]*مالکانه/,
   ],
@@ -861,8 +904,7 @@ function parseItems(lines){
   const items = {};
   const periods = 3;
 
-  // ⭐ مرحله ۱: همه‌ی match‌ها رو جمع کن (نه فقط اولی)
-  const allMatches = {};   // { key: [ { line, nums, priority } ] }
+  const allMatches = {};
 
   for(let i = 0; i < lines.length; i++){
     const line = lines[i];
@@ -875,23 +917,18 @@ function parseItems(lines){
     allMatches[key].push({ line, nums, lineIndex: i });
   }
 
-  // ⭐ مرحله ۲: برای هر key، بهترین match رو انتخاب کن
   for(const key in allMatches){
     const matches = allMatches[key];
 
-    // محاسبه priority برای هر match
     matches.forEach(m => {
       m.priority = calculatePriority(key, m.line, m.nums);
     });
 
-    // مرتب‌سازی: اول priority، بعد به ترتیب معکوس خط (آخرین خط اول)
     matches.sort((a, b) => {
       if(b.priority !== a.priority) return b.priority - a.priority;
-      // اگه priority یکسان بود، اون که خطش پایین‌تره (index بزرگ‌تر) رو انتخاب کن
       return b.lineIndex - a.lineIndex;
     });
 
-    // انتخاب بهترین match
     const best = matches[0];
     let filtered;
 
@@ -911,48 +948,37 @@ function parseItems(lines){
   return items;
 }
 
-/* ⭐ تابع محاسبه priority برای هر match */
 function calculatePriority(key, line, nums){
   let priority = 0;
   const n = norm(line);
 
-  // ⭐ پاداش: اگه خط فقط label باشه (بدون اعداد اضافی)، اولویت بالاتره
   const numCount = nums.length;
   if(numCount >= 2 && numCount <= 4) priority += 20;
-  if(numCount > 6) priority -= 30;   // خطوط شلوغ مثل جدول‌های چندستونه
+  if(numCount > 6) priority -= 30;
 
-  // ⭐ پاداش مخصوص هر key
   if(key === 'revenue'){
-    // خطوطی که فقط «درآمدهای عملیاتی» هستن (بدون ذکر دوره)
     if(/^درامدهای\s*عملیاتی$/.test(n)) priority += 100;
     if(/^درامد\s*عملیاتی$/.test(n)) priority += 100;
     if(/^فروش\s*خالص$/.test(n)) priority += 50;
-    // خطوطی که «جمع فروش داخلی» دارن، اولویت کمتری
     if(/جمع\s*فروش/.test(n)) priority -= 100;
     if(/پیش‌بینی|برآورد|تعداد/.test(n)) priority -= 50;
   }
 
   if(key === 'cogs'){
-    // فقط ردیف‌هایی که دقیقاً «بهای تمام شده درآمدهای عملیاتی» هستن
     if(/^بهاى\s*تمام\s*شده\s*درامدهاي\s*عملياتي$/.test(n)) priority += 100;
     if(/^بهاي\s*تمام\s*شده\s*درامدهاي\s*عملياتي$/.test(n)) priority += 100;
-    // ردیف‌های دیگه رو کم‌اولویت کن
     if(/كالاي\s*تولید|كالاي\s*فروش|خدمات|جمع\s*بهای|مبلغ\s*بهای\s*تمام|جدول|برآورد|انتظار/.test(n)) priority -= 100;
   }
 
   if(key === 'netProfit'){
-    // فقط «سود(زیان) خالص» (بدون عملیات در حال تداوم یا گزارش شده)
     if(/^سود.*زيان.*\s*خالص$/.test(n)) priority += 100;
     if(/عملیات\s*در\s*حال\s*تداوم|گزارش\s*شده|تجديد|هر\s*سهم/.test(n)) priority -= 80;
   }
 
-  // ⭐ پاداش کلی: خطوط کوتاه (label خالص) بهترن
   if(line.length < 50) priority += 10;
 
   return priority;
 }
-
-
 
 const HINTS = {
   'نسبت جاری': {
@@ -1103,16 +1129,11 @@ const HINTS = {
     warn: 'سود متوسطی',
     bad: 'سود کمی',
   },
-
   'پوشش بهره نقدی': {
     dynamic: true,
     template: 'شرکت با پول نقد واقعی، {v} برابر هزینه بهره‌اش رو می‌تونه بده',
   },
 };
-
-
-
-
 
 /* ---------- Chart Colors ---------- */
 function chartTextColor(){ return document.body.classList.contains('dark') ? '#94a3b8' : '#64748b'; }
@@ -1198,16 +1219,53 @@ function buildPieChart(slices){
 }
 
 /* ---------- Score ---------- */
+/* ⭐ v2.0.3 — بخش netMargin اصلاح شد:
+   - بالای ۱۰۰٪ هیچ امتیازی نمی‌گیره (مشکوک)
+   - بالای ۵۰٪ فقط ۸ امتیاز از ۲۵ می‌گیره (هشدار)
+*/
 function calcScore(v){
   let score = 0, total = 0;
   const cr = ratio(v.ca, v.cl);
   if(cr != null){ total += 25; if(cr >= 2) score += 25; else if(cr >= 1.5) score += 20; else if(cr >= 1) score += 14; else if(cr >= 0.7) score += 7; else score += 2; }
   const da = ratio(v.tl, v.ta);
   if(da != null){ total += 20; if(da <= 0.4) score += 20; else if(da <= 0.55) score += 15; else if(da <= 0.7) score += 10; else if(da <= 0.85) score += 5; else score += 1; }
+
+  /* ⭐⭐⭐ v2.0.3 — اصلاح netMargin ⭐⭐⭐ */
   const nm = ratio(v.net, v.revenue);
-  if(nm != null){ total += 25; if(nm >= 0.2) score += 25; else if(nm >= 0.12) score += 19; else if(nm >= 0.07) score += 13; else if(nm >= 0.03) score += 7; else if(nm > 0) score += 3; }
-  const roe = ratio(v.net, v.eq);
-  if(roe != null){ total += 15; if(roe >= 0.25) score += 15; else if(roe >= 0.18) score += 12; else if(roe >= 0.1) score += 8; else if(roe >= 0.05) score += 4; }
+  if(nm != null){
+    total += 25;
+    if(nm > 1.0){
+      // سود بیشتر از فروش — مشکوک، صفر امتیاز
+      score += 0;
+    } else if(nm > 0.5){
+      // بالا ولی نه مشکوک — فقط ۸ امتیاز از ۲۵
+      score += 8;
+    } else if(nm >= 0.2){
+      score += 25;
+    } else if(nm >= 0.12){
+      score += 19;
+    } else if(nm >= 0.07){
+      score += 13;
+    } else if(nm >= 0.03){
+      score += 7;
+    } else if(nm > 0){
+      score += 3;
+    }
+  }
+
+  /* ⭐ ROE: اگه equity منفی یا صفر بود، صفر امتیاز (ولی از total کم نمی‌شه) */
+  if(v.eq != null){
+    total += 15;
+    const roe = safeROE(v.net, v.eq);
+    if(roe != null){
+      if(roe >= 0.25) score += 15;
+      else if(roe >= 0.18) score += 12;
+      else if(roe >= 0.1) score += 8;
+      else if(roe >= 0.05) score += 4;
+    }
+    // equity منفی → صفر امتیاز (بدون شرط)
+  }
+
   const cq = ratio(v.cfo, v.net);
   if(cq != null){ total += 15; if(cq >= 1) score += 15; else if(cq >= 0.7) score += 11; else if(cq >= 0.4) score += 7; else if(cq >= 0.1) score += 3; }
   if(total === 0) return null;
@@ -1226,14 +1284,63 @@ function scoreLevel(s){
    DuPont Analysis
 ============================================================ */
 function renderDuPont(v){
-  const nm = ratio(v.net, v.revenue);
-  const at = ratio(v.revenue, v.ta);
-  const em = ratio(v.ta, v.eq);
-  const roe = ratio(v.net, v.eq);
-
   const box = $('dupontBox');
   const noteEl = $('dupontNote');
   if(!box) return;
+
+  /* ⭐ چک اول: اگه equity منفی یا صفر باشه، کارت قرمز مخصوص */
+  if(v.eq != null && v.eq <= 0){
+    box.innerHTML = `
+      <div class="dupont-negative-equity">
+        <span class="dne-icon">🚨</span>
+        <div class="dne-title">وضعیت بحرانی</div>
+        <div class="dne-subtitle">
+          حقوق مالکانه شرکت منفی است<br>
+          این شرکت از نظر فنی ورشکسته محسوب می‌شود
+        </div>
+
+        <div class="dne-stats">
+          <div class="dne-stat">
+            <div class="dne-stat-label">حقوق مالکانه</div>
+            <div class="dne-stat-value negative">${v.eq != null ? toman(v.eq) : '—'}</div>
+          </div>
+          <div class="dne-stat">
+            <div class="dne-stat-label">سود خالص</div>
+            <div class="dne-stat-value ${v.net < 0 ? 'negative' : ''}">${v.net != null ? toman(v.net) : '—'}</div>
+          </div>
+          <div class="dne-stat">
+            <div class="dne-stat-label">جمع دارایی‌ها</div>
+            <div class="dne-stat-value">${v.ta != null ? toman(v.ta) : '—'}</div>
+          </div>
+          <div class="dne-stat">
+            <div class="dne-stat-label">جمع بدهی‌ها</div>
+            <div class="dne-stat-value ${v.tl > 0 ? 'negative' : ''}">${v.tl != null ? toman(v.tl) : '—'}</div>
+          </div>
+        </div>
+
+        <div class="dne-explain">
+          <b>💡 به زبان ساده:</b>
+          ${v.ta != null && v.tl != null ? `
+            دارایی‌های شرکت (${toman(v.ta)}) از بدهی‌هاش (${toman(v.tl)}) کمتر است.
+            یعنی اگه الان شرکت بخواد تسویه کنه، کم میاره و سهامدارها هیچی نصیبشون نمی‌شه.
+          ` : `
+            حقوق مالکانه شرکت منفی شده، یعنی بدهی‌ها از دارایی‌ها بیشتر شده.
+          `}
+          <span class="dne-note">
+            ⚠️ در چنین وضعیتی، محاسبه ROE و DuPont معنی ندارد چون سرمایه‌ای وجود ندارد که بخواهد بازدهی بدهد.
+          </span>
+        </div>
+      </div>
+    `;
+    if(noteEl) noteEl.innerHTML = '';
+    return;
+  }
+
+  /* حالت عادی */
+  const nm = ratio(v.net, v.revenue);
+  const at = ratio(v.revenue, v.ta);
+  const em = ratio(v.ta, v.eq);
+  const roe = safeROE(v.net, v.eq);
 
   if(nm == null || at == null || em == null || roe == null){
     const items = [['درآمد', v.revenue],['سود خالص', v.net],['جمع دارایی‌ها', v.ta],['حقوق مالکانه', v.eq]];
@@ -1256,11 +1363,21 @@ function renderDuPont(v){
 
   const roePos = Math.max(0, Math.min(100, (roe / 0.40) * 100));
 
+  /* ⭐⭐⭐ v2.0.3 — اصلاح بخش سودآوری (nmScore) ⭐⭐⭐ */
+  const nmAnalysis = analyzeNetMargin(nm);
   let nmScore, nmColor, nmLabel;
-  if(nm < 0.05){ nmScore = Math.max(5, (nm / 0.05) * 25); nmColor = '#c62828'; nmLabel = 'ضعیف'; }
-  else if(nm < 0.10){ nmScore = 25 + ((nm - 0.05) / 0.05) * 25; nmColor = '#f59e0b'; nmLabel = 'متوسط'; }
-  else if(nm < 0.20){ nmScore = 50 + ((nm - 0.10) / 0.10) * 30; nmColor = '#eab308'; nmLabel = 'خوب'; }
-  else { nmScore = Math.min(100, 80 + ((nm - 0.20) / 0.20) * 20); nmColor = '#16834a'; nmLabel = 'عالی'; }
+  if(nmAnalysis.isSuspicious){
+    // مشکوک یا بالا — نوار کوتاه، رنگ هشدار
+    nmScore = nmAnalysis.type === 'bad' ? 15 : 35;
+    nmColor = nmAnalysis.color;
+    nmLabel = nmAnalysis.label;
+  } else {
+    // عادی
+    if(nm < 0.05){ nmScore = Math.max(5, (nm / 0.05) * 25); nmColor = '#c62828'; nmLabel = 'ضعیف'; }
+    else if(nm < 0.10){ nmScore = 25 + ((nm - 0.05) / 0.05) * 25; nmColor = '#f59e0b'; nmLabel = 'متوسط'; }
+    else if(nm < 0.20){ nmScore = 50 + ((nm - 0.10) / 0.10) * 30; nmColor = '#eab308'; nmLabel = 'خوب'; }
+    else { nmScore = Math.min(100, 80 + ((nm - 0.20) / 0.20) * 20); nmColor = '#16834a'; nmLabel = 'عالی'; }
+  }
 
   let atScore, atColor, atLabel;
   if(at < 0.1){ atScore = Math.max(3, (at / 0.1) * 15); atColor = '#c62828'; atLabel = 'خیلی ضعیف'; }
@@ -1283,7 +1400,20 @@ function renderDuPont(v){
   const nmGood = nm >= 0.10;
   const atGood = at >= 0.3;
 
-  if(roe >= 0.15){
+  /* ⭐⭐⭐ v2.0.3 — داستان جدید برای netMargin مشکوک ⭐⭐⭐ */
+  if(nmAnalysis.severity >= 2){
+    // بالای ۱۰۰٪ — خیلی مشکوک
+    problemIcon = '🚨';
+    problemTitle = 'مشکل اصلی: سود غیرعملیاتی مشکوک';
+    problemText = `حاشیه سود خالص <b>${pct(nm)}</b> است یعنی <b>سود از فروش بیشتره!</b> این معمولاً یعنی سود اصلی از <b>فعالیت اصلی شرکت</b> نمیاد (فروش دارایی، سود سهام، تسعیر ارز و...).`;
+    problemSuggestion = `صورت سود و زیان رو دقیق بررسی کن — ببین سود از کجا اومده. این سود <b>تکرارپذیر نیست</b>.`;
+  } else if(nmAnalysis.severity === 1){
+    // بین ۵۰٪ تا ۱۰۰٪
+    problemIcon = '⚠️';
+    problemTitle = 'حاشیه سود خیلی بالا — بررسی کن';
+    problemText = `حاشیه سود خالص <b>${pct(nm)}</b> است که برای اکثر صنایع <b>بالا و مشکوک</b>ه. معمولاً یعنی سود غیرعملیاتی یا درآمد غیرتکرارشونده تو سود اثر داشته.`;
+    problemSuggestion = `سود رو به عملیاتی و غیرعملیاتی تفکیک کن. اگه بخش عمده سود از عملیات اصلی نباشه، این سود <b>پایدار نیست</b>.`;
+  } else if(roe >= 0.15){
     problemIcon = '✅';
     problemTitle = 'وضعیت عالی';
     problemText = `شرکت از نظر بازدهی سهامدار در وضعیت <b>خوبی</b> قرار داره. ترکیب سودآوری، فروش و ساختار مالی متعادله.`;
@@ -1869,18 +1999,24 @@ function updateAccordionSummaries(v){
 
   const dupontEl = document.getElementById('accDupontSummary');
   if(dupontEl){
-    const roe = ratio(v.net, v.eq);
-    if(roe == null){ dupontEl.textContent = '—'; dupontEl.className = 'acc-summary'; }
-    else {
-      let label, cls;
-      if(roe < 0){ label = 'زیان‌ده'; cls = 'acc-summary-bad'; }
-      else if(roe < 0.05){ label = 'خیلی ضعیف'; cls = 'acc-summary-bad'; }
-      else if(roe < 0.10){ label = 'ضعیف'; cls = 'acc-summary-warn'; }
-      else if(roe < 0.15){ label = 'متوسط'; cls = 'acc-summary-warn'; }
-      else if(roe < 0.25){ label = 'خوب'; cls = 'acc-summary-good'; }
-      else { label = 'عالی'; cls = 'acc-summary-good'; }
-      dupontEl.textContent = pct(roe) + ' — ' + label;
-      dupontEl.className = 'acc-summary ' + cls;
+    /* ⭐ اگه equity منفی باشه، خلاصه هم پیام مخصوص نشون بده */
+    if(v.eq != null && v.eq <= 0){
+      dupontEl.textContent = '🚨 ورشکسته';
+      dupontEl.className = 'acc-summary acc-summary-bad';
+    } else {
+      const roe = safeROE(v.net, v.eq);
+      if(roe == null){ dupontEl.textContent = '—'; dupontEl.className = 'acc-summary'; }
+      else {
+        let label, cls;
+        if(roe < 0){ label = 'زیان‌ده'; cls = 'acc-summary-bad'; }
+        else if(roe < 0.05){ label = 'خیلی ضعیف'; cls = 'acc-summary-bad'; }
+        else if(roe < 0.10){ label = 'ضعیف'; cls = 'acc-summary-warn'; }
+        else if(roe < 0.15){ label = 'متوسط'; cls = 'acc-summary-warn'; }
+        else if(roe < 0.25){ label = 'خوب'; cls = 'acc-summary-good'; }
+        else { label = 'عالی'; cls = 'acc-summary-good'; }
+        dupontEl.textContent = pct(roe) + ' — ' + label;
+        dupontEl.className = 'acc-summary ' + cls;
+      }
     }
   }
 
@@ -2133,7 +2269,7 @@ function render(ci){
     inv: val('inventory',ci), recv: val('receivables',ci), cash: val('cash',ci), sti: val('shortTermInv',ci),
     nonCL: val('nonCurrentLiab',ci), cl: val('currentLiab',ci), tl: val('totalLiab',ci),
     eq: val('equity',ci), re: val('retainedEarnings',ci), ltd: val('longTermDebt',ci),
-    pay: val('payables',ci),   // ⭐ جدید
+    pay: val('payables',ci),
     cfo: val('cfo',ci), cfi: val('cfi',ci), cff: val('cff',ci), capex: val('capex',ci),
     deprec: val('depreciation',ci),
   };
@@ -2192,12 +2328,11 @@ function render(ci){
   const growthNet = (v.net != null && prevNet != null && prevNet !== 0)
     ? (v.net - prevNet) / Math.abs(prevNet) : null;
 
-    const cogsAbs = (v.cogs != null) ? Math.abs(v.cogs) : null;
-    const dso = (v.recv && v.revenue) ? 365 * (v.recv / v.revenue) : null;
-    const dio = (v.inv && cogsAbs) ? 365 * (v.inv / cogsAbs) : null;
-    const dpo = (cogsAbs && v.pay) ? 365 * (v.pay / Math.abs(cogsAbs)) : null;
-    console.log('DEBUG render:', { cogsAbs, dso, dio, dpo, recv: v.recv, inv: v.inv, pay: v.pay, revenue: v.revenue });
-    const ccc = (dso != null && dio != null && dpo != null) ? (dso + dio - dpo) : null;
+  const cogsAbs = (v.cogs != null) ? Math.abs(v.cogs) : null;
+  const dso = (v.recv && v.revenue) ? 365 * (v.recv / v.revenue) : null;
+  const dio = (v.inv && cogsAbs) ? 365 * (v.inv / cogsAbs) : null;
+  const dpo = (cogsAbs && v.pay) ? 365 * (v.pay / Math.abs(cogsAbs)) : null;
+  const ccc = (dso != null && dio != null && dpo != null) ? (dso + dio - dpo) : null;
 
   const roce = (v.opProfit != null && v.ta != null && v.cl != null && (v.ta - v.cl) !== 0)
     ? v.opProfit / (v.ta - v.cl) : null;
@@ -2205,15 +2340,13 @@ function render(ci){
   const peg = (pe != null && growthNet != null && growthNet > 0)
     ? pe / (growthNet * 100) : null;
 
-
-
   const cashInterestCoverage = (v.cfo != null && v.financeCost != null && Math.abs(v.financeCost) > 0)
     ? v.cfo / Math.abs(v.financeCost) : null;
 
   const R = {
     liq: [
       ['نسبت جاری',        ratio(v.ca, v.cl),                       x=>x<1, x=>x>=1&&x<2],
-      ['نسبت آنی (Quick)', ratio((v.ca??0)-(v.inv??0), v.cl),        x=>x<0.7, x=>x>=0.7&&x<1],
+      ['نسبت آنی (Quick)', quickRatio(v.ca, v.inv, v.cl),            x=>x<0.7, x=>x>=0.7&&x<1],
       ['نسبت نقد',          ratio(v.cash, v.cl),                     x=>x<0.1, x=>x>=0.1&&x<0.3],
       ['سرمایه در گردش',   (v.ca!=null&&v.cl!=null)?(v.ca-v.cl):null, x=>x<0, ()=>false],
     ],
@@ -2228,7 +2361,7 @@ function render(ci){
       ['حاشیه سود عملیاتی', ratio(v.opProfit, v.revenue), x=>x<0.05, x=>x<0.15],
       ['حاشیه سود خالص',    ratio(v.net, v.revenue),    x=>x<0.05, x=>x<0.1],
       ['ROA',               ratio(v.net, v.ta),          x=>x<0.02, x=>x<0.05],
-      ['ROE',               ratio(v.net, v.eq),          x=>x<0.05, x=>x<0.15],
+      ['ROE',               safeROE(v.net, v.eq),        x=>x<0.05, x=>x<0.15],
       ['ROCE (بازده سرمایه به کار گرفته شده)', roce, x=>x<0.05, x=>x<0.15],
       ['نرخ رشد فروش',     growthRev, x=>x<0, x=>x<0.1],
       ['نرخ رشد سود خالص', growthNet, x=>x<0, x=>x<0.1],
@@ -2274,8 +2407,6 @@ function render(ci){
     return 'good';
   };
 
-
-
   function tableFor(list){
     return '<div class="ratio-cards">' + list.map(([name,x,bad,warn])=>{
       const c = statusClass(x, bad, warn);
@@ -2308,19 +2439,11 @@ function render(ci){
     }).join('') + '</div>';
   }
 
-
-
-
-
-
-  /* ⭐ فرمت‌کننده مقدار برای نسبت‌های پویا */
   function formatDynamicValue(name, x){
     if(x == null || !isFinite(x)) return '—';
 
-    // این ۴ نسبت: عدد بدون ٪ (چون جمله خودش «از هر ۱۰۰ تومن...» داره)
     const noPercentSign = /^(بدهی به دارایی|حاشیه سود ناخالص|حاشیه سود عملیاتی|حاشیه سود خالص)$/.test(name);
 
-    // نسبت‌های درصدی
     if(/حاشیه|ROA|ROE|ROCE|بدهی به دارایی|CFO به درآمد|نرخ رشد/.test(name)){
       const pctVal = x * 100;
       const rounded = Math.abs(pctVal) >= 1 ? Math.round(pctVal) : null;
@@ -2328,29 +2451,23 @@ function render(ci){
       if(rounded !== null){
         return toFa(rounded.toLocaleString('en-US')) + (noPercentSign ? '' : '٪');
       }
-      // اگه < ۱ بود، دست‌نخورده با ۲ رقم اعشار
       return toFa(pctVal.toFixed(2)) + (noPercentSign ? '' : '٪');
     }
 
-    // نسبت‌های روز
     if(/روز|CCC|چرخه تبدیل/.test(name)){
       return toFa(Math.round(x)) + ' روز';
     }
 
-    // EPS (ریال)
     if(name === 'EPS'){
       return toFa(Math.round(x).toLocaleString('en-US')) + ' ریال';
     }
 
-    // بقیه: عدد ساده
     if(Math.abs(x) >= 1){
       return toFa(Math.round(x).toLocaleString('en-US'));
     }
     return num2(x);
   }
 
-
-  /* ⭐ توضیحات پویا — جای {v} رو با عدد واقعی پر می‌کنه */
   function makeHintDynamic(name, hint, status, x){
     if(!hint) return '';
 
@@ -2404,10 +2521,6 @@ function render(ci){
     return hint;
   }
 
-
-
-
-
   document.querySelectorAll('#tabSingle .tab').forEach(t => {
     t.onclick = () => {
       document.querySelectorAll('#tabSingle .tab').forEach(x => x.classList.remove('active'));
@@ -2422,26 +2535,40 @@ function render(ci){
   $('ratios').innerHTML = tableFor(R.liq);
 
   const A = [];
+
+  /* ⭐⭐⭐ v2.0.3 — تحلیل خودکار netMargin اصلاح شد ⭐⭐⭐ */
   const nm = ratio(v.net, v.revenue);
   if(nm != null){
     const faNm = toFa((nm * 100).toFixed(1));
+    const nmAnalysis = analyzeNetMargin(nm);
+
     let label, type, hint;
-    if(nm > 1){
-      type = 'good';
-      label = `${pct(nm)} — عالی (نکته: بیشتر از فروش)`;
-      hint = `حاشیه سود ${faNm}٪ یعنی از هر ۱۰۰ تومان فروش، ${faNm} تومان سود ساخته شده.`;
-    } else if(nm > 0.2){
-      type = 'good';
-      label = `${pct(nm)} — قوی`;
-      hint = `از هر ۱۰۰ تومان فروش، ${faNm} تومان سود خالص می‌مونه.`;
-    } else if(nm > 0.08){
-      type = 'good';
-      label = `${pct(nm)} — متعارف`;
-      hint = `از هر ۱۰۰ تومان فروش، ${faNm} تومان سود خالص می‌مونه.`;
+
+    if(nmAnalysis.isSuspicious){
+      // 🚨 مشکوک — سود بالای ۵۰٪ یا ۱۰۰٪
+      type = nmAnalysis.type; // 'bad' یا 'warn'
+      if(nm > 1){
+        label = `${pct(nm)} — 🚨 مشکوک (سود بیشتر از فروش!)`;
+        hint = `حاشیه سود ${faNm}٪ یعنی از هر ۱۰۰ تومان فروش، ${faNm} تومان سود ساخته شده که <b>غیرممکنه از فروش بیاد</b>. احتمالاً سود از فروش دارایی، سود سهام، تسعیر ارز یا درآمد غیرتکرارشونده است.`;
+      } else {
+        label = `${pct(nm)} — ⚠️ بالا (بررسی کن)`;
+        hint = `حاشیه سود ${faNm}٪ برای اکثر صنایع بالاست. احتمالاً بخشی از سود از فعالیت اصلی نیاد. صورت سود و زیان رو دقیق‌تر بررسی کن.`;
+      }
     } else {
-      type = 'warn';
-      label = `${pct(nm)} — پایین`;
-      hint = `از هر ۱۰۰ تومان فروش، ${faNm} تومان سود خالص می‌مونه.`;
+      // عادی
+      if(nm > 0.2){
+        type = 'good';
+        label = `${pct(nm)} — قوی`;
+        hint = `از هر ۱۰۰ تومان فروش، ${faNm} تومان سود خالص می‌مونه.`;
+      } else if(nm > 0.08){
+        type = 'good';
+        label = `${pct(nm)} — متعارف`;
+        hint = `از هر ۱۰۰ تومان فروش، ${faNm} تومان سود خالص می‌مونه.`;
+      } else {
+        type = 'warn';
+        label = `${pct(nm)} — پایین`;
+        hint = `از هر ۱۰۰ تومان فروش، ${faNm} تومان سود خالص می‌مونه.`;
+      }
     }
     A.push({t:type, x:`حاشیه سود خالص ${label}.`, hint});
   }
@@ -2484,7 +2611,7 @@ function render(ci){
     A.push({t:type, x:`بدهی/حقوق ${label}.`, hint});
   }
 
-  const roe = ratio(v.net, v.eq);
+  const roe = safeROE(v.net, v.eq);
   if(roe != null){
     const faRoe = toFa((roe * 100).toFixed(1));
     let label, type, hint;
@@ -2558,12 +2685,6 @@ function render(ci){
   updatePrintHeader();
 }
 
-
-
-
-
-
-
 /* ---------- Summary ---------- */
 function renderSummary(v, extras){
   const parts = [];
@@ -2604,7 +2725,7 @@ function renderSummary(v, extras){
     else desc = 'محافظه‌کارانه';
     parts.push(`بدهی به حقوق <span class="stat">${num2(de)}</span> (${desc})`);
   }
-  const roe = ratio(v.net, v.eq);
+  const roe = safeROE(v.net, v.eq);
   if(roe != null) parts.push(`ROE <span class="stat">${pct(roe)}</span>`);
   if(extras && extras.pe != null){
     parts.push(`P/E <span class="stat">${num2(extras.pe)}</span>`);
@@ -2619,13 +2740,41 @@ function renderSummary(v, extras){
 function renderAlerts(v){
   const alerts = [];
 
+  /* ⭐ هشدار ویژه: حقوق مالکانه منفی */
+  if(v.eq != null && v.eq <= 0){
+    alerts.push({
+      type: 'danger',
+      icon: '🚨',
+      text: `<b>حقوق مالکانه منفی:</b> شرکت از نظر فنی ورشکسته است. ROE قابل محاسبه نیست و DuPont معنی ندارد.`
+    });
+  }
+
+  /* ⭐⭐⭐ v2.0.3 — هشدار جدید برای netMargin مشکوک ⭐⭐⭐ */
   const nm1 = ratio(v.net, v.revenue);
+  if(nm1 != null){
+    const nmAnalysis = analyzeNetMargin(nm1);
+    if(nmAnalysis.severity >= 2){
+      alerts.push({
+        type: 'danger',
+        icon: '🚨',
+        text: `<b>حاشیه سود خالص مشکوک (${pct(nm1)}):</b> سود از فروش بیشتره! این یعنی سود اصلی از <b>فعالیت عملیاتی</b> شرکت نمیاد (فروش دارایی، سود سهام، تسعیر ارز یا درآمد غیرتکرارشونده). این سود <b>پایدار نیست</b>.`
+      });
+    } else if(nmAnalysis.severity === 1){
+      alerts.push({
+        type: 'warning',
+        icon: '⚠️',
+        text: `<b>حاشیه سود خالص بالا (${pct(nm1)}):</b> برای اکثر صنایع این عدد بالاست. صورت سود و زیان رو دقیق بررسی کن — شاید بخشی از سود از فعالیت اصلی نیاد.`
+      });
+    }
+  }
+
   const nm0 = ratio(val('netProfit',1), val('revenue',1));
   if(nm1 != null && nm0 != null){
     const change = nm1 - nm0;
     if(change < -0.03){
       alerts.push({type:'danger', icon:'🚨', text:`<b>افت شدید حاشیه سود خالص:</b> از <span class="num">${pct(nm0)}</span> به <span class="num">${pct(nm1)}</span>.`});
-    } else if(change > 0.03){
+    } else if(change > 0.03 && nm1 <= 0.5){
+      // ⭐ فقط اگه از ۵۰٪ نگذشته باشه به عنوان بهبود اعلام کن
       alerts.push({type:'success', icon:'✅', text:`<b>بهبود حاشیه سود خالص:</b> از <span class="num">${pct(nm0)}</span> به <span class="num">${pct(nm1)}</span>.`});
     }
   }
@@ -2743,6 +2892,8 @@ window.KodalHelpers = {
   calcScore,
   scoreLevel,
   ratio,
+  quickRatio,
+  safeROE,
   toman,
   tomanText,
   pct,
@@ -2756,6 +2907,7 @@ window.KodalHelpers = {
   chartBaseColor,
   chartLabelColor,
   detectPeriodFromLines,
+  analyzeNetMargin,   // ⭐ v2.0.3 — اضافه شد
 };
 
 /* ============================================================
@@ -3239,4 +3391,4 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
-console.log('%c🎯 app.js v2.0.0 لود شد', 'color:#1769e0;font-weight:bold');
+console.log('%c🎯 app.js v2.0.3 لود شد', 'color:#1769e0;font-weight:bold');

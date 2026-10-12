@@ -4822,3 +4822,120 @@ body.dark .ratio-avg-marker-label {
   display: flex;
   justify-content: flex-end;
 }
+
+/* ============================================================
+   🆕 کارت هشدار DuPont (equity منفی)
+============================================================ */
+.dupont-negative-equity {
+  padding: 22px 20px;
+  background: linear-gradient(135deg, rgba(198,40,40,.06), var(--chart-bg));
+  border-radius: 14px;
+  border: 1px solid rgba(198,40,40,.25);
+  border-top: 5px solid #c62828;
+  text-align: center;
+}
+
+.dupont-negative-equity .dne-icon {
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: 10px;
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(198,40,40,.3));
+}
+
+.dupont-negative-equity .dne-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: #c62828;
+  margin-bottom: 6px;
+}
+
+.dupont-negative-equity .dne-subtitle {
+  font-size: 13.5px;
+  color: var(--txt);
+  line-height: 1.8;
+  margin-bottom: 18px;
+}
+
+.dupont-negative-equity .dne-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+  text-align: right;
+}
+
+.dupont-negative-equity .dne-stat {
+  padding: 10px 14px;
+  background: var(--card);
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+
+.dupont-negative-equity .dne-stat-label {
+  font-size: 11px;
+  color: var(--sub);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.dupont-negative-equity .dne-stat-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--txt);
+  direction: ltr;
+  text-align: right;
+}
+
+.dupont-negative-equity .dne-stat-value.negative {
+  color: #c62828;
+}
+
+.dupont-negative-equity .dne-explain {
+  padding: 14px 16px;
+  background: rgba(102,112,133,.08);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--txt);
+  text-align: right;
+  border-right: 3px solid #c62828;
+}
+
+.dupont-negative-equity .dne-explain b {
+  color: #c62828;
+}
+
+.dupont-negative-equity .dne-explain .dne-note {
+  display: block;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  color: var(--sub);
+  font-size: 12.5px;
+}
+
+/* حالت موبایل */
+@media (max-width: 600px) {
+  .dupont-negative-equity {
+    padding: 16px 14px;
+  }
+  .dupont-negative-equity .dne-icon {
+    font-size: 38px;
+  }
+  .dupont-negative-equity .dne-title {
+    font-size: 16px;
+  }
+  .dupont-negative-equity .dne-subtitle {
+    font-size: 12.5px;
+  }
+  .dupont-negative-equity .dne-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .dupont-negative-equity .dne-stat-value {
+    font-size: 13px;
+  }
+  .dupont-negative-equity .dne-explain {
+    font-size: 12px;
+  }
+}

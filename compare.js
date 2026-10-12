@@ -1,5 +1,5 @@
 /* ============================================================
-   compare.js — منطق تب «مقایسه با صنعت»  |  v2.1.1
+   compare.js — منطق تب «مقایسه با صنعت»  |  v2.1.3
    وابسته به: app.js (window.KodalHelpers)
 ============================================================ */
 
@@ -9,7 +9,6 @@
   const H = window.KodalHelpers || {};
   const $ = id => document.getElementById(id);
 
-  /* ---------- کمک‌کننده: فرمت عدد ---------- */
   function _fmtNumInput(value){
     const clean = H.fa2en(String(value || '')).replace(/[^\d]/g, '');
     if(!clean) return '';
@@ -17,13 +16,11 @@
     return H.toFa(withComma);
   }
 
-  /* ---------- کمک‌کننده: نرمال‌سازی ---------- */
   function _cmpVal(x){
     if(x == null || typeof x !== 'number' || !isFinite(x)) return null;
     return Math.round(x * 1e6) / 1e6;
   }
 
-  /* ---------- میانگین/میانه ---------- */
   function avg(arr){
     const v = arr.filter(x => x != null && isFinite(x));
     if(!v.length) return null;
@@ -46,12 +43,10 @@
     return direction === 'lower' ? Math.max(...v) : Math.min(...v);
   }
 
-  /* ---------- رنگ‌ها ---------- */
   const BASE_COLOR = '#f59e0b';
   const PEER_COLORS = ['#1769e0', '#10b981', '#8b5cf6', '#ec4899', '#06b6d4'];
   const MAX_PEERS = 5;
 
-  /* ---------- State ---------- */
   let BASE = { file: null, parsed: null, symbol: '', industry: '', price: null, shares: null };
   let PEERS = [];
   let INDUSTRY_RESULTS = null;
@@ -59,9 +54,6 @@
 
   const INDUSTRY_STORAGE_KEY = 'kodal_industries_v1';
 
-  /* ============================================================
-     Storage
-  ============================================================ */
   function loadIndustriesFromStorage(){
     try{
       const raw = localStorage.getItem(INDUSTRY_STORAGE_KEY);
@@ -81,9 +73,6 @@
   }
   loadIndustriesFromStorage();
 
-  /* ============================================================
-     ۱. سهم اصلی
-  ============================================================ */
   function bindBaseInputs(){
     const symEl = $('baseSymbol');
     const indEl = $('baseIndustry');
@@ -243,9 +232,6 @@
     }
   }
 
-  /* ============================================================
-     ۲. هم‌گروهی‌ها
-  ============================================================ */
   function renderPeers(){
     const box = $('peersList');
     if(!box) return;
@@ -497,9 +483,6 @@
     }
   }
 
-  /* ============================================================
-     ۳. محاسبه
-  ============================================================ */
   function extractValues(parsed, price, shares){
     const ci = 0;
     const val = k => parsed?.[k]?.[ci] ?? null;
@@ -531,24 +514,23 @@
       net: parsed?.['netProfit']?.[1] ?? null,
     };
 
-    // ⭐ جدید: تشخیص دوره و محاسبه ضریب سالانه‌سازی
     const detectedMonths = parsed?._detectedInfo?.months || 12;
     const annualizeFactor = 12 / detectedMonths;
 
     const r = {
       currentRatio: H.ratio(v.ca, v.cl),
-      quickRatio: H.ratio((v.ca ?? 0) - (v.inv ?? 0), v.cl),
+      quickRatio: H.quickRatio(v.ca, v.inv, v.cl),
       cashRatio: H.ratio(v.cash, v.cl),
       debtToAsset: H.ratio(v.tl, v.ta),
       debtToEquity: H.ratio(v.tl, v.eq),
-      interestCoverage: v.financeCost && v.opProfit
-        ? H.ratio(v.opProfit, Math.abs(v.financeCost)) : null,
+      interestCoverage: (v.financeCost != null && v.financeCost !== 0 && v.opProfit != null)
+        ? v.opProfit / Math.abs(v.financeCost) : null,
       equityMultiplier: H.ratio(v.ta, v.eq),
       grossMargin: H.ratio(v.gross, v.revenue),
       opMargin: H.ratio(v.opProfit, v.revenue),
       netMargin: H.ratio(v.net, v.revenue),
       roa: H.ratio(v.net, v.ta),
-      roe: H.ratio(v.net, v.eq),
+      roe: H.safeROE(v.net, v.eq),   // ⭐ ROE امن
       assetTurnover: H.ratio(v.revenue, v.ta),
       invTurnover: H.ratio(v.cogs, v.inv),
       recvTurnover: H.ratio(v.revenue, v.recv),
@@ -572,7 +554,6 @@
 
     const MILLION = 1_000_000;
 
-    // ⭐⭐ نکته اصلی: ضرب در annualizeFactor برای جریان‌های دوره‌ای
     const netRial = (v.net != null) ? v.net * MILLION * annualizeFactor : null;
     const revRial = (v.revenue != null) ? v.revenue * MILLION * annualizeFactor : null;
     const ebitdaVal = (v.opProfit != null)
@@ -580,7 +561,6 @@
       : null;
     const ebitdaRial = (ebitdaVal != null) ? ebitdaVal * MILLION * annualizeFactor : null;
 
-    // ⚠️ اینا موجودی هستن (Balance Sheet) — سالانه‌سازی نمی‌شن
     const eqRial = (v.eq != null) ? v.eq * MILLION : null;
     const tlRial = (v.tl != null) ? v.tl * MILLION : null;
     const cashRial = (v.cash != null) ? v.cash * MILLION : null;
@@ -613,9 +593,6 @@
     btn.disabled = !valid;
   }
 
-  /* ============================================================
-     ۴. اجرای مقایسه
-  ============================================================ */
   window.runIndustryCompare = function(){
     if(window.License){
       const status = window.License.getStatus();
@@ -692,9 +669,6 @@
     }, 250);
   };
 
-  /* ============================================================
-     ۵. رندر خروجی
-  ============================================================ */
   function renderIndustryOutput(){
     try{ renderIndustryScores(); }catch(e){ console.error('renderIndustryScores:', e); }
     try{ renderIndustryZScore(); }catch(e){ console.error('renderIndustryZScore:', e); }
@@ -715,9 +689,6 @@
     }, 50);
   }
 
-  /* ============================================================
-     ⭐ سوییچ تب داخلی — global
-  ============================================================ */
   window.indSwitchTab = function(target){
     const container = document.querySelector('#industryOut');
     if(!container) return;
@@ -735,7 +706,6 @@
     if(panel) panel.classList.add('active');
   };
 
-  /* ---------- امتیازهای سلامت ---------- */
   function renderIndustryScores(){
     const box = $('industryScores');
     if(!box) return;
@@ -791,7 +761,6 @@
     `;
   }
 
-  /* ---------- Altman Z-Score ---------- */
   function renderIndustryZScore(){
     const box = $('industryZScore');
     if(!box) return;
@@ -875,7 +844,6 @@
     box.innerHTML = html;
   }
 
-  /* ---------- جدول اصلی ---------- */
   const MAIN_RATIOS = [
     { key: 'grossMargin',   label: 'حاشیه سود ناخالص',   getter: r => r.r.grossMargin,   dir: 'higher', fmt: 'pct' },
     { key: 'opMargin',      label: 'حاشیه سود عملیاتی',  getter: r => r.r.opMargin,      dir: 'higher', fmt: 'pct' },
@@ -981,7 +949,6 @@
     box.innerHTML = html;
   }
 
-  /* ---------- رتبه‌بندی ---------- */
   function renderIndustryRanking(){
     const box = $('industryRanking');
     if(!box) return;
@@ -1169,9 +1136,6 @@
     box.innerHTML = winnerHtml + cardsHtml + criteriaHtml + legendHtml;
   }
 
-  /* ============================================================
-     ۶. ذخیره و بازیابی صنایع
-  ============================================================ */
   function openSaveIndustryModal(){
     if(!INDUSTRY_RESULTS){
       if(window.showToast) window.showToast('اول یه مقایسه انجام بده!', true);
@@ -1369,7 +1333,7 @@
       return;
     }
     const data = {
-      version: '2.1.1',
+      version: '2.1.3',
       type: 'kodal_industries',
       exportDate: new Date().toISOString(),
       count: INDUSTRY_SAVED.length,
@@ -1412,9 +1376,6 @@
     reader.readAsText(file);
   }
 
-  /* ============================================================
-     ۷. مقایسه دو صنعت
-  ============================================================ */
   function openCompareIndustriesModal(){
     if(INDUSTRY_SAVED.length < 2){
       if(window.showToast) window.showToast('حداقل ۲ صنعت ذخیره‌شده لازمه', true);
@@ -1536,9 +1497,6 @@
     if(window.showToast) window.showToast('✅ مقایسه دو صنعت انجام شد');
   }
 
-  /* ============================================================
-     ۸. اتصال دکمه‌ها
-  ============================================================ */
   function bindButtons(){
     const compareBtn = $('compareIndustryGo');
     if(compareBtn){
@@ -1620,16 +1578,10 @@
     });
   }
 
-  /* ============================================================
-     ۹. تغییر تم
-  ============================================================ */
   window.onThemeChange = function(){
     if(INDUSTRY_RESULTS) renderIndustryOutput();
   };
 
-  /* ============================================================
-     Init
-  ============================================================ */
   function init(){
     bindBaseInputs();
     bindPeersInputs();
@@ -1644,6 +1596,6 @@
     init();
   }
 
-  console.log('%c📈 compare.js v2.1.1 لود شد', 'color:#f59e0b;font-weight:bold');
+  console.log('%c📈 compare.js v2.1.3 لود شد', 'color:#f59e0b;font-weight:bold');
 
 })();

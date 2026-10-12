@@ -6,7 +6,7 @@
    - سایر فایل‌ها: Network First با fallback به cache
 ============================================================ */
 
-const CACHE_VERSION = 'kodal-v1.8.6';
+const CACHE_VERSION = 'kodal-v2.0.3';
 const CACHE_NAME = CACHE_VERSION;
 
 // فایل‌های اصلی که همیشه کش می‌شن (App Shell)
