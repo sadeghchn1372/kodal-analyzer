@@ -3567,4 +3567,46 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
+
+/* ---------- دکمه باز/بسته کل بخش ورودی (تحلیل تک شرکت) ---------- */
+(function initInputSectionToggle(){
+  const btn = document.getElementById('inputSectionToggleBtn');
+  const container = document.getElementById('allInputSections');
+  const text = document.getElementById('inputSectionToggleText');
+
+  if(!btn || !container) return;
+
+  const STORAGE_KEY = 'kodal_input_sections_collapsed';
+
+  function applyState(collapsed){
+    if(collapsed){
+      container.classList.add('collapsed');
+      btn.classList.add('collapsed');
+      if(text) text.textContent = 'باز کردن ورودی‌ها';
+    } else {
+      container.classList.remove('collapsed');
+      btn.classList.remove('collapsed');
+      if(text) text.textContent = 'بستن ورودی‌ها';
+    }
+  }
+
+  // ⭐ پیش‌فرض: باز
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    applyState(saved === '1');
+  } catch(e) {
+    applyState(false);
+  }
+
+  btn.onclick = () => {
+    const isCollapsed = container.classList.toggle('collapsed');
+    btn.classList.toggle('collapsed', isCollapsed);
+    if(text) text.textContent = isCollapsed ? 'باز کردن ورودی‌ها' : 'بستن ورودی‌ها';
+
+    try {
+      localStorage.setItem(STORAGE_KEY, isCollapsed ? '1' : '0');
+    } catch(e) {}
+  };
+})();
+
 console.log('%c🎯 app.js v2.1.1 لود شد (با اصلاح ROE منفی)', 'color:#1769e0;font-weight:bold');
