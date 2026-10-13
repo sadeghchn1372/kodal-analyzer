@@ -1,11 +1,9 @@
 /* ============================================================
-   app.js — منطق اصلی تحلیل تک شرکت  |  v2.1.1
+   app.js — منطق اصلی تحلیل تک شرکت  |  v2.1.2
    وابسته به: helpers.js + ui-modal.js
-   تغییرات v2.1.1:
-   - اصلاح ROE منفی کاذب (وقتی حقوق مالکانه منفی است)
-   - اصلاح calcScore برای eq منفی
-   - اصلاح جدول نسبت‌ها برای ROE
-   - اصلاح HINTS.ROE به حالت dynamic
+   تغییرات v2.1.2:
+   - حذف کامل دکمه خروجی PDF
+   - اصلاح ROE منفی کاذب
 ============================================================ */
 
 /* ---------- Utility (از helpers.js) ---------- */
@@ -156,12 +154,7 @@ function loadMarketFromStorage(){
 }
 function saveMarketToStorage(){
   try{
-    // ⭐ زمان ذخیره رو هم نگه دار
-    const dataToSave = {
-      ...MARKET,
-      savedAt: Date.now()
-    };
-    localStorage.setItem('kodal_market', JSON.stringify(dataToSave));
+    localStorage.setItem('kodal_market', JSON.stringify(MARKET));
   }catch(e){}
 }
 function applyMarketInputs(){
@@ -191,35 +184,12 @@ function applyMarketInputs(){
 
   if(PARSED) render(0);
 }
-// ⭐ بهتره اطلاعات قبلی لود نشه تا با فایل جدید قاطی نشه
-// loadMarketFromStorage();   ← این خط کامنت شد
+
+// ⭐ دیگه از localStorage لود نمی‌کنیم تا قیمت قبلی با فایل جدید قاطی نشه
+// loadMarketFromStorage();
 
 setTimeout(() => {
-  // ⭐ فیلدها رو خالی نگه دار (نمی‌خوایم اطلاعات قبلی بیاد)
-  // فقط اگه کاربر خودشون پر کردن، نمایش بده
-  
-  const savedMarket = (() => {
-    try {
-      const raw = localStorage.getItem('kodal_market');
-      if(!raw) return null;
-      const m = JSON.parse(raw);
-      // اگه تازه ذخیره شده (کمتر از ۱ ساعت)، نمایش بده
-      if(m.savedAt && (Date.now() - m.savedAt) < 3600000){
-        return m;
-      }
-      return null;
-    } catch(e) { return null; }
-  })();
-  
-  if(savedMarket){
-    if(savedMarket.symbol && $('symbolName')) $('symbolName').value = savedMarket.symbol;
-    if(savedMarket.price && $('stockPrice')) $('stockPrice').value = formatNumberInput(savedMarket.price);
-    if(savedMarket.shares && $('stockCount')) $('stockCount').value = formatNumberInput(savedMarket.shares);
-    if(savedMarket.price && $('marketHint')){
-      $('marketHint').textContent = `✅ اطلاعات بازار ذخیره شده (نیم ساعت قبل) — ${savedMarket.symbol || ''}`;
-      $('marketHint').classList.add('active');
-    }
-  }
+  // ⭐ فیلدها خالی می‌مونن — کاربر باید سرچ کنه
 }, 100);
 
 attachNumberFormatter($('stockPrice'));
@@ -410,7 +380,6 @@ window.restoreAnalysis = function(idx){
     const btn = $('saveBtn');
     btn.style.display = 'inline-block';
     btn.disabled = false;
-    $('pdfBtn').style.display = 'inline-block';
 
     const watchBtn = $('sendToWatchBtn');
     if(watchBtn){
@@ -431,7 +400,7 @@ function downloadAllAnalyses(){
     return;
   }
   const data = {
-    version: '2.0.0',
+    version: '2.1.2',
     exportDate: new Date().toISOString(),
     count: SAVED_LIST.length,
     analyses: SAVED_LIST,
@@ -739,6 +708,7 @@ function matchLabel(line){
   }
   return null;
 }
+
 function extractBestValues(nums, periods, preferLargest){
   let filtered = nums.filter(v => {
     if(v == null) return false;
@@ -979,6 +949,7 @@ function parseItems(lines){
 
   return items;
 }
+
 function calculatePriority(key, line, nums){
   let priority = 0;
   const n = norm(line);
@@ -1072,6 +1043,7 @@ function calculatePriority(key, line, nums){
   return priority;
 }
 
+/* ---------- HINTS ---------- */
 const HINTS = {
   'نسبت جاری': {
     template: 'شرکت اگه همین الان بخواد بدهی‌های کوتاه‌مدتش رو بده، ...',
@@ -1133,7 +1105,6 @@ const HINTS = {
     warn: 'متوسط',
     bad: 'کم',
   },
-  // ⭐ اصلاح شد: ROE الان dynamic هست
   'ROE': {
     dynamic: true,
     template: 'شرکت از هر ۱۰۰ تومان پول سهامداران، {v} تومان سود ساخته',
@@ -1319,7 +1290,7 @@ function calcScore(v){
   const nm = ratio(v.net, v.revenue);
   if(nm != null){ total += 25; if(nm >= 0.2) score += 25; else if(nm >= 0.12) score += 19; else if(nm >= 0.07) score += 13; else if(nm >= 0.03) score += 7; else if(nm > 0) score += 3; }
   
-  // ⭐ اصلاح شد: ROE فقط وقتی eq مثبته معنی داره
+  // ⭐ ROE فقط وقتی eq مثبته
   const roe = (v.eq != null && v.eq > 0) ? ratio(v.net, v.eq) : null;
   if(roe != null){ total += 15; if(roe >= 0.25) score += 15; else if(roe >= 0.18) score += 12; else if(roe >= 0.1) score += 8; else if(roe >= 0.05) score += 4; }
   
@@ -1338,7 +1309,7 @@ function scoreLevel(s){
 }
 
 /* ============================================================
-   DuPont Analysis — با تحلیل دلیل منفی بودن equity
+   DuPont Analysis
 ============================================================ */
 function renderDuPont(v){
   const box = $('dupontBox');
@@ -1359,7 +1330,6 @@ function renderDuPont(v){
   const em = ratio(ta, eq);
   const roe = (eq != null && eq > 0) ? ratio(v.net, eq) : null;
 
-  // ⭐ حقوق مالکانه منفی یا صفر — تحلیل کامل دلیل
   if(eq != null && eq <= 0){
     const retainedEarnings = v.re;
     const capital = v.capital;
@@ -2099,7 +2069,6 @@ function updateAccordionSummaries(v){
 
   const dupontEl = document.getElementById('accDupontSummary');
   if(dupontEl){
-    // ⭐ اصلاح شد: ROE فقط وقتی eq مثبته معنی داره
     const roe = (v.eq != null && v.eq > 0) ? ratio(v.net, v.eq) : null;
     if(roe == null){ 
       dupontEl.textContent = (v.eq != null && v.eq <= 0) ? 'بی‌معنی (سرمایه منفی)' : '—';
@@ -2227,12 +2196,6 @@ function updateAccordionSummaries(v){
   }
 }
 
-
-
-
-
-
-
 /* ============================================================
    تحلیل کن — Main
 ============================================================ */
@@ -2261,27 +2224,6 @@ if($('go')) $('go').onclick = async () => {
     const lines = await getLines(file);
     if(!lines.length) throw Error('هیچ خطی استخراج نشد.');
     PARSED = parseItems(lines);
-    PARSED = parseItems(lines);
-    window.PARSED = PARSED;
-
-    // ⭐ اگه نماد جدید با قبلی فرق داشت، اطلاعات بازار قبلی رو پاک کن
-    const currentSymbolInput = ($('symbolName')?.value || '').trim();
-    if(currentSymbolInput && MARKET.symbol && currentSymbolInput !== MARKET.symbol){
-      // کاربر فایل یه شرکت جدید داده ولی قیمت قبلی مونده
-      MARKET = {
-        symbol: currentSymbolInput,
-        price: null,
-        shares: null,
-        periodMonths: PARSED._detectedInfo?.months || 12,
-      };
-      saveMarketToStorage();
-      if($('stockPrice')) $('stockPrice').value = '';
-      if($('stockCount')) $('stockCount').value = '';
-      if($('marketHint')){
-        $('marketHint').textContent = '⚠️ فایل شرکت جدید بارگذاری شد — برای قیمت و تعداد سهام، از جستجوی سریع استفاده کن.';
-        $('marketHint').classList.add('active');
-      }
-    }
     window.PARSED = PARSED;
     const found = Object.keys(PARSED).length;
     if(!found) throw Error('هیچ قلمی شناسایی نشد.');
@@ -2303,7 +2245,6 @@ if($('go')) $('go').onclick = async () => {
     const btn = $('saveBtn');
     btn.style.display = 'inline-block';
     btn.disabled = false;
-    $('pdfBtn').style.display = 'inline-block';
 
     const watchBtn = $('sendToWatchBtn');
     if(watchBtn){
@@ -2480,13 +2421,7 @@ function render(ci){
     lev: [
       ['بدهی به دارایی',              ratio(v.tl, v.ta),              x=>x>0.7, x=>x>0.5&&x<=0.7],
       ['بدهی به حقوق صاحبان سهام',   ratio(v.tl, v.eq),              x=>x>2,  x=>x>1&&x<=2],
-      // ⭐ اصلاح: استفاده از EBIT (سود عملیاتی + استهلاک) طبق استاندارد
-      ['پوشش بهره',                   (() => {
-        if(v.opProfit == null || !v.financeCost || v.financeCost === 0) return null;
-        const depAbs = (v.deprec != null) ? Math.abs(v.deprec) : 0;
-        const ebit = v.opProfit + depAbs;
-        return ebit / Math.abs(v.financeCost);
-      })(), x=>x<2, x=>x>=2&&x<4],
+      ['پوشش بهره',                   ratio(v.opProfit, Math.abs(v.financeCost||0)) || null, x=>x<2, x=>x>=2&&x<4],
       ['اهرم حقوق مالکانه',           ratio(v.ta, v.eq),              x=>x>4,  x=>x>2&&x<=4],
     ],
     prof: [
@@ -2494,7 +2429,6 @@ function render(ci){
       ['حاشیه سود عملیاتی', ratio(v.opProfit, v.revenue), x=>x<0.05, x=>x<0.15],
       ['حاشیه سود خالص',    ratio(v.net, v.revenue),    x=>x<0.05, x=>x<0.1],
       ['ROA',               ratio(v.net, v.ta),          x=>x<0.02, x=>x<0.05],
-      // ⭐ اصلاح شد: ROE فقط وقتی eq مثبته معنی داره
       ['ROE',               (v.eq != null && v.eq > 0) ? ratio(v.net, v.eq) : null, x=>x<0.05, x=>x<0.15],
       ['ROCE (بازده سرمایه به کار گرفته شده)', roce, x=>x<0.05, x=>x<0.15],
       ['نرخ رشد فروش',     growthRev, x=>x<0, x=>x<0.1],
@@ -2525,20 +2459,17 @@ function render(ci){
 
   const fmt = (name, x) => {
     if(x==null) {
-      // ⭐ اصلاح شد: اگه ROE بود و سرمایه منفی، پیام واضح نشون بده
       if(name === 'ROE' && v.eq != null && v.eq <= 0){
         return '<span style="color:var(--bad);font-weight:700;font-size:11px">بی‌معنی (سرمایه منفی)</span>';
       }
       return '—';
     }
 
-    // ⭐ نسبت‌هایی که وقتی منفی می‌شن، معنی ندارن
     const meaninglessIfNegative = /^(P\/E|PEG|P\/B|P\/S|EV\/EBITDA)$/.test(name);
     if(meaninglessIfNegative && x < 0){
       return '<span style="color:var(--bad);font-weight:700">زیان‌ده</span>';
     }
 
-    // ⭐ EPS منفی
     if(name === 'EPS' && x < 0){
       return `<span style="color:var(--bad);font-weight:700">${toFa(Math.round(x).toLocaleString('en-US'))} ریال (زیان)</span>`;
     }
@@ -2559,7 +2490,6 @@ function render(ci){
     return 'good';
   };
 
-  // ⭐ برای نسبت‌هایی که معنی‌دار بودنشون مهمه
   const meaningfulRatio = (name, x) => {
     if(x == null) return false;
     const meaninglessIfNegative = /^(P\/E|PEG|P\/B|P\/S|EV\/EBITDA)$/.test(name);
@@ -2569,7 +2499,6 @@ function render(ci){
 
   function tableFor(list){
     return '<div class="ratio-cards">' + list.map(([name,x,bad,warn])=>{
-      // ⭐ اگه نسبت منفی و بی‌معنیه، برچسب خاص
       const isMeaningless = !meaningfulRatio(name, x);
       const isNegativeEPS = name === 'EPS' && x != null && x < 0;
       const isNegativeEquityROE = name === 'ROE' && v.eq != null && v.eq <= 0;
@@ -2782,7 +2711,6 @@ function render(ci){
     A.push({t:type, x:`بدهی/حقوق ${label}.`, hint});
   }
 
-  // ⭐ اصلاح شد: ROE در تحلیل خودکار
   const roe = (v.eq != null && v.eq > 0) ? ratio(v.net, v.eq) : null;
   if(roe != null){
     const faRoe = toFa((roe * 100).toFixed(1));
@@ -2903,7 +2831,6 @@ function renderSummary(v, extras){
     else desc = 'محافظه‌کارانه';
     parts.push(`بدهی به حقوق <span class="stat">${num2(de)}</span> (${desc})`);
   }
-  // ⭐ اصلاح شد: ROE در خلاصه
   const roe = (v.eq != null && v.eq > 0) ? ratio(v.net, v.eq) : null;
   if(roe != null) parts.push(`ROE <span class="stat">${pct(roe)}</span>`);
   else if(v.eq != null && v.eq <= 0) parts.push(`<span style="color:var(--bad)">ROE بی‌معنی (سرمایه منفی)</span>`);
@@ -2932,7 +2859,6 @@ function renderAlerts(v){
     }
   }
 
-  // ⭐ اصلاح شد: فقط وقتی eq مثبته
   const de1 = (v.tl != null && v.eq != null && v.eq > 0) ? ratio(v.tl, v.eq) : null;
   const de0 = (val('totalLiab',1) != null && val('equity',1) != null && val('equity',1) > 0) 
     ? ratio(val('totalLiab',1), val('equity',1)) : null;
@@ -2993,7 +2919,7 @@ if($('copySummary')) $('copySummary').onclick = () => {
   });
 };
 
-/* ---------- Print ---------- */
+/* ---------- Print Header ---------- */
 function updatePrintHeader(){
   const old = document.querySelector('.print-header');
   if(old) old.remove();
@@ -3008,12 +2934,6 @@ function updatePrintHeader(){
   const out = $('out');
   if(out) out.insertBefore(header, out.firstChild);
 }
-
-if($('pdfBtn')) $('pdfBtn').onclick = () => {
-  if(!PARSED){ showToast('اول یه فایل رو تحلیل کن!', true); return; }
-  updatePrintHeader();
-  setTimeout(() => window.print(), 100);
-};
 
 window.addEventListener('beforeprint', updatePrintHeader);
 
@@ -3348,7 +3268,6 @@ window.restoreFromExternal = function(reportData){
 
     if($('out')) $('out').style.display = 'block';
     if($('saveBtn')){ $('saveBtn').style.display = 'inline-block'; $('saveBtn').disabled = false; }
-    if($('pdfBtn')) $('pdfBtn').style.display = 'inline-block';
     if($('sendToWatchBtn')){ $('sendToWatchBtn').style.display = 'inline-block'; $('sendToWatchBtn').disabled = false; }
 
     render(0);
@@ -3568,15 +3487,18 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-/* ---------- دکمه باز/بسته کل بخش ورودی (تحلیل تک شرکت) ---------- */
+/* ============================================================
+   🆕 دکمه باز/بسته کل بخش ورودی (تحلیل تک شرکت)
+============================================================ */
 (function initInputSectionToggle(){
   const btn = document.getElementById('inputSectionToggleBtn');
   const container = document.getElementById('allInputSections');
   const text = document.getElementById('inputSectionToggleText');
 
-  if(!btn || !container) return;
-
-  const STORAGE_KEY = 'kodal_input_sections_collapsed';
+  if(!btn || !container){
+    console.warn('⚠️ دکمه باز/بسته یا کانتینر پیدا نشد');
+    return;
+  }
 
   function applyState(collapsed){
     if(collapsed){
@@ -3590,23 +3512,16 @@ document.addEventListener('keydown', (e) => {
     }
   }
 
-  // ⭐ پیش‌فرض: باز
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    applyState(saved === '1');
-  } catch(e) {
-    applyState(false);
-  }
+  // ⭐ پیش‌فرض همیشه باز
+  applyState(false);
 
   btn.onclick = () => {
     const isCollapsed = container.classList.toggle('collapsed');
     btn.classList.toggle('collapsed', isCollapsed);
     if(text) text.textContent = isCollapsed ? 'باز کردن ورودی‌ها' : 'بستن ورودی‌ها';
-
-    try {
-      localStorage.setItem(STORAGE_KEY, isCollapsed ? '1' : '0');
-    } catch(e) {}
   };
+
+  console.log('✅ دکمه باز/بسته ورودی‌ها فعال شد');
 })();
 
-console.log('%c🎯 app.js v2.1.1 لود شد (با اصلاح ROE منفی)', 'color:#1769e0;font-weight:bold');
+console.log('%c🎯 app.js v2.1.2 لود شد (بدون PDF + با اصلاح ROE منفی)', 'color:#1769e0;font-weight:bold');
