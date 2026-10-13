@@ -5197,3 +5197,734 @@ body.dark .ratio-avg-marker-label {
 body.dark .score-note-top {
   background: rgba(59,130,246,.15);
 }
+/* ============================================================
+   🆕 سرچ سریع برای سهم اصلی (تب مقایسه با صنعت)
+============================================================ */
+.base-search-section {
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(245,158,11,.06), var(--chart-bg));
+  border-radius: 12px;
+  border-right: 3px solid #f59e0b;
+  margin-bottom: 14px;
+}
+
+.base-search-section > label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--txt);
+  margin-bottom: 8px;
+}
+
+.base-search-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+#baseSearchInput {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  color: var(--txt);
+  font: inherit;
+  font-size: 13.5px;
+  direction: rtl;
+  transition: .15s;
+}
+
+#baseSearchInput:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245,158,11,.15);
+}
+
+#baseSearchBtn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: .15s;
+}
+
+#baseSearchBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(245,158,11,.4);
+}
+
+#baseSearchBtn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.base-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.base-search-results:empty {
+  margin-top: 0;
+}
+
+.base-search-msg {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  margin-top: 8px;
+}
+
+.base-search-msg.success {
+  background: rgba(16,185,129,.1);
+  border-right: 3px solid var(--good);
+  color: var(--txt);
+}
+
+.base-search-msg.error {
+  background: rgba(198,40,40,.1);
+  border-right: 3px solid var(--bad);
+  color: var(--bad);
+}
+
+/* ============================================================
+   🆕 سرچ برای هر سهم هم‌گروهی
+============================================================ */
+.peer-item .peer-search-input {
+  width: 130px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #f59e0b;
+  background: rgba(245,158,11,.05);
+  color: var(--txt);
+  font: inherit;
+  font-size: 12px;
+  direction: rtl;
+  transition: .15s;
+}
+
+.peer-item .peer-search-input:focus {
+  outline: none;
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(245,158,11,.15);
+}
+
+.peer-search-msg {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex-basis: 100%;
+}
+
+@media (max-width: 900px) {
+  .peer-item .peer-search-input {
+    width: 110px;
+  }
+}
+
+@media (max-width: 640px) {
+  .peer-item .peer-search-input {
+    width: 100%;
+  }
+}
+/* ============================================================
+   🆕 نسخه ساده‌شده تب «مقایسه با صنعت»
+============================================================ */
+
+/* ---------- دراپ‌زون ساده ---------- */
+.simple-row {
+  margin-bottom: 10px;
+}
+
+.simple-drop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+  background: var(--chart-bg);
+  cursor: pointer;
+  transition: .2s;
+  position: relative;
+  flex-wrap: wrap;
+}
+
+.simple-drop:hover {
+  border-color: var(--blue);
+  background: rgba(23,105,224,.04);
+}
+
+.simple-drop.hover {
+  border-color: var(--blue);
+  background: rgba(23,105,224,.08);
+  border-style: solid;
+}
+
+.simple-drop input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.simple-drop-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.simple-drop-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--txt);
+  flex: 1;
+}
+
+.simple-drop-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--blue), #1e40af);
+  color: #fff;
+  border: 0;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s;
+  flex-shrink: 0;
+}
+
+.simple-drop-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(23,105,224,.3);
+}
+
+.simple-file-info {
+  display: none;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(16,185,129,.1);
+  border: 1px solid rgba(16,185,129,.3);
+  font-size: 11.5px;
+  color: var(--good);
+  font-weight: 600;
+  max-width: 100%;
+}
+
+.simple-file-info.active {
+  display: inline-flex;
+}
+
+.simple-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: ltr;
+  max-width: 200px;
+}
+
+/* ---------- سرچ ساده ---------- */
+.simple-search-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.simple-search-row input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  color: var(--txt);
+  font: inherit;
+  font-size: 13px;
+  direction: rtl;
+  transition: .15s;
+}
+
+.simple-search-row input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(23,105,224,.12);
+}
+
+.simple-search-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: var(--blue);
+  color: #fff;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: .15s;
+}
+
+.simple-search-btn:hover:not(:disabled) {
+  background: #0f5bc4;
+}
+
+.simple-search-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* ---------- لیست هم‌گروهی‌ها (ساده) ---------- */
+.simple-peers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.simple-peer-item {
+  display: grid;
+  grid-template-columns: 10px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transition: .15s;
+  position: relative;
+}
+
+.simple-peer-item:hover {
+  border-color: var(--blue);
+  box-shadow: 0 2px 8px rgba(23,105,224,.08);
+}
+
+.simple-peer-item.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.simple-peer-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.simple-peer-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.simple-peer-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13.5px;
+}
+
+.simple-peer-name b {
+  color: var(--txt);
+  font-weight: 700;
+}
+
+.simple-peer-file {
+  font-size: 11px;
+  color: var(--sub);
+  direction: ltr;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.simple-peer-meta {
+  font-size: 11.5px;
+  color: var(--sub);
+  margin-top: 3px;
+  direction: rtl;
+}
+
+.simple-peer-search input {
+  width: 130px;
+  padding: 7px 11px;
+  border-radius: 8px;
+  border: 1.5px solid var(--line);
+  background: var(--chart-bg);
+  color: var(--txt);
+  font: inherit;
+  font-size: 12px;
+  direction: rtl;
+  transition: .15s;
+}
+
+.simple-peer-search input:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245,158,11,.12);
+}
+
+.simple-peer-remove {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--bad);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: .15s;
+  flex-shrink: 0;
+}
+
+.simple-peer-remove:hover {
+  background: rgba(198,40,40,.1);
+  border-color: var(--bad);
+}
+
+.simple-peer-error {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--bad);
+  padding: 4px 0;
+}
+
+/* ---------- موبایل ---------- */
+@media (max-width: 700px) {
+  .simple-drop {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+  .simple-drop-text {
+    width: 100%;
+  }
+  .simple-drop-btn {
+    width: 100%;
+  }
+  .simple-search-row {
+    flex-direction: column;
+  }
+  .simple-search-btn {
+    width: 100%;
+  }
+  .simple-peer-item {
+    grid-template-columns: 10px 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 8px;
+  }
+  .simple-peer-info {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .simple-peer-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .simple-peer-search input {
+    width: 100%;
+  }
+  .simple-peer-remove {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+/* ============================================================
+   🆕 نسخه ساده تب «مقایسه با صنعت» v2.3.0
+============================================================ */
+
+.simple-drop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+  background: var(--chart-bg);
+  cursor: pointer;
+  transition: .2s;
+  position: relative;
+  flex-wrap: wrap;
+}
+
+.simple-drop:hover {
+  border-color: var(--blue);
+  background: rgba(23,105,224,.04);
+}
+
+.simple-drop.hover {
+  border-color: var(--blue);
+  background: rgba(23,105,224,.08);
+  border-style: solid;
+}
+
+.simple-drop input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.simple-drop-icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.simple-drop-text {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--txt);
+  flex: 1;
+}
+
+.simple-drop-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--blue), #1e40af);
+  color: #fff;
+  border: 0;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s;
+  flex-shrink: 0;
+}
+
+.simple-drop-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(23,105,224,.3);
+}
+
+.simple-file-info {
+  display: none;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(16,185,129,.1);
+  border: 1px solid rgba(16,185,129,.3);
+  font-size: 11.5px;
+  color: var(--good);
+  font-weight: 600;
+  max-width: 100%;
+}
+
+.simple-file-info.active {
+  display: inline-flex;
+}
+
+.simple-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: ltr;
+  max-width: 200px;
+}
+
+.simple-search-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.simple-search-row input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  color: var(--txt);
+  font: inherit;
+  font-size: 13px;
+  direction: rtl;
+  transition: .15s;
+}
+
+.simple-search-row input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(23,105,224,.12);
+}
+
+.simple-search-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: var(--blue);
+  color: #fff;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: .15s;
+}
+
+.simple-search-btn:hover:not(:disabled) {
+  background: #0f5bc4;
+}
+
+.simple-search-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.simple-peers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.simple-peer-item {
+  display: grid;
+  grid-template-columns: 12px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transition: .15s;
+}
+
+.simple-peer-item:hover {
+  border-color: var(--blue);
+  box-shadow: 0 2px 8px rgba(23,105,224,.08);
+}
+
+.simple-peer-item.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.simple-peer-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.simple-peer-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.simple-peer-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13.5px;
+}
+
+.simple-peer-name b {
+  color: var(--txt);
+  font-weight: 700;
+}
+
+.simple-peer-file {
+  font-size: 11px;
+  color: var(--sub);
+  direction: ltr;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.simple-peer-meta {
+  font-size: 11.5px;
+  color: var(--sub);
+  margin-top: 3px;
+  direction: rtl;
+}
+
+.simple-peer-search input {
+  width: 140px;
+  padding: 7px 11px;
+  border-radius: 8px;
+  border: 1.5px solid var(--line);
+  background: var(--chart-bg);
+  color: var(--txt);
+  font: inherit;
+  font-size: 12px;
+  direction: rtl;
+  transition: .15s;
+}
+
+.simple-peer-search input:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245,158,11,.12);
+}
+
+.simple-peer-remove {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--bad);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: .15s;
+  flex-shrink: 0;
+}
+
+.simple-peer-remove:hover {
+  background: rgba(198,40,40,.1);
+  border-color: var(--bad);
+}
+
+.simple-peer-error {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--bad);
+  padding: 4px 0;
+}
+
+@media (max-width: 700px) {
+  .simple-drop {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+  .simple-drop-btn { width: 100%; }
+  .simple-search-row { flex-direction: column; }
+  .simple-search-btn { width: 100%; }
+  .simple-peer-item {
+    grid-template-columns: 12px 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 8px;
+  }
+  .simple-peer-info { grid-column: 2; grid-row: 1; }
+  .simple-peer-search { grid-column: 1 / -1; grid-row: 2; }
+  .simple-peer-search input { width: 100%; }
+  .simple-peer-remove { grid-column: 3; grid-row: 1; }
+}

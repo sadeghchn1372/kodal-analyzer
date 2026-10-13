@@ -1,13 +1,47 @@
 /* ============================================================
    stock-search.js — جستجو + دریافت خودکار از TSETMC
-   نسخه: 1.2.0 — مرتب‌شده، فشرده، طبق ترتیب فایل‌محور
+   نسخه: 1.3.0 — با فیلتر اختیار معامله
 ============================================================ */
 
 (function(){
   'use strict';
 
   const H = window.KodalHelpers;
+  if(!H){
+    console.error('❌ stock-search.js: KodalHelpers لود نشده!');
+    return;
+  }
   const $ = id => document.getElementById(id);
+
+  /* ============================================================
+     فیلتر کردن نتایج TSETMC — فقط سهام معمولی
+     flow: 1=بورس, 2=فرابورس, 3=اختیار, 4=پایه, 5=اوراق
+  ============================================================ */
+  function _isRegularStock(item){
+    const sym = (item.lVal18AFC || '').trim();
+    const name = (item.lVal30 || '');
+    const flow = item.flow || 0;
+
+    if(!sym) return false;
+
+    // فقط بورس (1)، فرابورس (2)، پایه (4)
+    if(![1, 2, 4].includes(flow)) return false;
+
+    // حذف حق تقدم
+    if(/^ح\s*\./.test(name.trim())) return false;
+    if(/حق\s*تقدم/i.test(name)) return false;
+    if(/حق\s*تقدم/i.test(sym)) return false;
+
+    // حذف اختیار
+    if(/^اختيار|^اختیار/i.test(name)) return false;
+    if(/^اختيار|^اختیار/i.test(sym)) return false;
+
+    // حذف اوراق و سلف
+    if(/^اوراق/.test(sym) || /^اوراق/.test(name)) return false;
+    if(/^سلف/.test(sym) || /سلف\s*فروش/i.test(name)) return false;
+
+    return true;
+  }
 
   /* ============================================================
      جستجوی نماد
@@ -23,7 +57,10 @@
     const results = data.instrumentSearch;
     if(!results || !results.length) return [];
 
-    return results.map(item => ({
+    // ⭐ فیلتر کردن
+    const filtered = results.filter(_isRegularStock);
+
+    return filtered.map(item => ({
       insCode: item.insCode,
       symbol: item.lVal18AFC || '—',
       name: item.lVal30 || '—',
@@ -118,14 +155,18 @@
   }
 
   /* ============================================================
-     ساخت UI جستجو — در محل anchor
+     ساخت UI جستجو
   ============================================================ */
   function buildSearchUI(){
     // اگه از قبل هست، رد کن
     if($('stockSearchInput')) return;
 
-    // anchor رو پیدا کن (جای مشخص‌شده توی HTML)
+    // anchor رو پیدا کن
     const anchor = $('stockSearchAnchor');
+    if(!anchor){
+      console.warn('⚠️ stock-search.js: anchor پیدا نشد');
+      return;
+    }
 
     const section = document.createElement('div');
     section.className = 'input-section stock-search-section';
@@ -150,13 +191,7 @@
     `;
 
     // جاگذاری
-    if(anchor){
-      anchor.parentNode.insertBefore(section, anchor.nextSibling);
-    } else {
-      // فallback اگه anchor نبود
-      const drop = $('drop');
-      if(drop) drop.closest('.input-section').after(section);
-    }
+    anchor.parentNode.insertBefore(section, anchor.nextSibling);
 
     $('stockSearchBtn').onclick = () => handleSearch();
     $('stockSearchInput').addEventListener('keydown', (e) => {
@@ -165,6 +200,8 @@
         handleSearch();
       }
     });
+
+    console.log('✅ stock-search.js: UI ساخته شد');
   }
 
   /* ============================================================
@@ -248,7 +285,6 @@
 
       fillFields(data);
 
-      // پیام فشرده و زیبا
       const change = data.changePercent;
       let changeHtml = '';
       if(change != null){
@@ -266,7 +302,6 @@
         ? H.toFa(Math.round(data.shares).toLocaleString('en-US'))
         : '—';
 
-      // پیام فشرده در یک خط
       showMessage(`
         <span style="font-weight:700;color:var(--good)">✅ ${H.escapeHtml(data.symbol)}</span>
         <span style="color:var(--sub);font-size:12px;margin-right:6px">${H.escapeHtml(data.name)}</span>
@@ -290,7 +325,27 @@
      اجرا
   ============================================================ */
   function init(){
-    setTimeout(buildSearchUI, 200);
+    // اول anchor رو چک کن
+    const anchor = $('stockSearchAnchor');
+    if(anchor){
+      buildSearchUI();
+      return;
+    }
+
+    // اگه anchor نبود، صبر کن تا لود بشه (max 5 seconds)
+    let tries = 0;
+    const maxTries = 25; // 25 × 200ms = 5 seconds
+    const timer = setInterval(() => {
+      tries++;
+      const anchor2 = $('stockSearchAnchor');
+      if(anchor2){
+        clearInterval(timer);
+        buildSearchUI();
+      } else if(tries >= maxTries){
+        clearInterval(timer);
+        console.warn('⚠️ stock-search.js: anchor بعد از ۵ ثانیه پیدا نشد');
+      }
+    }, 200);
   }
 
   if(document.readyState === 'loading'){
@@ -299,6 +354,6 @@
     init();
   }
 
-  console.log('%c🔍 stock-search.js v1.2.0 لود شد', 'color:#8b5cf6;font-weight:bold');
+  console.log('%c🔍 stock-search.js v1.3.0 لود شد', 'color:#8b5cf6;font-weight:bold');
 
 })();

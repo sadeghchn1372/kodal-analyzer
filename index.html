@@ -215,7 +215,7 @@
         </div>
       </div>
 
-      <!-- ===== anchor برای جستجوی سهم (مرحله ۲ توسط stock-search.js پر می‌شه) ===== -->
+      <!-- ===== anchor برای جستجوی سهم (stock-search.js اینجا رو پر می‌کنه) ===== -->
       <div id="stockSearchAnchor"></div>
 
       <!-- ===== مرحله ۳: اطلاعات شرکت ===== -->
@@ -470,84 +470,55 @@
         <p class="sub" style="margin:0">یه سهم اصلی انتخاب کن، بعد تا ۵ سهم هم‌گروهی‌اش رو اضافه کن. آمار کامل صنعت محاسبه می‌شه.</p>
       </div>
 
+      <!-- ⭐ بخش ساده: سهم اصلی -->
       <div class="input-section industry-input-section">
         <div class="input-section-title">
-          <span class="step-badge">📥</span>
-          ورود اطلاعات
-          <span class="optional-badge">سهم اصلی + تا ۵ سهم هم‌گروهی</span>
+          <span class="step-badge">۱</span>
+          🎯 سهم اصلی (Base)
         </div>
 
-        <div class="industry-sub-section">
-          <div class="industry-sub-title">
-            <span class="sub-badge">۱</span>
-            🎯 سهم اصلی (Base)
-          </div>
-
-          <div class="base-symbol-grid">
-            <div class="market-field">
-              <label>نماد سهم اصلی</label>
-              <input id="baseSymbol" type="text" placeholder="مثلاً: فولاد">
-            </div>
-            <div class="market-field">
-              <label>صنعت / گروه</label>
-              <input id="baseIndustry" type="text" placeholder="مثلاً: فلزات اساسی">
-            </div>
-            <div class="market-field">
-              <label>قیمت هر سهم (ریال) <span class="optional-badge">اختیاری</span></label>
-              <input id="basePrice" type="text" inputmode="numeric" placeholder="۵,۲۰۰" class="num-input">
-            </div>
-            <div class="market-field">
-              <label>تعداد سهام <span class="optional-badge">اختیاری</span></label>
-              <input id="baseShares" type="text" inputmode="numeric" placeholder="۵,۰۰۰,۰۰۰,۰۰۰" class="num-input">
-            </div>
-          </div>
-
-          <div id="baseDrop" class="base-drop-horizontal">
-            <input id="baseFile" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt">
-
-            <div class="base-drop-left">
-              <span class="base-drop-icon">📂</span>
-              <span class="base-drop-text">فایل صورت مالی سهم اصلی</span>
-            </div>
-
-            <div class="base-drop-right">
-              <button type="button" class="drop-browse-btn" onclick="event.stopPropagation(); document.getElementById('baseFile').click()">
-                📁 انتخاب فایل
-              </button>
-              <div id="baseFileInfo" class="base-file-info-inline">
-                <span class="file-icon">✅</span>
-                <span class="file-name" id="baseFileName"></span>
-              </div>
-            </div>
+        <div id="baseDrop" class="simple-drop">
+          <input id="baseFile" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt">
+          <span class="simple-drop-icon">📂</span>
+          <span class="simple-drop-text">فایل صورت مالی سهم اصلی</span>
+          <button type="button" class="simple-drop-btn" onclick="event.stopPropagation(); document.getElementById('baseFile').click()">📁 انتخاب فایل</button>
+          <div id="baseFileInfo" class="simple-file-info">
+            <span class="simple-file-name" id="baseFileName"></span>
           </div>
         </div>
 
-        <div class="industry-sub-section">
-          <div class="industry-sub-title">
-            <span class="sub-badge">۲</span>
-            👥 سهم‌های هم‌گروهی
-            <span class="optional-badge">تا ۵ سهم</span>
-          </div>
+        <div class="simple-search-row">
+          <input id="baseSearchInput" type="text"
+                 placeholder="🔍 یا اسم نماد رو بنویس (مثلاً: فملی)"
+                 autocomplete="off">
+          <button id="baseSearchBtn" class="simple-search-btn" type="button">جستجو</button>
+        </div>
+        <div id="baseSearchResults" class="base-search-results"></div>
+        <div id="baseSearchMsg" class="base-search-msg" style="display:none"></div>
 
-          <div id="peersDrop" class="peers-drop-horizontal">
-            <input id="peersFileInput" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt" multiple style="display:none">
+        <!-- فیلدهای پنهان -->
+        <input id="baseSymbol" type="hidden">
+        <input id="baseIndustry" type="hidden">
+        <input id="basePrice" type="hidden">
+        <input id="baseShares" type="hidden">
+      </div>
 
-            <div class="peers-drop-left">
-              <span class="peers-drop-icon">👥</span>
-              <span class="peers-drop-text">فایل‌های سهم‌های هم‌گروهی</span>
-              <span class="peers-drop-hint">(کشیدن و رها کردن یا کلیک)</span>
-            </div>
-
-            <div class="peers-drop-right">
-              <button type="button" id="addPeerBtn2" class="drop-browse-btn">
-                📁 انتخاب فایل‌ها
-              </button>
-            </div>
-          </div>
-
-          <div id="peersList" class="peers-list" style="margin-top:12px"></div>
+      <!-- ⭐ بخش ساده: هم‌گروهی‌ها -->
+      <div class="input-section industry-input-section">
+        <div class="input-section-title">
+          <span class="step-badge">۲</span>
+          👥 سهم‌های هم‌گروهی
+          <span class="optional-badge" id="peersCountBadge">۰ از ۵</span>
         </div>
 
+        <div id="peersDrop" class="simple-drop">
+          <input id="peersFileInput" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt" multiple style="display:none">
+          <span class="simple-drop-icon">👥</span>
+          <span class="simple-drop-text">فایل‌های هم‌گروهی (تا ۵ سهم)</span>
+          <button type="button" class="simple-drop-btn" onclick="event.stopPropagation(); document.getElementById('peersFileInput').click()">📁 انتخاب فایل‌ها</button>
+        </div>
+
+        <div id="peersList" class="simple-peers-list"></div>
       </div>
 
       <div class="industry-actions">
@@ -710,7 +681,7 @@
 <script src="stock-search.js"></script>
 
 <script>
-if('serviceWorker' in navigator){
+if('serviceWorker' in navigator && location.protocol !== 'file:'){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
       .then((registration) => {

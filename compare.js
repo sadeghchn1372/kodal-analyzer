@@ -1,13 +1,12 @@
 /* ============================================================
-   compare.js — منطق تب «مقایسه با صنعت»  |  v2.1.4
-   وابسته به: app.js (window.KodalHelpers)
-   تغییرات v2.1.4: برچسب «میانگین نمونه (n=X)» به جای «میانگین صنعت»
+   compare.js — منطق تب «مقایسه با صنعت»  |  v2.3.0
+   وابسته به: helpers.js + ui-modal.js
 ============================================================ */
 
 (function(){
   'use strict';
 
-  const H = window.KodalHelpers || {};
+  const H = window.KodalHelpers;
   const $ = id => document.getElementById(id);
 
   function _fmtNumInput(value){
@@ -44,6 +43,88 @@
     return direction === 'lower' ? Math.max(...v) : Math.min(...v);
   }
 
+  /* ============================================================
+     فیلتر کردن نتایج TSETMC — فقط سهام معمولی
+     flow: 1=بورس, 2=فرابورس, 3=اختیار, 4=پایه, 5=اوراق
+  ============================================================ */
+  function _isRegularStock(item){
+    const sym = (item.lVal18AFC || '').trim();
+    const name = (item.lVal30 || '');
+    const flow = item.flow || 0;
+
+    if(!sym) return false;
+
+    // فقط بورس (1)، فرابورس (2)، پایه (4)
+    if(![1, 2, 4].includes(flow)) return false;
+
+    // حذف حق تقدم
+    if(/^ح\s*\./.test(name.trim())) return false;
+    if(/حق\s*تقدم/i.test(name)) return false;
+    if(/حق\s*تقدم/i.test(sym)) return false;
+
+    // حذف اختیار
+    if(/^اختيار|^اختیار/i.test(name)) return false;
+    if(/^اختيار|^اختیار/i.test(sym)) return false;
+
+    // حذف اوراق و سلف
+    if(/^اوراق/.test(sym) || /^اوراق/.test(name)) return false;
+    if(/^سلف/.test(sym) || /سلف\s*فروش/i.test(name)) return false;
+
+    return true;
+  }
+
+  async function _searchSymbolTsetmc(query){
+    if(!query || !query.trim()) return null;
+    const url = `https://cdn.tsetmc.com/api/Instrument/GetInstrumentSearch/${encodeURIComponent(query.trim())}`;
+
+    const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if(!response.ok) throw new Error(`خطای شبکه: ${response.status}`);
+
+    const data = await response.json();
+    const results = data.instrumentSearch;
+    if(!results || !results.length) return [];
+
+    const filtered = results.filter(_isRegularStock);
+
+    return filtered.map(item => ({
+      insCode: item.insCode,
+      symbol: item.lVal18AFC || '—',
+      name: item.lVal30 || '—',
+    }));
+  }
+
+  async function _fetchPriceInfo(insCode){
+    const url = `https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceInfo/${insCode}`;
+    const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if(!response.ok) throw new Error(`خطای شبکه: ${response.status}`);
+
+    const data = await response.json();
+    const info = data.closingPriceInfo;
+    if(!info) throw new Error('ساختار پاسخ نامعتبر');
+
+    return {
+      lastPrice: info.pDrCotVal || 0,
+      closePrice: info.pClosing || 0,
+      yesterdayPrice: info.priceYesterday || 0,
+    };
+  }
+
+  async function _fetchInstrumentInfo(insCode){
+    const url = `https://cdn.tsetmc.com/api/Instrument/GetInstrumentInfo/${insCode}`;
+    const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if(!response.ok) return null;
+
+    const data = await response.json();
+    const info = data.instrumentInfo;
+    if(!info) return null;
+
+    let shares = null;
+    if(info.zTitad && info.zTitad > 0){
+      shares = info.zTitad;
+    }
+    return { shares };
+  }
+
   const BASE_COLOR = '#f59e0b';
   const PEER_COLORS = ['#1769e0', '#10b981', '#8b5cf6', '#ec4899', '#06b6d4'];
   const MAX_PEERS = 5;
@@ -74,68 +155,108 @@
   }
   loadIndustriesFromStorage();
 
+  /* ============================================================
+     سرچ سریع سهم اصلی
+  ============================================================ */
+  function _showBaseMsg(html, type){
+    const baseSearchMsg = $('baseSearchMsg');
+    if(!baseSearchMsg) return;
+    baseSearchMsg.style.display = 'flex';
+    baseSearchMsg.className = 'base-search-msg ' + (type === 'error' ? 'error' : 'success');
+    baseSearchMsg.innerHTML = html;
+  }
+
+  async function _selectBaseStock(stock){
+    const baseSearchResults = $('baseSearchResults');
+    if(baseSearchResults) baseSearchResults.innerHTML = '';
+
+    try{
+      const [priceData, instData] = await Promise.all([
+        _fetchPriceInfo(stock.insCode),
+        _fetchInstrumentInfo(stock.insCode).catch(() => null),
+      ]);
+
+      const lastPrice = priceData?.lastPrice || null;
+      const shares = instData?.shares || null;
+
+      if($('baseSymbol')) $('baseSymbol').value = stock.symbol || '';
+      if($('basePrice')) $('basePrice').value = lastPrice || '';
+      if($('baseShares')) $('baseShares').value = shares || '';
+
+      BASE.symbol = stock.symbol;
+      BASE.price = lastPrice;
+      BASE.shares = shares;
+      updateCompareButton();
+
+      const priceText = lastPrice ? H.toFa(Math.round(lastPrice).toLocaleString('en-US')) + ' ریال' : '—';
+      const sharesText = shares ? H.toFa(Math.round(shares).toLocaleString('en-US')) + ' سهم' : '—';
+
+      _showBaseMsg(`✅ <b>${H.escapeHtml(stock.symbol)}</b> — ${H.escapeHtml(stock.name)}<br>
+        💰 قیمت: <b>${priceText}</b> | 📊 تعداد سهام: <b>${sharesText}</b>`, 'success');
+    }catch(err){
+      _showBaseMsg('❌ ' + H.escapeHtml(err.message), 'error');
+    }
+  }
+
+  async function _doBaseSearch(){
+    const baseSearchInput = $('baseSearchInput');
+    const baseSearchBtn = $('baseSearchBtn');
+    const baseSearchResults = $('baseSearchResults');
+    const baseSearchMsg = $('baseSearchMsg');
+
+    const q = (baseSearchInput?.value || '').trim();
+    if(!q){
+      _showBaseMsg('⚠️ اسم نماد رو وارد کن', 'error');
+      return;
+    }
+
+    if(baseSearchBtn){
+      baseSearchBtn.disabled = true;
+      baseSearchBtn.textContent = '⏳ ...';
+    }
+    if(baseSearchResults) baseSearchResults.innerHTML = '';
+    if(baseSearchMsg) baseSearchMsg.style.display = 'none';
+
+    try{
+      const results = await _searchSymbolTsetmc(q);
+      if(!results || !results.length){
+        _showBaseMsg(`❌ نمادی با اسم «${q}» پیدا نشد`, 'error');
+        return;
+      }
+
+      let pick = null;
+      if(results.length === 1) pick = results[0];
+      else {
+        const exact = results.find(r => r.symbol.toLowerCase() === q.toLowerCase());
+        if(exact) pick = exact;
+      }
+
+      if(pick){
+        await _selectBaseStock(pick);
+      } else {
+        baseSearchResults.innerHTML = results.slice(0, 10).map((r, i) => `
+          <div class="stock-result-item" data-idx="${i}">
+            <span class="sri-symbol">${H.escapeHtml(r.symbol)}</span>
+            <span class="sri-name">${H.escapeHtml(r.name)}</span>
+          </div>
+        `).join('');
+
+        baseSearchResults.querySelectorAll('.stock-result-item').forEach((el, i) => {
+          el.onclick = () => _selectBaseStock(results[i]);
+        });
+      }
+    }catch(err){
+      _showBaseMsg('❌ ' + H.escapeHtml(err.message), 'error');
+    }finally{
+      if(baseSearchBtn){
+        baseSearchBtn.disabled = false;
+        baseSearchBtn.textContent = 'جستجو';
+      }
+    }
+  }
+
   function bindBaseInputs(){
-    const symEl = $('baseSymbol');
-    const indEl = $('baseIndustry');
-    const priceEl = $('basePrice');
-    const sharesEl = $('baseShares');
-
-    if(symEl){
-      symEl.addEventListener('input', () => {
-        BASE.symbol = symEl.value.trim();
-        updateCompareButton();
-      });
-    }
-    if(indEl){
-      indEl.addEventListener('input', () => {
-        BASE.industry = indEl.value.trim();
-      });
-    }
-    if(priceEl){
-      priceEl.addEventListener('input', (e) => {
-        const oldValue = e.target.value;
-        const cursorPos = e.target.selectionStart;
-        const digitsBeforeCursor = H.fa2en(oldValue.slice(0, cursorPos)).replace(/[^\d]/g, '').length;
-
-        const formatted = _fmtNumInput(oldValue);
-        e.target.value = formatted;
-
-        let newPos = 0, digitCount = 0;
-        for(let i = 0; i < formatted.length; i++){
-          if(digitCount >= digitsBeforeCursor) break;
-          newPos = i + 1;
-          if(/[۰-۹]/.test(formatted[i])) digitCount++;
-        }
-        if(digitsBeforeCursor === 0) newPos = 0;
-        try{ e.target.setSelectionRange(newPos, newPos); }catch(_){}
-
-        BASE.price = H.toNum(formatted);
-        updateCompareButton();
-      });
-    }
-    if(sharesEl){
-      sharesEl.addEventListener('input', (e) => {
-        const oldValue = e.target.value;
-        const cursorPos = e.target.selectionStart;
-        const digitsBeforeCursor = H.fa2en(oldValue.slice(0, cursorPos)).replace(/[^\d]/g, '').length;
-
-        const formatted = _fmtNumInput(oldValue);
-        e.target.value = formatted;
-
-        let newPos = 0, digitCount = 0;
-        for(let i = 0; i < formatted.length; i++){
-          if(digitCount >= digitsBeforeCursor) break;
-          newPos = i + 1;
-          if(/[۰-۹]/.test(formatted[i])) digitCount++;
-        }
-        if(digitsBeforeCursor === 0) newPos = 0;
-        try{ e.target.setSelectionRange(newPos, newPos); }catch(_){}
-
-        BASE.shares = H.toNum(formatted);
-        updateCompareButton();
-      });
-    }
-
+    // ⭐ فایل سهم اصلی
     const baseFileInput = $('baseFile');
     if(baseFileInput){
       baseFileInput.onchange = async (e) => {
@@ -146,6 +267,7 @@
       };
     }
 
+    // ⭐ دراپ سهم اصلی
     const drop = $('baseDrop');
     if(drop){
       ['dragover', 'dragenter'].forEach(ev => {
@@ -165,17 +287,15 @@
         if(!f) return;
         await loadBaseFile(f);
       });
+    }
 
-      const browseBtn = drop.querySelector('.drop-browse-btn');
-      if(browseBtn){
-        browseBtn.onclick = (e) => {
-          e.stopPropagation();
-          if(baseFileInput) baseFileInput.click();
-        };
-      }
-      drop.addEventListener('click', (e) => {
-        if(e.target.closest('button')) return;
-        if(baseFileInput) baseFileInput.click();
+    // ⭐ سرچ سهم اصلی
+    const baseSearchBtn = $('baseSearchBtn');
+    const baseSearchInput = $('baseSearchInput');
+    if(baseSearchBtn) baseSearchBtn.onclick = _doBaseSearch;
+    if(baseSearchInput){
+      baseSearchInput.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter'){ e.preventDefault(); _doBaseSearch(); }
       });
     }
   }
@@ -206,15 +326,8 @@
         const cap = parsed.capital?.[0];
         if(cap != null && cap > 0){
           BASE.shares = cap * 1000;
-          const sharesEl = $('baseShares');
-          if(sharesEl) sharesEl.value = _fmtNumInput(BASE.shares);
+          if($('baseShares')) $('baseShares').value = BASE.shares;
         }
-      }
-
-      if(!BASE.symbol){
-        BASE.symbol = file.name.replace(/\.[^.]+$/, '');
-        const symEl = $('baseSymbol');
-        if(symEl) symEl.value = BASE.symbol;
       }
 
       const info = $('baseFileInfo');
@@ -233,126 +346,132 @@
     }
   }
 
+  /* ============================================================
+     رندر لیست هم‌گروهی‌ها (ساده)
+  ============================================================ */
   function renderPeers(){
     const box = $('peersList');
     if(!box) return;
 
+    // ⭐ آپدیت badge تعداد
+    const badge = $('peersCountBadge');
+    if(badge){
+      badge.textContent = `${H.toFa(PEERS.length)} از ${H.toFa(MAX_PEERS)}`;
+      if(PEERS.length >= MAX_PEERS){
+        badge.style.background = 'rgba(198,40,40,.15)';
+        badge.style.color = 'var(--bad)';
+      } else if(PEERS.length > 0){
+        badge.style.background = 'rgba(23,105,224,.15)';
+        badge.style.color = 'var(--blue)';
+      } else {
+        badge.style.background = 'rgba(102,112,133,.12)';
+        badge.style.color = 'var(--sub)';
+      }
+    }
+
     if(!PEERS.length){
-      box.innerHTML = `
-        <div class="saved-empty" style="padding:16px;text-align:center;color:var(--sub);font-size:12.5px">
-          هنوز سهم هم‌گروهی اضافه نکردی. روی «📁 انتخاب فایل‌ها» بزن یا فایل‌ها رو بکش و بذار اینجا.
-        </div>
-      `;
+      box.innerHTML = '';
       updateCompareButton();
-      updateAddPeerButton();
       return;
     }
 
     box.innerHTML = PEERS.map((peer, i) => {
       const fileName = peer.file ? peer.file.name : '—';
-      const symbolVal = (peer.symbol || '').replace(/"/g, '&quot;');
-      const priceVal = peer.price ? _fmtNumInput(peer.price) : '';
-      const sharesVal = peer.shares ? _fmtNumInput(peer.shares) : '';
+      const symbolVal = (peer.symbol || '');
+      const priceVal = peer.price ? H.toFa(Math.round(peer.price).toLocaleString('en-US')) + ' ریال' : '—';
+      const sharesVal = peer.shares ? H.toFa(Math.round(peer.shares).toLocaleString('en-US')) + ' سهم' : '—';
       const errorBadge = peer.error
-        ? `<span style="color:var(--bad);font-size:12px;flex-basis:100%">⚠️ ${peer.error}</span>`
+        ? `<div class="simple-peer-error">⚠️ ${H.escapeHtml(peer.error)}</div>`
         : '';
+
       return `
-        <div class="peer-item">
-          <span class="color-dot" style="background:${peer.color}"></span>
+        <div class="simple-peer-item">
+          <span class="simple-peer-color" style="background:${peer.color}"></span>
 
-          <label class="field-label">
-            نماد
-            <input class="symbol-input" type="text"
-                   value="${symbolVal}"
-                   placeholder="نماد"
-                   oninput="window.indUpdatePeerSymbol(${i}, this.value)">
-          </label>
+          <div class="simple-peer-info">
+            <div class="simple-peer-name">
+              ${symbolVal ? `<b>${H.escapeHtml(symbolVal)}</b>` : '<span style="color:var(--sub)">بدون نماد</span>'}
+              <span class="simple-peer-file">📄 ${H.escapeHtml(fileName)}</span>
+            </div>
+            <div class="simple-peer-meta">
+              💰 ${priceVal} &nbsp;|&nbsp; 📊 ${sharesVal}
+            </div>
+          </div>
 
-          <label class="field-label">
-            قیمت (ریال)
-            <input class="price-input" type="text" inputmode="numeric"
-                   value="${priceVal}"
-                   placeholder="اختیاری"
-                   oninput="window.indUpdatePeerPrice(${i}, this.value)">
-          </label>
+          <div class="simple-peer-search">
+            <input type="text"
+                   placeholder="🔍 سرچ نماد"
+                   id="peer-search-${i}"
+                   onkeydown="window.indPeerSearchKey(${i}, event)">
+          </div>
 
-          <label class="field-label">
-            تعداد سهام
-            <input class="shares-input" type="text" inputmode="numeric"
-                   value="${sharesVal}"
-                   placeholder="اختیاری"
-                   oninput="window.indUpdatePeerShares(${i}, this.value)">
-          </label>
-
-          <button class="remove-btn" onclick="window.indRemovePeer(${i})">✕</button>
-
-          <span class="file-info">📄 ${fileName}</span>
+          <button class="simple-peer-remove" onclick="window.indRemovePeer(${i})" title="حذف">✕</button>
           ${errorBadge}
         </div>
       `;
     }).join('');
 
     updateCompareButton();
-    updateAddPeerButton();
   }
 
-  function updateAddPeerButton(){
-    const addBtn2 = $('addPeerBtn2');
-    if(addBtn2){
-      if(PEERS.length >= MAX_PEERS){
-        addBtn2.disabled = true;
-        addBtn2.style.opacity = '0.5';
-        addBtn2.style.cursor = 'not-allowed';
-      } else {
-        addBtn2.disabled = false;
-        addBtn2.style.opacity = '1';
-        addBtn2.style.cursor = 'pointer';
-      }
+  /* ============================================================
+     سرچ برای هر peer (ساده)
+  ============================================================ */
+  window.indPeerSearchKey = async function(idx, event){
+    if(event && event.key !== 'Enter') return;
+    if(event) event.preventDefault();
+
+    const peer = PEERS[idx];
+    if(!peer) return;
+
+    const input = document.getElementById(`peer-search-${idx}`);
+    const q = (input?.value || '').trim();
+    if(!q){
+      if(window.showToast) window.showToast('⚠️ اسم نماد رو وارد کن', true);
+      return;
     }
 
-    const dropText = document.querySelector('.peers-drop-text');
-    if(dropText){
-      if(PEERS.length >= MAX_PEERS){
-        dropText.textContent = `حداکثر ${H.toFa(MAX_PEERS)} سهم پر شده`;
-      } else if(PEERS.length > 0){
-        dropText.textContent = `${H.toFa(PEERS.length)} از ${H.toFa(MAX_PEERS)} سهم اضافه شد`;
-      } else {
-        dropText.textContent = 'فایل‌های سهم‌های هم‌گروهی';
+    const item = input.closest('.simple-peer-item');
+    if(item) item.classList.add('loading');
+
+    try{
+      const results = await _searchSymbolTsetmc(q);
+      if(!results || !results.length){
+        if(window.showToast) window.showToast(`❌ نمادی با اسم «${q}» پیدا نشد`, true);
+        if(item) item.classList.remove('loading');
+        return;
       }
+
+      let pick = null;
+      if(results.length === 1) pick = results[0];
+      else {
+        const exact = results.find(r => r.symbol.toLowerCase() === q.toLowerCase());
+        if(exact) pick = exact;
+      }
+      if(!pick) pick = results[0];
+
+      const [priceData, instData] = await Promise.all([
+        _fetchPriceInfo(pick.insCode),
+        _fetchInstrumentInfo(pick.insCode).catch(() => null),
+      ]);
+
+      peer.symbol = pick.symbol || '';
+      peer.price = priceData?.lastPrice || null;
+      peer.shares = instData?.shares || null;
+
+      renderPeers();
+      updateCompareButton();
+
+      if(window.showToast) window.showToast(`✅ ${pick.symbol} بارگذاری شد`);
+    }catch(err){
+      if(item) item.classList.remove('loading');
+      if(window.showToast) window.showToast('❌ ' + err.message, true);
     }
-  }
+  };
 
   window.indUpdatePeerSymbol = function(idx, value){
     if(!PEERS[idx]) return;
     PEERS[idx].symbol = String(value || '').trim();
-  };
-
-  window.indUpdatePeerPrice = function(idx, value){
-    if(!PEERS[idx]) return;
-    const num = H.toNum(value);
-    PEERS[idx].price = num;
-    const inputs = document.querySelectorAll('.peer-item .price-input');
-    if(inputs[idx]){
-      const caretEnd = inputs[idx].selectionStart === inputs[idx].value.length;
-      inputs[idx].value = num ? _fmtNumInput(num) : '';
-      if(caretEnd){
-        try{ inputs[idx].setSelectionRange(inputs[idx].value.length, inputs[idx].value.length); }catch(_){}
-      }
-    }
-  };
-
-  window.indUpdatePeerShares = function(idx, value){
-    if(!PEERS[idx]) return;
-    const num = H.toNum(value);
-    PEERS[idx].shares = num;
-    const inputs = document.querySelectorAll('.peer-item .shares-input');
-    if(inputs[idx]){
-      const caretEnd = inputs[idx].selectionStart === inputs[idx].value.length;
-      inputs[idx].value = num ? _fmtNumInput(num) : '';
-      if(caretEnd){
-        try{ inputs[idx].setSelectionRange(inputs[idx].value.length, inputs[idx].value.length); }catch(_){}
-      }
-    }
   };
 
   window.indRemovePeer = function(idx){
@@ -389,11 +508,10 @@
     for(const f of files){
       const idx = PEERS.length;
       const color = PEER_COLORS[idx % PEER_COLORS.length];
-      const defaultSymbol = f.name.replace(/\.[^.]+$/, '');
 
       const peer = {
         file: f,
-        symbol: defaultSymbol,
+        symbol: '',
         price: null,
         shares: null,
         color,
@@ -427,35 +545,8 @@
   }
 
   function bindPeersInputs(){
-    const addBtn2 = $('addPeerBtn2');
     const peersInput = $('peersFileInput');
     const peersDrop = $('peersDrop');
-
-    function triggerFileSelect(){
-      if(PEERS.length >= MAX_PEERS){
-        const errBox = $('industryErr');
-        if(errBox){
-          errBox.style.display = 'block';
-          errBox.textContent = `حداکثر ${H.toFa(MAX_PEERS)} سهم هم‌گروهی مجازه.`;
-        }
-        return;
-      }
-      if(peersInput) peersInput.click();
-    }
-
-    if(addBtn2){
-      addBtn2.onclick = (e) => {
-        e.stopPropagation();
-        triggerFileSelect();
-      };
-    }
-
-    if(peersDrop){
-      peersDrop.onclick = (e) => {
-        if(e.target.closest('button')) return;
-        triggerFileSelect();
-      };
-    }
 
     if(peersInput){
       peersInput.onchange = (e) => {
@@ -720,7 +811,6 @@
     const bestScore = best(peerScores, 'higher');
     const worstScore = worst(peerScores, 'higher');
 
-    // ⭐ تعداد نمونه
     const n = peers.length;
     const nText = H.toFa(n);
 
@@ -805,7 +895,6 @@
     const peerZ = peers.map(p => p.zscore).filter(z => z != null && isFinite(z));
     const avgZ = avg(peerZ);
 
-    // ⭐ تعداد نمونه
     const nZ = peers.length;
     const nZText = H.toFa(nZ);
 
@@ -886,7 +975,6 @@
 
     const { base, peers } = INDUSTRY_RESULTS;
 
-    // ⭐ تعداد نمونه
     const sampleSize = peers.length;
     const sampleText = H.toFa(sampleSize);
 
@@ -900,7 +988,6 @@
       const bestVal = best(peerVals, ratio.dir);
       const worstVal = worst(peerVals, ratio.dir);
 
-      // ⭐ تعداد نمونه برای این ردیف
       const nVal = H.toFa(peerVals.length);
 
       let color = '#94a3b8';
@@ -1017,7 +1104,6 @@
     const totalPossible = criteria.length * (all.length - 1);
     const maxScore = ranked.length ? ranked[0].totalScore : 0;
 
-    // ⭐ تعداد نمونه
     const nText = H.toFa(peers.length);
 
     let cardsHtml = '<div class="rank-cards">';
@@ -1326,14 +1412,6 @@
         price: item.snapshot.base.price,
         shares: item.snapshot.base.shares,
       };
-      if($('baseSymbol')) $('baseSymbol').value = BASE.symbol || '';
-      if($('baseIndustry')) $('baseIndustry').value = BASE.industry || '';
-      if($('basePrice')) $('basePrice').value = BASE.price ? _fmtNumInput(BASE.price) : '';
-      if($('baseShares')) $('baseShares').value = BASE.shares ? _fmtNumInput(BASE.shares) : '';
-      if($('baseFileInfo') && BASE.symbol){
-        $('baseFileInfo').classList.add('active');
-        if($('baseFileName')) $('baseFileName').textContent = '(بازیابی‌شده از ذخیره)';
-      }
 
       PEERS = item.snapshot.peers.map((p, i) => ({
         file: null,
@@ -1361,7 +1439,7 @@
       return;
     }
     const data = {
-      version: '2.1.4',
+      version: '2.3.0',
       type: 'kodal_industries',
       exportDate: new Date().toISOString(),
       count: INDUSTRY_SAVED.length,
@@ -1624,6 +1702,6 @@
     init();
   }
 
-  console.log('%c📈 compare.js v2.1.4 لود شد (با میانگین نمونه)', 'color:#f59e0b;font-weight:bold');
+  console.log('%c📈 compare.js v2.3.0 لود شد', 'color:#f59e0b;font-weight:bold');
 
 })();
