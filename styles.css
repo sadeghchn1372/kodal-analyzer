@@ -4991,3 +4991,190 @@ body.dark .ratio-avg-marker-label {
   direction: ltr;
   display: inline-block;
 }
+
+
+
+
+
+
+/* ============================================================
+   🆕 بخش جستجوی سریع سهم (stock-search) — v1.2.0 فشرده
+============================================================ */
+.stock-search-section {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), var(--chart-bg));
+  border-right: 4px solid #8b5cf6;
+  padding: 12px 14px !important;
+  margin-top: 14px !important;
+  margin-bottom: 14px !important;
+}
+
+.stock-search-section .input-section-title {
+  margin-bottom: 8px;
+  font-size: 13.5px;
+}
+
+.stock-search-row {
+  display: flex;
+  gap: 8px;
+}
+
+#stockSearchInput {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  color: var(--txt);
+  font: inherit;
+  font-size: 13.5px;
+  direction: rtl;
+  transition: .15s;
+}
+
+#stockSearchInput:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+#stockSearchBtn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: .15s;
+  box-shadow: 0 3px 10px rgba(139, 92, 246, 0.25);
+}
+
+#stockSearchBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(139, 92, 246, 0.4);
+}
+
+#stockSearchBtn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+  transform: none;
+}
+
+/* لیست نتایج */
+.stock-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.stock-search-results:empty {
+  margin-top: 0;
+}
+
+.stock-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.stock-result-item:hover {
+  background: rgba(139, 92, 246, 0.08);
+  border-color: #8b5cf6;
+  transform: translateX(-3px);
+}
+
+.stock-result-item .sri-symbol {
+  font-weight: 700;
+  color: #8b5cf6;
+  font-size: 13.5px;
+  min-width: 70px;
+  direction: rtl;
+}
+
+.stock-result-item .sri-name {
+  font-size: 12px;
+  color: var(--sub);
+  flex: 1;
+}
+
+.sri-loading {
+  padding: 10px 12px;
+  text-align: center;
+  color: var(--sub);
+  font-size: 12.5px;
+  background: var(--chart-bg);
+  border-radius: 8px;
+}
+
+/* پیام موفقیت / خطا — فشرده و افقی */
+.search-result-msg {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  margin-top: 8px;
+  animation: srFadeIn .3s ease;
+}
+
+@keyframes srFadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.search-result-msg.success {
+  background: rgba(16, 185, 129, 0.1);
+  border-right: 3px solid var(--good);
+  color: var(--txt);
+}
+
+.search-result-msg.error {
+  background: rgba(198, 40, 40, 0.1);
+  border-right: 3px solid var(--bad);
+  color: var(--bad);
+}
+
+/* موبایل */
+@media (max-width: 600px) {
+  .stock-search-row {
+    flex-direction: column;
+  }
+  #stockSearchBtn {
+    width: 100%;
+  }
+  .search-result-msg {
+    font-size: 12px;
+  }
+  .search-result-msg span:last-child {
+    margin-right: 0 !important;
+    width: 100%;
+    margin-top: 4px;
+  }
+}
+
+/* موبایل */
+@media (max-width: 600px) {
+  .stock-search-row {
+    flex-direction: column;
+  }
+  #stockSearchBtn {
+    width: 100%;
+  }
+  .stock-result-item .sri-symbol {
+    min-width: 60px;
+    font-size: 13px;
+  }
+}
