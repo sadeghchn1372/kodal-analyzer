@@ -5107,6 +5107,15 @@ body.dark .ratio-avg-marker-label {
   flex: 1;
 }
 
+.stock-result-item .sri-industry {
+  font-size: 11px;
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-weight: 600;
+}
 .sri-loading {
   padding: 10px 12px;
   text-align: center;
@@ -5274,6 +5283,54 @@ body.dark .score-note-top {
 
 .base-search-results:empty {
   margin-top: 0;
+}
+/* ⭐ استایل نتایج جستجو در تب مقایسه با صنعت */
+.base-search-results .stock-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.base-search-results .stock-result-item:hover {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: #f59e0b;
+  transform: translateX(-3px);
+  box-shadow: 0 3px 12px rgba(245, 158, 11, 0.15);
+}
+
+.base-search-results .stock-result-item .sri-symbol {
+  font-weight: 700;
+  color: #f59e0b;
+  font-size: 14px;
+  min-width: 75px;
+  direction: rtl;
+}
+
+.base-search-results .stock-result-item .sri-name {
+  font-size: 12.5px;
+  color: var(--sub);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ⭐ استایل گروه صنعت در نتایج (برای هر دو تب) */
+.stock-result-item .sri-industry {
+  font-size: 11px;
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.12);
+  padding: 3px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-weight: 600;
+  border: 1px solid rgba(139, 92, 246, 0.2);
 }
 
 .base-search-msg {
@@ -5927,4 +5984,86 @@ body.dark .score-note-top {
   .simple-peer-search { grid-column: 1 / -1; grid-row: 2; }
   .simple-peer-search input { width: 100%; }
   .simple-peer-remove { grid-column: 3; grid-row: 1; }
+}
+/* ============================================================
+   🆕 کادر اطلاعات سهم انتخاب‌شده (تب مقایسه با صنعت)
+============================================================ */
+.base-info-box {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(245,158,11,.05), var(--chart-bg));
+  border-radius: 12px;
+  border: 1.5px solid rgba(245,158,11,.3);
+  border-right: 4px solid #f59e0b;
+  animation: baseInfoFadeIn .3s ease;
+}
+
+@keyframes baseInfoFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.base-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.base-info-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.base-info-field label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--sub);
+  margin: 0;
+}
+
+.base-info-field input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--txt);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  direction: rtl;
+  text-align: right;
+  cursor: default;
+  font-variant-numeric: tabular-nums;
+}
+
+.base-info-field input:focus {
+  outline: none;
+}
+
+#baseSymbolDisplay {
+  color: #f59e0b;
+  font-size: 14px;
+}
+
+#baseIndustryDisplay {
+  color: #8b5cf6;
+}
+
+/* موبایل */
+@media (max-width: 800px) {
+  .base-info-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 500px) {
+  .base-info-grid {
+    grid-template-columns: 1fr;
+  }
+  .base-info-field input {
+    font-size: 12.5px;
+  }
 }

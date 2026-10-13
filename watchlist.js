@@ -1,7 +1,9 @@
 /* ============================================================
-   watchlist.js — منطق تب «دیدبان»  |  v43
+   watchlist.js — منطق تب «دیدبان»  |  v44
    طراحی: صادق رمضانی
-   v43: انتخابگر نسبت + نمودار خطی تک‌پارامتری
+   تغییرات v44:
+   - اصلاح analyzeAlerts برای حقوق مالکانه منفی (eq > 0)
+   - بهبود wlViewAnalysisReport با try/catch
 ============================================================ */
 
 (function(){
@@ -27,9 +29,11 @@
     { key: 'netMargin',      label: 'حاشیه سود خالص',           color: '#10b981', type: 'pct', calc: m => (m.net != null && m.revenue != null && m.revenue !== 0) ? (m.net / m.revenue) : null },
     { key: 'grossMargin',    label: 'حاشیه سود ناخالص',         color: '#f59e0b', type: 'pct', calc: m => (m.grossProfit != null && m.revenue != null && m.revenue !== 0) ? (m.grossProfit / m.revenue) : null },
     { key: 'opMargin',       label: 'حاشیه سود عملیاتی',        color: '#ec4899', type: 'pct', calc: m => (m.opProfit != null && m.revenue != null && m.revenue !== 0) ? (m.opProfit / m.revenue) : null },
-    { key: 'roe',            label: 'ROE (بازده حقوق مالکانه)', color: '#dc2626', type: 'pct', calc: m => (m.net != null && m.eq != null && m.eq !== 0) ? (m.net / m.eq) : null },
+    // ⭐ اصلاح شد: ROE فقط وقتی eq مثبته
+    { key: 'roe',            label: 'ROE (بازده حقوق مالکانه)', color: '#dc2626', type: 'pct', calc: m => (m.net != null && m.eq != null && m.eq > 0) ? (m.net / m.eq) : null },
     { key: 'roa',            label: 'ROA (بازده دارایی)',       color: '#0891b2', type: 'pct', calc: m => (m.net != null && m.ta != null && m.ta !== 0) ? (m.net / m.ta) : null },
-    { key: 'debtToEquity',   label: 'بدهی به حقوق',              color: '#a16207', type: 'num', calc: m => (m.tl != null && m.eq != null && m.eq !== 0) ? (m.tl / m.eq) : null },
+    // ⭐ اصلاح شد: debtToEquity فقط وقتی eq مثبته
+    { key: 'debtToEquity',   label: 'بدهی به حقوق',              color: '#a16207', type: 'num', calc: m => (m.tl != null && m.eq != null && m.eq > 0) ? (m.tl / m.eq) : null },
     { key: 'debtToAsset',    label: 'بدهی به دارایی',            color: '#7c3aed', type: 'pct', calc: m => (m.tl != null && m.ta != null && m.ta !== 0) ? (m.tl / m.ta) : null },
     { key: 'assetTurnover',  label: 'گردش دارایی',               color: '#0284c7', type: 'num', calc: m => (m.revenue != null && m.ta != null && m.ta !== 0) ? (m.revenue / m.ta) : null },
     { key: 'cfoToNet',       label: 'کیفیت سود (CFO/Net)',       color: '#65a30d', type: 'num', calc: m => (m.cfo != null && m.net != null && m.net !== 0) ? (m.cfo / m.net) : null },
@@ -179,12 +183,6 @@
       return (curr - prev) / Math.abs(prev);
     };
 
-    // تابع کمکی: تغییر مطلق
-    const absChange = (curr, prev) => {
-      if(curr == null || prev == null) return null;
-      return curr - prev;
-    };
-
     // ۱) تغییر درآمد
     const revG = relChange(mCurr.revenue, mPrev.revenue);
     if(revG != null){
@@ -232,9 +230,9 @@
       }
     }
 
-    // ۴) تغییر بدهی/حقوق
-    const dePrev = (mPrev.tl != null && mPrev.eq && mPrev.eq !== 0) ? (mPrev.tl / mPrev.eq) : null;
-    const deCurr = (mCurr.tl != null && mCurr.eq && mCurr.eq !== 0) ? (mCurr.tl / mCurr.eq) : null;
+    // ⭐ ۴) تغییر بدهی/حقوق — فقط وقتی eq مثبته معنی داره
+    const dePrev = (mPrev.tl != null && mPrev.eq != null && mPrev.eq > 0) ? (mPrev.tl / mPrev.eq) : null;
+    const deCurr = (mCurr.tl != null && mCurr.eq != null && mCurr.eq > 0) ? (mCurr.tl / mCurr.eq) : null;
     const deChange = (dePrev != null && deCurr != null) ? (deCurr - dePrev) : null;
     if(deChange != null){
       if(deChange > 0.5){
@@ -249,7 +247,13 @@
       }
     }
 
-    // ۵) CFO منفی شده
+    // ⭐ ۵) حقوق مالکانه منفی شده (هشدار بحرانی)
+    if(mCurr.eq != null && mCurr.eq <= 0 && (mPrev.eq == null || mPrev.eq > 0)){
+      items.push({icon:'🚨', text:`<b>حقوق مالکانه منفی شد!</b> — بدهی‌ها از دارایی‌ها بیشتر شده`});
+      hasDanger = true;
+    }
+
+    // ۶) CFO منفی شده
     if(mCurr.cfo != null && mCurr.cfo < 0 && (mPrev.cfo == null || mPrev.cfo >= 0)){
       items.push({icon:'🚨', text:`جریان نقد عملیاتی منفی شد`});
       hasDanger = true;
@@ -463,12 +467,11 @@
 
     const yAt = v => padT + plotH - ((v - botV) / (topV - botV)) * plotH;
     // ⭐ حالت LTR: قدیمی‌ترین سمت چپ، جدیدترین سمت راست
-    // این با ذهنیت کاربر ایرانی که می‌خواد «روند از چپ به راست صعودی» رو ببینه سازگاره
     const xAt = i => padL + (plotW / (points.length - 1)) * i;
 
     let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
 
-    // خطوط افقی راهنما (کم‌رنگ‌تر تا تداخل نداشته باشه)
+    // خطوط افقی راهنما
     const steps = 4;
     for(let i=0; i<=steps; i++){
       const y = padT + (plotH * i / steps);
@@ -506,21 +509,17 @@
       svg += `<polyline points="${linePoints.join(' ')}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
     }
 
-    // نقاط + برچسب با پس‌زمینه سفید (تا با خطوط راهنما تداخل نکنه)
+    // نقاط + برچسب
     points.forEach((p, i) => {
       const v = getter(p);
       if(v == null) return;
       const x = xAt(i), y = yAt(v);
       const labelText = formatVal(v);
-      // تخمین عرض برچسب بر اساس طول متن
       const lblW = labelText.length * 7 + 10;
       const lblH = 16;
       const lblY = y - 22;
-      // مستطیل پس‌زمینه برچسب
       svg += `<rect x="${x - lblW/2}" y="${lblY - lblH + 4}" width="${lblW}" height="${lblH}" rx="4" fill="var(--card)" stroke="${color}" stroke-width="0.8" opacity="0.95"/>`;
-      // متن برچسب
       svg += `<text x="${x}" y="${lblY}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${color}">${labelText}</text>`;
-      // دایره نقطه
       svg += `<circle cx="${x}" cy="${y}" r="5" fill="#fff" stroke="${color}" stroke-width="2.5"><title>${p.label.replace('\n',' ')} — ${title}: ${labelText}</title></circle>`;
     });
 
@@ -627,6 +626,7 @@
   }
 
   /* ---------- اقدامات ---------- */
+  // ⭐ اصلاح شد: اضافه کردن try/catch برای جلوگیری از کرش
   window.wlViewAnalysisReport = function(itemId, reportId){
     const item = WATCHLIST.analysis.find(w => w.id === itemId);
     if(!item) return;
@@ -637,8 +637,13 @@
     if(tab) tab.click();
 
     setTimeout(() => {
-      if(window.restoreFromExternal && rep.data){
-        window.restoreFromExternal(rep.data);
+      if(typeof window.restoreFromExternal === 'function' && rep.data){
+        try {
+          window.restoreFromExternal(rep.data);
+        } catch(err) {
+          console.error('restoreFromExternal error:', err);
+          if(window.showToast) window.showToast('خطا در بازیابی: ' + err.message, true);
+        }
       } else {
         if(window.showToast) window.showToast('سیستم بازیابی آماده نیست', true);
       }
@@ -717,7 +722,7 @@
       return;
     }
     const data = {
-      version: '43',
+      version: '44',
       type: 'kodal_watchlist',
       exportDate: new Date().toISOString(),
       analysisCount: WATCHLIST.analysis.length,
@@ -866,6 +871,6 @@
 
   renderWatchlist();
 
-  console.log('%c👁️ watchlist.js v43 لود شد (با انتخابگر نسبت)', 'color:#10b981;font-weight:bold');
+  console.log('%c👁️ watchlist.js v44 لود شد (با اصلاح ROE منفی)', 'color:#10b981;font-weight:bold');
 
 })();

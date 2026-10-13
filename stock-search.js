@@ -1,6 +1,6 @@
 /* ============================================================
    stock-search.js — جستجو + دریافت خودکار از TSETMC
-   نسخه: 1.3.0 — با فیلتر اختیار معامله
+   نسخه: 1.5.0 — با گروه صنعت + کادر اطلاعات
 ============================================================ */
 
 (function(){
@@ -50,14 +50,18 @@
     if(!query || !query.trim()) return null;
     const url = `https://cdn.tsetmc.com/api/Instrument/GetInstrumentSearch/${encodeURIComponent(query.trim())}`;
 
-    const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    let response;
+    try {
+      response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    } catch(netErr) {
+      throw new Error('اتصال به سرور تستمک برقرار نشد. اینترنت رو بررسی کن.');
+    }
     if(!response.ok) throw new Error(`خطای شبکه: ${response.status}`);
 
     const data = await response.json();
     const results = data.instrumentSearch;
     if(!results || !results.length) return [];
 
-    // ⭐ فیلتر کردن
     const filtered = results.filter(_isRegularStock);
 
     return filtered.map(item => ({
@@ -94,7 +98,7 @@
   }
 
   /* ============================================================
-     اطلاعات کامل سهم (تعداد سهام)
+     اطلاعات کامل سهم (تعداد سهام + گروه صنعت)
   ============================================================ */
   async function fetchInstrumentInfo(insCode){
     const url = `https://cdn.tsetmc.com/api/Instrument/GetInstrumentInfo/${insCode}`;
@@ -110,11 +114,17 @@
       shares = info.zTitad;
     }
 
-    return { shares };
+    // ⭐ استخراج گروه صنعت
+    let industry = '';
+    if(info.sector && info.sector.lSecVal){
+      industry = String(info.sector.lSecVal).trim();
+    }
+
+    return { shares, industry };
   }
 
   /* ============================================================
-     پر کردن فیلدها
+     پر کردن فیلدهای معمولی (برای ویرایش و ذخیره‌سازی)
   ============================================================ */
   function fillFields(data){
     if($('symbolName')) $('symbolName').value = data.symbol || '';
@@ -133,6 +143,25 @@
       el.dispatchEvent(new Event('input', { bubbles: true }));
       el.dispatchEvent(new Event('change', { bubbles: true }));
     });
+  }
+
+  /* ============================================================
+     ⭐ پر کردن کادر اطلاعات (مثل تب مقایسه با صنعت)
+  ============================================================ */
+  function fillInfoBox(data){
+    const priceText = data.lastPrice
+      ? H.toFa(Math.round(data.lastPrice).toLocaleString('en-US'))
+      : '—';
+    const sharesText = data.shares
+      ? H.toFa(Math.round(data.shares).toLocaleString('en-US'))
+      : '—';
+
+    if($('stockSymbolDisplay')) $('stockSymbolDisplay').value = data.symbol || '—';
+    if($('stockPriceDisplay')) $('stockPriceDisplay').value = priceText;
+    if($('stockSharesDisplay')) $('stockSharesDisplay').value = sharesText;
+    if($('stockIndustryDisplay')) $('stockIndustryDisplay').value = data.industry || '—';
+
+    if($('stockInfoBox')) $('stockInfoBox').style.display = 'block';
   }
 
   /* ============================================================
@@ -158,10 +187,8 @@
      ساخت UI جستجو
   ============================================================ */
   function buildSearchUI(){
-    // اگه از قبل هست، رد کن
     if($('stockSearchInput')) return;
 
-    // anchor رو پیدا کن
     const anchor = $('stockSearchAnchor');
     if(!anchor){
       console.warn('⚠️ stock-search.js: anchor پیدا نشد');
@@ -174,7 +201,7 @@
       <div class="input-section-title">
         <span class="step-badge">۲</span>
         🔍 جستجوی سریع سهم
-        <span class="optional-badge">قیمت و تعداد سهام خودکار پر می‌شه</span>
+        <span class="optional-badge">قیمت، تعداد سهام و گروه صنعت خودکار پر می‌شه</span>
       </div>
 
       <div class="stock-search-row">
@@ -190,7 +217,6 @@
       <div id="searchResultMsg" class="search-result-msg" style="display:none"></div>
     `;
 
-    // جاگذاری
     anchor.parentNode.insertBefore(section, anchor.nextSibling);
 
     $('stockSearchBtn').onclick = () => handleSearch();
@@ -244,6 +270,7 @@
         return;
       }
 
+      // نمایش لیست نتایج
       resultsBox.innerHTML = results.slice(0, 10).map((r, i) => `
         <div class="stock-result-item" data-idx="${i}">
           <span class="sri-symbol">${H.escapeHtml(r.symbol)}</span>
@@ -279,11 +306,21 @@
       const data = {
         symbol: stock.symbol,
         name: stock.name,
+        industry: instData?.industry || '',   // ⭐ گروه صنعت از instrumentInfo
         ...priceData,
         shares: instData?.shares || null,
       };
 
+      // ⭐ پر کردن فیلدهای معمولی (ویرایش‌پذیر)
       fillFields(data);
+
+      // ⭐ پر کردن کادر اطلاعات (نمایش قشنگ)
+      fillInfoBox(data);
+
+      // آپدیت فیلد «صنعت» برای تب مقایسه
+      if($('baseIndustry') && data.industry){
+        $('baseIndustry').value = data.industry;
+      }
 
       const change = data.changePercent;
       let changeHtml = '';
@@ -302,9 +339,15 @@
         ? H.toFa(Math.round(data.shares).toLocaleString('en-US'))
         : '—';
 
+      // نمایش گروه صنعت در پیام
+      const industryHtml = data.industry
+        ? `<span style="color:#8b5cf6;font-size:11.5px;background:rgba(139,92,246,.12);padding:2px 8px;border-radius:6px;font-weight:600">🏭 ${H.escapeHtml(data.industry)}</span>`
+        : '';
+
       showMessage(`
         <span style="font-weight:700;color:var(--good)">✅ ${H.escapeHtml(data.symbol)}</span>
         <span style="color:var(--sub);font-size:12px;margin-right:6px">${H.escapeHtml(data.name)}</span>
+        ${industryHtml}
         <span style="margin-right:auto;font-size:13px">
           💰 <b>${priceText}</b> ریال ${changeHtml}
           <span style="color:var(--line);margin:0 8px">|</span>
@@ -325,16 +368,14 @@
      اجرا
   ============================================================ */
   function init(){
-    // اول anchor رو چک کن
     const anchor = $('stockSearchAnchor');
     if(anchor){
       buildSearchUI();
       return;
     }
 
-    // اگه anchor نبود، صبر کن تا لود بشه (max 5 seconds)
     let tries = 0;
-    const maxTries = 25; // 25 × 200ms = 5 seconds
+    const maxTries = 25;
     const timer = setInterval(() => {
       tries++;
       const anchor2 = $('stockSearchAnchor');
@@ -354,6 +395,6 @@
     init();
   }
 
-  console.log('%c🔍 stock-search.js v1.3.0 لود شد', 'color:#8b5cf6;font-weight:bold');
+  console.log('%c🔍 stock-search.js v1.5.0 لود شد (گروه صنعت + کادر اطلاعات)', 'color:#8b5cf6;font-weight:bold');
 
 })();

@@ -1,6 +1,11 @@
 /* ============================================================
-   app.js — منطق اصلی تحلیل تک شرکت  |  v2.1.0
+   app.js — منطق اصلی تحلیل تک شرکت  |  v2.1.1
    وابسته به: helpers.js + ui-modal.js
+   تغییرات v2.1.1:
+   - اصلاح ROE منفی کاذب (وقتی حقوق مالکانه منفی است)
+   - اصلاح calcScore برای eq منفی
+   - اصلاح جدول نسبت‌ها برای ROE
+   - اصلاح HINTS.ROE به حالت dynamic
 ============================================================ */
 
 /* ---------- Utility (از helpers.js) ---------- */
@@ -151,7 +156,12 @@ function loadMarketFromStorage(){
 }
 function saveMarketToStorage(){
   try{
-    localStorage.setItem('kodal_market', JSON.stringify(MARKET));
+    // ⭐ زمان ذخیره رو هم نگه دار
+    const dataToSave = {
+      ...MARKET,
+      savedAt: Date.now()
+    };
+    localStorage.setItem('kodal_market', JSON.stringify(dataToSave));
   }catch(e){}
 }
 function applyMarketInputs(){
@@ -181,15 +191,34 @@ function applyMarketInputs(){
 
   if(PARSED) render(0);
 }
-loadMarketFromStorage();
+// ⭐ بهتره اطلاعات قبلی لود نشه تا با فایل جدید قاطی نشه
+// loadMarketFromStorage();   ← این خط کامنت شد
 
 setTimeout(() => {
-  if(MARKET.symbol && $('symbolName')) $('symbolName').value = MARKET.symbol;
-  if(MARKET.price && $('stockPrice')) $('stockPrice').value = formatNumberInput(MARKET.price);
-  if(MARKET.shares && $('stockCount')) $('stockCount').value = formatNumberInput(MARKET.shares);
-  if(MARKET.price && $('marketHint')){
-    $('marketHint').textContent = `✅ اطلاعات بازار از قبل ذخیره شده${MARKET.symbol ? ' — '+MARKET.symbol : ''}`;
-    $('marketHint').classList.add('active');
+  // ⭐ فیلدها رو خالی نگه دار (نمی‌خوایم اطلاعات قبلی بیاد)
+  // فقط اگه کاربر خودشون پر کردن، نمایش بده
+  
+  const savedMarket = (() => {
+    try {
+      const raw = localStorage.getItem('kodal_market');
+      if(!raw) return null;
+      const m = JSON.parse(raw);
+      // اگه تازه ذخیره شده (کمتر از ۱ ساعت)، نمایش بده
+      if(m.savedAt && (Date.now() - m.savedAt) < 3600000){
+        return m;
+      }
+      return null;
+    } catch(e) { return null; }
+  })();
+  
+  if(savedMarket){
+    if(savedMarket.symbol && $('symbolName')) $('symbolName').value = savedMarket.symbol;
+    if(savedMarket.price && $('stockPrice')) $('stockPrice').value = formatNumberInput(savedMarket.price);
+    if(savedMarket.shares && $('stockCount')) $('stockCount').value = formatNumberInput(savedMarket.shares);
+    if(savedMarket.price && $('marketHint')){
+      $('marketHint').textContent = `✅ اطلاعات بازار ذخیره شده (نیم ساعت قبل) — ${savedMarket.symbol || ''}`;
+      $('marketHint').classList.add('active');
+    }
   }
 }, 100);
 
@@ -1104,11 +1133,10 @@ const HINTS = {
     warn: 'متوسط',
     bad: 'کم',
   },
+  // ⭐ اصلاح شد: ROE الان dynamic هست
   'ROE': {
-    template: 'شرکت از پول سهامدارها ...  ساخته',
-    good: 'سود خوبی',
-    warn: 'سود متوسطی',
-    bad: 'سود کمی',
+    dynamic: true,
+    template: 'شرکت از هر ۱۰۰ تومان پول سهامداران، {v} تومان سود ساخته',
   },
   'گردش دارایی': {
     dynamic: true,
@@ -1290,8 +1318,11 @@ function calcScore(v){
   if(da != null){ total += 20; if(da <= 0.4) score += 20; else if(da <= 0.55) score += 15; else if(da <= 0.7) score += 10; else if(da <= 0.85) score += 5; else score += 1; }
   const nm = ratio(v.net, v.revenue);
   if(nm != null){ total += 25; if(nm >= 0.2) score += 25; else if(nm >= 0.12) score += 19; else if(nm >= 0.07) score += 13; else if(nm >= 0.03) score += 7; else if(nm > 0) score += 3; }
-  const roe = ratio(v.net, v.eq);
+  
+  // ⭐ اصلاح شد: ROE فقط وقتی eq مثبته معنی داره
+  const roe = (v.eq != null && v.eq > 0) ? ratio(v.net, v.eq) : null;
   if(roe != null){ total += 15; if(roe >= 0.25) score += 15; else if(roe >= 0.18) score += 12; else if(roe >= 0.1) score += 8; else if(roe >= 0.05) score += 4; }
+  
   const cq = ratio(v.cfo, v.net);
   if(cq != null){ total += 15; if(cq >= 1) score += 15; else if(cq >= 0.7) score += 11; else if(cq >= 0.4) score += 7; else if(cq >= 0.1) score += 3; }
   if(total === 0) return null;
@@ -2068,8 +2099,13 @@ function updateAccordionSummaries(v){
 
   const dupontEl = document.getElementById('accDupontSummary');
   if(dupontEl){
-    const roe = ratio(v.net, v.eq);
-    if(roe == null){ dupontEl.textContent = '—'; dupontEl.className = 'acc-summary'; }
+    // ⭐ اصلاح شد: ROE فقط وقتی eq مثبته معنی داره
+    const roe = (v.eq != null && v.eq > 0) ? ratio(v.net, v.eq) : null;
+    if(roe == null){ 
+      dupontEl.textContent = (v.eq != null && v.eq <= 0) ? 'بی‌معنی (سرمایه منفی)' : '—';
+      dupontEl.className = 'acc-summary';
+      if(v.eq != null && v.eq <= 0) dupontEl.classList.add('acc-summary-bad');
+    }
     else {
       let label, cls;
       if(roe < 0){ label = 'زیان‌ده'; cls = 'acc-summary-bad'; }
@@ -2191,6 +2227,12 @@ function updateAccordionSummaries(v){
   }
 }
 
+
+
+
+
+
+
 /* ============================================================
    تحلیل کن — Main
 ============================================================ */
@@ -2219,6 +2261,27 @@ if($('go')) $('go').onclick = async () => {
     const lines = await getLines(file);
     if(!lines.length) throw Error('هیچ خطی استخراج نشد.');
     PARSED = parseItems(lines);
+    PARSED = parseItems(lines);
+    window.PARSED = PARSED;
+
+    // ⭐ اگه نماد جدید با قبلی فرق داشت، اطلاعات بازار قبلی رو پاک کن
+    const currentSymbolInput = ($('symbolName')?.value || '').trim();
+    if(currentSymbolInput && MARKET.symbol && currentSymbolInput !== MARKET.symbol){
+      // کاربر فایل یه شرکت جدید داده ولی قیمت قبلی مونده
+      MARKET = {
+        symbol: currentSymbolInput,
+        price: null,
+        shares: null,
+        periodMonths: PARSED._detectedInfo?.months || 12,
+      };
+      saveMarketToStorage();
+      if($('stockPrice')) $('stockPrice').value = '';
+      if($('stockCount')) $('stockCount').value = '';
+      if($('marketHint')){
+        $('marketHint').textContent = '⚠️ فایل شرکت جدید بارگذاری شد — برای قیمت و تعداد سهام، از جستجوی سریع استفاده کن.';
+        $('marketHint').classList.add('active');
+      }
+    }
     window.PARSED = PARSED;
     const found = Object.keys(PARSED).length;
     if(!found) throw Error('هیچ قلمی شناسایی نشد.');
@@ -2380,7 +2443,7 @@ function render(ci){
               ((netRial != null && shares != null && shares !== 0) ? netRial / shares : null);
 
   const pe = (price != null && eps != null && eps !== 0) ? price / eps : null;
-  const pb = (marketCap != null && eqRial != null && eqRial !== 0) ? marketCap / eqRial : null;
+  const pb = (marketCap != null && eqRial != null && eqRial !== 0 && eqRial > 0) ? marketCap / eqRial : null;
   const ps = (marketCap != null && revRial != null && revRial !== 0) ? marketCap / revRial : null;
   const ev = (marketCap != null) ? (marketCap + (tlRial || 0) - (cashRial || 0)) : null;
   const evEbitda = (ev != null && ebitdaRial != null && ebitdaRial !== 0) ? ev / ebitdaRial : null;
@@ -2417,7 +2480,13 @@ function render(ci){
     lev: [
       ['بدهی به دارایی',              ratio(v.tl, v.ta),              x=>x>0.7, x=>x>0.5&&x<=0.7],
       ['بدهی به حقوق صاحبان سهام',   ratio(v.tl, v.eq),              x=>x>2,  x=>x>1&&x<=2],
-      ['پوشش بهره',                   ratio(v.opProfit, Math.abs(v.financeCost||0)) || null, x=>x<2, x=>x>=2&&x<4],
+      // ⭐ اصلاح: استفاده از EBIT (سود عملیاتی + استهلاک) طبق استاندارد
+      ['پوشش بهره',                   (() => {
+        if(v.opProfit == null || !v.financeCost || v.financeCost === 0) return null;
+        const depAbs = (v.deprec != null) ? Math.abs(v.deprec) : 0;
+        const ebit = v.opProfit + depAbs;
+        return ebit / Math.abs(v.financeCost);
+      })(), x=>x<2, x=>x>=2&&x<4],
       ['اهرم حقوق مالکانه',           ratio(v.ta, v.eq),              x=>x>4,  x=>x>2&&x<=4],
     ],
     prof: [
@@ -2425,7 +2494,8 @@ function render(ci){
       ['حاشیه سود عملیاتی', ratio(v.opProfit, v.revenue), x=>x<0.05, x=>x<0.15],
       ['حاشیه سود خالص',    ratio(v.net, v.revenue),    x=>x<0.05, x=>x<0.1],
       ['ROA',               ratio(v.net, v.ta),          x=>x<0.02, x=>x<0.05],
-      ['ROE',               ratio(v.net, v.eq),          x=>x<0.05, x=>x<0.15],
+      // ⭐ اصلاح شد: ROE فقط وقتی eq مثبته معنی داره
+      ['ROE',               (v.eq != null && v.eq > 0) ? ratio(v.net, v.eq) : null, x=>x<0.05, x=>x<0.15],
       ['ROCE (بازده سرمایه به کار گرفته شده)', roce, x=>x<0.05, x=>x<0.15],
       ['نرخ رشد فروش',     growthRev, x=>x<0, x=>x<0.1],
       ['نرخ رشد سود خالص', growthNet, x=>x<0, x=>x<0.1],
@@ -2454,7 +2524,13 @@ function render(ci){
   };
 
   const fmt = (name, x) => {
-    if(x==null) return '—';
+    if(x==null) {
+      // ⭐ اصلاح شد: اگه ROE بود و سرمایه منفی، پیام واضح نشون بده
+      if(name === 'ROE' && v.eq != null && v.eq <= 0){
+        return '<span style="color:var(--bad);font-weight:700;font-size:11px">بی‌معنی (سرمایه منفی)</span>';
+      }
+      return '—';
+    }
 
     // ⭐ نسبت‌هایی که وقتی منفی می‌شن، معنی ندارن
     const meaninglessIfNegative = /^(P\/E|PEG|P\/B|P\/S|EV\/EBITDA)$/.test(name);
@@ -2496,10 +2572,15 @@ function render(ci){
       // ⭐ اگه نسبت منفی و بی‌معنیه، برچسب خاص
       const isMeaningless = !meaningfulRatio(name, x);
       const isNegativeEPS = name === 'EPS' && x != null && x < 0;
+      const isNegativeEquityROE = name === 'ROE' && v.eq != null && v.eq <= 0;
 
       let c, label, color;
 
-      if(isMeaningless){
+      if(isNegativeEquityROE){
+        c = 'bad';
+        label = 'بی‌معنی';
+        color = '#c62828';
+      } else if(isMeaningless){
         c = 'bad';
         label = 'زیان‌ده';
         color = '#c62828';
@@ -2519,7 +2600,9 @@ function render(ci){
       else if(c === 'good') score = 85;
 
       const hint = HINTS[name] || '';
-      const dynamicHint = isMeaningless
+      const dynamicHint = isNegativeEquityROE
+        ? 'این نسبت برای شرکت با سرمایه منفی معنی نداره. به کارت «بازدهی سهامدار (DuPont)» مراجعه کن.'
+        : isMeaningless
         ? 'این نسبت برای شرکت زیان‌ده معنی نداره. شرکت در حال حاضر زیان می‌ده.'
         : makeHintDynamic(name, hint, c, x);
 
@@ -2681,7 +2764,7 @@ function render(ci){
   }
 
   const de = ratio(v.tl, v.eq);
-  if(de != null){
+  if(de != null && v.eq > 0){
     let label, type, hint;
     if(de > 2){
       type = 'bad';
@@ -2699,7 +2782,8 @@ function render(ci){
     A.push({t:type, x:`بدهی/حقوق ${label}.`, hint});
   }
 
-  const roe = ratio(v.net, v.eq);
+  // ⭐ اصلاح شد: ROE در تحلیل خودکار
+  const roe = (v.eq != null && v.eq > 0) ? ratio(v.net, v.eq) : null;
   if(roe != null){
     const faRoe = toFa((roe * 100).toFixed(1));
     let label, type, hint;
@@ -2721,6 +2805,12 @@ function render(ci){
       hint = `از هر ۱۰۰ تومان پول سهامداران، ${faRoe} تومان سود ساخته شده.`;
     }
     A.push({t:type, x:`ROE ${label}.`, hint});
+  } else if(v.eq != null && v.eq <= 0){
+    A.push({
+      t: 'bad',
+      x: `ROE قابل محاسبه نیست — حقوق مالکانه منفی است.`,
+      hint: 'وقتی بدهی‌ها از دارایی‌ها بیشتر باشه، ROE معنی نداره. به کارت «DuPont» برای تحلیل کامل مراجعه کن.'
+    });
   }
 
   const cq = ratio(v.cfo, v.net);
@@ -2806,15 +2896,18 @@ function renderSummary(v, extras){
     parts.push(`نسبت جاری <span class="stat">${num2(cr)}</span> (${desc})`);
   }
   const de = ratio(v.tl, v.eq);
-  if(de != null){
+  if(de != null && v.eq > 0){
     let desc = '';
     if(de > 2) desc = 'اهرم بالا';
     else if(de > 1) desc = 'اهرم متعادل';
     else desc = 'محافظه‌کارانه';
     parts.push(`بدهی به حقوق <span class="stat">${num2(de)}</span> (${desc})`);
   }
-  const roe = ratio(v.net, v.eq);
+  // ⭐ اصلاح شد: ROE در خلاصه
+  const roe = (v.eq != null && v.eq > 0) ? ratio(v.net, v.eq) : null;
   if(roe != null) parts.push(`ROE <span class="stat">${pct(roe)}</span>`);
+  else if(v.eq != null && v.eq <= 0) parts.push(`<span style="color:var(--bad)">ROE بی‌معنی (سرمایه منفی)</span>`);
+  
   if(extras && extras.pe != null){
     parts.push(`P/E <span class="stat">${num2(extras.pe)}</span>`);
   }
@@ -2839,8 +2932,10 @@ function renderAlerts(v){
     }
   }
 
-  const de1 = ratio(v.tl, v.eq);
-  const de0 = ratio(val('totalLiab',1), val('equity',1));
+  // ⭐ اصلاح شد: فقط وقتی eq مثبته
+  const de1 = (v.tl != null && v.eq != null && v.eq > 0) ? ratio(v.tl, v.eq) : null;
+  const de0 = (val('totalLiab',1) != null && val('equity',1) != null && val('equity',1) > 0) 
+    ? ratio(val('totalLiab',1), val('equity',1)) : null;
   if(de1 != null && de0 != null){
     const change = de1 - de0;
     if(change > 0.5){
@@ -3472,4 +3567,4 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
-console.log('%c🎯 app.js v2.1.0 لود شد', 'color:#1769e0;font-weight:bold');
+console.log('%c🎯 app.js v2.1.1 لود شد (با اصلاح ROE منفی)', 'color:#1769e0;font-weight:bold');

@@ -218,6 +218,13 @@
       <!-- ===== anchor برای جستجوی سهم (stock-search.js اینجا رو پر می‌کنه) ===== -->
       <div id="stockSearchAnchor"></div>
 
+
+
+
+
+
+
+
       <!-- ===== مرحله ۳: اطلاعات شرکت ===== -->
       <div class="input-section">
         <div class="input-section-title">
@@ -225,20 +232,39 @@
           📈 اطلاعات شرکت
           <span class="optional-badge">برای نسبت‌های ارزش‌گذاری</span>
         </div>
-        <div class="market-grid">
-          <div class="market-field">
-            <label>اسم نماد</label>
-            <input id="symbolName" type="text" placeholder="مثلاً: فولاد">
-          </div>
-          <div class="market-field">
-            <label>قیمت هر سهم (ریال)</label>
-            <input id="stockPrice" type="text" inputmode="numeric" placeholder="۵,۲۰۰" class="num-input">
-          </div>
-          <div class="market-field">
-            <label>تعداد سهام</label>
-            <input id="stockCount" type="text" inputmode="numeric" placeholder="۵,۰۰۰,۰۰۰,۰۰۰" class="num-input">
+
+        <!-- ⭐ فیلدهای اصلی (مخفی — مقادیرشون ذخیره می‌شن) -->
+        <input id="symbolName" type="hidden">
+        <input id="stockPrice" type="hidden">
+        <input id="stockCount" type="hidden">
+
+        <!-- ⭐ پیام راهنما (قبل از سرچ) -->
+        <div id="stockInfoEmptyMsg" class="market-hint" style="text-align:center;padding:14px">
+          💡 برای پر شدن خودکار اطلاعات، نماد رو توی باکس «جستجوی سریع سهم» (بالاتر) سرچ کن.
+        </div>
+
+        <!-- ⭐ کادر اطلاعات تکمیلی (بعد از سرچ نمایش داده می‌شه) -->
+        <div id="stockInfoBox" class="base-info-box" style="display:none">
+          <div class="base-info-grid">
+            <div class="base-info-field">
+              <label>📊 نماد</label>
+              <input id="stockSymbolDisplay" type="text" readonly>
+            </div>
+            <div class="base-info-field">
+              <label>💰 قیمت (ریال)</label>
+              <input id="stockPriceDisplay" type="text" readonly>
+            </div>
+            <div class="base-info-field">
+              <label>📈 تعداد سهام</label>
+              <input id="stockSharesDisplay" type="text" readonly>
+            </div>
+            <div class="base-info-field">
+              <label>🏭 گروه صنعت</label>
+              <input id="stockIndustryDisplay" type="text" readonly>
+            </div>
           </div>
         </div>
+
         <div class="market-hint" id="marketHint" style="display:none"></div>
       </div>
 
@@ -495,6 +521,28 @@
         </div>
         <div id="baseSearchResults" class="base-search-results"></div>
         <div id="baseSearchMsg" class="base-search-msg" style="display:none"></div>
+
+        <!-- ⭐ کادر اطلاعات سهم انتخاب‌شده -->
+        <div id="baseInfoBox" class="base-info-box" style="display:none">
+          <div class="base-info-grid">
+            <div class="base-info-field">
+              <label>📊 نماد</label>
+              <input id="baseSymbolDisplay" type="text" readonly>
+            </div>
+            <div class="base-info-field">
+              <label>💰 قیمت (ریال)</label>
+              <input id="basePriceDisplay" type="text" readonly>
+            </div>
+            <div class="base-info-field">
+              <label>📈 تعداد سهام</label>
+              <input id="baseSharesDisplay" type="text" readonly>
+            </div>
+            <div class="base-info-field">
+              <label>🏭 گروه صنعت</label>
+              <input id="baseIndustryDisplay" type="text" readonly>
+            </div>
+          </div>
+        </div>
 
         <!-- فیلدهای پنهان -->
         <input id="baseSymbol" type="hidden">

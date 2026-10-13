@@ -1,12 +1,12 @@
 /* ============================================================
    sw.js — Service Worker برای تحلیلگر کدال
-   نسخه: v2.0.4
+   نسخه: v2.0.5
    استراتژی:
    - App Shell (index.html, CSS, JS, فونت‌ها): Cache First
    - سایر فایل‌ها: Network First با fallback به cache
 ============================================================ */
 
-const CACHE_VERSION = 'kodal-v2.0.4';
+const CACHE_VERSION = 'kodal-v2.0.5';
 const CACHE_NAME = CACHE_VERSION;
 
 // فایل‌های اصلی که همیشه کش می‌شن (App Shell)

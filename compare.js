@@ -122,7 +122,14 @@
     if(info.zTitad && info.zTitad > 0){
       shares = info.zTitad;
     }
-    return { shares };
+
+    // ⭐ استخراج گروه صنعت
+    let industry = '';
+    if(info.sector && info.sector.lSecVal){
+      industry = String(info.sector.lSecVal).trim();
+    }
+
+    return { shares, industry };
   }
 
   const BASE_COLOR = '#f59e0b';
@@ -178,21 +185,33 @@
 
       const lastPrice = priceData?.lastPrice || null;
       const shares = instData?.shares || null;
+      const industry = instData?.industry || '';
 
+      // فیلدهای پنهان
       if($('baseSymbol')) $('baseSymbol').value = stock.symbol || '';
+      if($('baseIndustry')) $('baseIndustry').value = industry;
       if($('basePrice')) $('basePrice').value = lastPrice || '';
       if($('baseShares')) $('baseShares').value = shares || '';
 
       BASE.symbol = stock.symbol;
+      BASE.industry = industry;
       BASE.price = lastPrice;
       BASE.shares = shares;
       updateCompareButton();
 
-      const priceText = lastPrice ? H.toFa(Math.round(lastPrice).toLocaleString('en-US')) + ' ریال' : '—';
-      const sharesText = shares ? H.toFa(Math.round(shares).toLocaleString('en-US')) + ' سهم' : '—';
+      // ⭐ پر کردن کادر اطلاعات
+      const priceText = lastPrice ? H.toFa(Math.round(lastPrice).toLocaleString('en-US')) : '—';
+      const sharesText = shares ? H.toFa(Math.round(shares).toLocaleString('en-US')) : '—';
 
-      _showBaseMsg(`✅ <b>${H.escapeHtml(stock.symbol)}</b> — ${H.escapeHtml(stock.name)}<br>
-        💰 قیمت: <b>${priceText}</b> | 📊 تعداد سهام: <b>${sharesText}</b>`, 'success');
+      if($('baseSymbolDisplay')) $('baseSymbolDisplay').value = stock.symbol || '—';
+      if($('basePriceDisplay')) $('basePriceDisplay').value = priceText;
+      if($('baseSharesDisplay')) $('baseSharesDisplay').value = sharesText;
+      if($('baseIndustryDisplay')) $('baseIndustryDisplay').value = industry || '—';
+
+      if($('baseInfoBox')) $('baseInfoBox').style.display = 'block';
+
+      // پیام کوتاه
+      _showBaseMsg(`✅ <b>${H.escapeHtml(stock.symbol)}</b> — ${H.escapeHtml(stock.name)} بارگذاری شد`, 'success');
     }catch(err){
       _showBaseMsg('❌ ' + H.escapeHtml(err.message), 'error');
     }
@@ -234,6 +253,7 @@
       if(pick){
         await _selectBaseStock(pick);
       } else {
+        // ⭐ نمایش نتایج با استایل بهتر
         baseSearchResults.innerHTML = results.slice(0, 10).map((r, i) => `
           <div class="stock-result-item" data-idx="${i}">
             <span class="sri-symbol">${H.escapeHtml(r.symbol)}</span>
@@ -242,7 +262,12 @@
         `).join('');
 
         baseSearchResults.querySelectorAll('.stock-result-item').forEach((el, i) => {
-          el.onclick = () => _selectBaseStock(results[i]);
+          el.onclick = async () => {
+            // ⭐ اول لیست رو پاک کن
+            baseSearchResults.innerHTML = '';
+            // بعد سهم رو انتخاب کن
+            await _selectBaseStock(results[i]);
+          };
         });
       }
     }catch(err){
@@ -615,8 +640,13 @@
       cashRatio: H.ratio(v.cash, v.cl),
       debtToAsset: H.ratio(v.tl, v.ta),
       debtToEquity: H.ratio(v.tl, v.eq),
-      interestCoverage: (v.financeCost != null && v.financeCost !== 0 && v.opProfit != null)
-        ? v.opProfit / Math.abs(v.financeCost) : null,
+      // ⭐ اصلاح: استفاده از EBIT (سود عملیاتی + استهلاک) طبق استاندارد
+      interestCoverage: (() => {
+        if(v.financeCost == null || v.financeCost === 0 || v.opProfit == null) return null;
+        const depAbs = (v.deprec != null) ? Math.abs(v.deprec) : 0;
+        const ebit = v.opProfit + depAbs;
+        return ebit / Math.abs(v.financeCost);
+      })(),
       equityMultiplier: H.ratio(v.ta, v.eq),
       grossMargin: H.ratio(v.gross, v.revenue),
       opMargin: H.ratio(v.opProfit, v.revenue),
