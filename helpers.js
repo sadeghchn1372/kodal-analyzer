@@ -51,11 +51,21 @@
 
   const toman = x => {
     if(x == null) return '—';
-    const b = x / 10000;
-    if(Math.abs(b) < 1){
-      return '<bdi dir="ltr">' + toFa(Math.round(x / 10).toLocaleString('en-US')) + ' M</bdi>';
+    const abs = Math.abs(x);
+    // میلیون (x < 1000)
+    if(abs < 1000){
+      return '<bdi dir="ltr">' + toFa(Math.round(x).toLocaleString('en-US')) + ' M</bdi>';
     }
-    return '<bdi dir="ltr">' + toFa(Math.round(b).toLocaleString('en-US')) + ' B</bdi>';
+    // میلیارد (1000 تا 1000000)
+    if(abs < 1_000_000){
+      return '<bdi dir="ltr">' + toFa((x / 1000).toFixed(1)) + ' B</bdi>';
+    }
+    // هزار میلیارد = همت
+    if(abs < 1_000_000_000){
+      return '<bdi dir="ltr">' + toFa((x / 1_000_000).toFixed(2)) + ' همت</bdi>';
+    }
+    // تریلیون
+    return '<bdi dir="ltr">' + toFa((x / 1_000_000_000).toFixed(2)) + ' T</bdi>';
   };
 
   const tomanText = x => {

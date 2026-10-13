@@ -2428,7 +2428,8 @@ function render(ci){
   const pb = (marketCap != null && eqRial != null && eqRial !== 0 && eqRial > 0) ? marketCap / eqRial : null;
   const ps = (marketCap != null && revRial != null && revRial !== 0) ? marketCap / revRial : null;
   const ev = (marketCap != null) ? (marketCap + (tlRial || 0) - (cashRial || 0)) : null;
-  const evEbitda = (ev != null && ebitdaRial != null && ebitdaRial !== 0) ? ev / ebitdaRial : null;
+  // ⭐ EV/EBITDA فقط وقتی EBITDA مثبت باشه معنی داره
+  const evEbitda = (ev != null && ebitdaRial != null && ebitdaRial > 0) ? ev / ebitdaRial : null;
 
   const prevRevenue = val('revenue', 1);
   const prevNet = val('netProfit', 1);
@@ -2817,7 +2818,13 @@ function render(ci){
 
   if(pe != null){
     let label, type, hint;
-    if(pe < 5){
+
+    // ⭐ اگه P/E منفی باشه، یعنی شرکت زیان‌ده‌ست و P/E معنی نداره
+    if(pe < 0){
+      type = 'bad';
+      label = `${num2(pe)} — زیان‌ده (بی‌معنی)`;
+      hint = `P/E منفی یعنی شرکت در حال زیان دادنه و این نسبت اصلاً معنی نداره. برای شرکت زیان‌ده، P/E رو نمی‌شه تفسیر کرد.`;
+    } else if(pe < 5){
       type = 'good';
       label = `${num2(pe)} — ارزنده`;
       hint = `قیمت سهام کمتر از ۵ برابر سودشه.`;
