@@ -182,90 +182,97 @@
         </div>
       </div>
 
-      <!-- ===== مرحله ۱: فایل صورت مالی ===== -->
-      <div class="input-section">
-        <div class="input-section-title">
-          <span class="step-badge">۱</span>
-          📁 فایل صورت مالی (اکسل یا CSV یا HTML)
+      <!-- ⭐ کانتینر همه مراحل ورودی (قابل باز/بسته شدن) -->
+      <div id="allInputSections">
+
+        <!-- ===== مرحله ۱: فایل صورت مالی ===== -->
+        <div class="input-section">
+          <div class="input-section-title">
+            <span class="step-badge">۱</span>
+            📁 فایل صورت مالی (اکسل یا CSV یا HTML)
+          </div>
+
+          <div id="drop" class="drop">
+            <input id="file" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt">
+            <span class="drop-icon">📂</span>
+            <p class="drop-text">فایل اکسل صورت مالی رو اینجا بذار</p>
+            <button type="button" class="drop-browse-btn" onclick="document.getElementById('file').click()">
+              📁 انتخاب فایل
+            </button>
+
+            <p id="status" style="display:none"></p>
+            <div id="fileInfo" class="drop-file-info">
+              <span class="file-icon">✅</span>
+              <span class="file-name" id="fileName"></span>
+            </div>
+            <div id="periodInfoBox" class="period-info-box" style="display:none">
+              <label>📅 دوره صورت مالی:</label>
+              <span id="periodInfoText" class="period-info-text">—</span>
+            </div>
+            <div id="err" class="err" style="display:none"></div>
+          </div>
         </div>
 
-        <div id="drop" class="drop">
-          <input id="file" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt">
-          <span class="drop-icon">📂</span>
-          <p class="drop-text">فایل اکسل صورت مالی رو اینجا بذار</p>
-          <button type="button" class="drop-browse-btn" onclick="document.getElementById('file').click()">
-            📁 انتخاب فایل
-          </button>
+        <!-- ===== anchor برای جستجوی سهم ===== -->
+        <div id="stockSearchAnchor"></div>
 
-          <p id="status" style="display:none"></p>
-          <div id="fileInfo" class="drop-file-info">
-            <span class="file-icon">✅</span>
-            <span class="file-name" id="fileName"></span>
+        <!-- ===== مرحله ۳: اطلاعات شرکت ===== -->
+        <div class="input-section">
+          <div class="input-section-title">
+            <span class="step-badge">۳</span>
+            📈 اطلاعات شرکت
+            <span class="optional-badge">برای نسبت‌های ارزش‌گذاری</span>
           </div>
-          <div id="periodInfoBox" class="period-info-box" style="display:none">
-            <label>📅 دوره صورت مالی:</label>
-            <span id="periodInfoText" class="period-info-text">—</span>
+
+          <input id="symbolName" type="hidden">
+          <input id="stockPrice" type="hidden">
+          <input id="stockCount" type="hidden">
+
+          <div id="stockInfoEmptyMsg" class="market-hint" style="text-align:center;padding:14px">
+            💡 برای پر شدن خودکار اطلاعات، نماد رو توی باکس «جستجوی سریع سهم» (بالاتر) سرچ کن.
           </div>
-          <div style="margin-top:14px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+
+          <div id="stockInfoBox" class="base-info-box" style="display:none">
+            <div class="base-info-grid">
+              <div class="base-info-field">
+                <label>📊 نماد</label>
+                <input id="stockSymbolDisplay" type="text" readonly>
+              </div>
+              <div class="base-info-field">
+                <label>💰 قیمت (ریال)</label>
+                <input id="stockPriceDisplay" type="text" readonly>
+              </div>
+              <div class="base-info-field">
+                <label>📈 تعداد سهام</label>
+                <input id="stockSharesDisplay" type="text" readonly>
+              </div>
+              <div class="base-info-field">
+                <label>🏭 گروه صنعت</label>
+                <input id="stockIndustryDisplay" type="text" readonly>
+              </div>
+            </div>
+          </div>
+
+          <div class="market-hint" id="marketHint" style="display:none"></div>
+        </div>
+
+        <!-- ⭐ دکمه‌های اقدام (داخل کانتینر — با بستن، مخفی می‌شن) -->
+        <div class="action-buttons-bottom">
+          <div class="action-buttons-main">
             <button id="go" class="primary" disabled>🔍 تحلیل کن</button>
             <button id="saveBtn" class="ghost" style="display:none" disabled>💾 ذخیره تحلیل</button>
             <button id="sendToWatchBtn" class="ghost" style="display:none" disabled>👁️ افزودن به دیدبان</button>
           </div>
-          <div id="err" class="err" style="display:none"></div>
-        </div>
-      </div>
-
-      <!-- ===== anchor برای جستجوی سهم (stock-search.js اینجا رو پر می‌کنه) ===== -->
-      <div id="stockSearchAnchor"></div>
-
-
-
-
-
-
-
-
-      <!-- ===== مرحله ۳: اطلاعات شرکت ===== -->
-      <div class="input-section">
-        <div class="input-section-title">
-          <span class="step-badge">۳</span>
-          📈 اطلاعات شرکت
-          <span class="optional-badge">برای نسبت‌های ارزش‌گذاری</span>
         </div>
 
-        <!-- ⭐ فیلدهای اصلی (مخفی — مقادیرشون ذخیره می‌شن) -->
-        <input id="symbolName" type="hidden">
-        <input id="stockPrice" type="hidden">
-        <input id="stockCount" type="hidden">
+      </div><!-- /allInputSections -->
 
-        <!-- ⭐ پیام راهنما (قبل از سرچ) -->
-        <div id="stockInfoEmptyMsg" class="market-hint" style="text-align:center;padding:14px">
-          💡 برای پر شدن خودکار اطلاعات، نماد رو توی باکس «جستجوی سریع سهم» (بالاتر) سرچ کن.
-        </div>
-
-        <!-- ⭐ کادر اطلاعات تکمیلی (بعد از سرچ نمایش داده می‌شه) -->
-        <div id="stockInfoBox" class="base-info-box" style="display:none">
-          <div class="base-info-grid">
-            <div class="base-info-field">
-              <label>📊 نماد</label>
-              <input id="stockSymbolDisplay" type="text" readonly>
-            </div>
-            <div class="base-info-field">
-              <label>💰 قیمت (ریال)</label>
-              <input id="stockPriceDisplay" type="text" readonly>
-            </div>
-            <div class="base-info-field">
-              <label>📈 تعداد سهام</label>
-              <input id="stockSharesDisplay" type="text" readonly>
-            </div>
-            <div class="base-info-field">
-              <label>🏭 گروه صنعت</label>
-              <input id="stockIndustryDisplay" type="text" readonly>
-            </div>
-          </div>
-        </div>
-
-        <div class="market-hint" id="marketHint" style="display:none"></div>
+      <!-- ⭐ دکمه بستن/باز کردن (بیرون کانتینر — همیشه دیده می‌شه) -->
+      <div class="toggle-btn-wrapper">
+        <button type="button" id="inputSectionToggleBtn" class="ghost action-toggle-btn" title="بستن/باز کردن ورودی‌ها">
+          <span id="inputSectionToggleIcon">▼</span>
+          <span id="inputSectionToggleText">بستن ورودی‌ها</span>
+        </button>
       </div>
 
     </div><!-- /card (ورودی‌ها) -->
@@ -496,77 +503,88 @@
         <p class="sub" style="margin:0">یه سهم اصلی انتخاب کن، بعد تا ۵ سهم هم‌گروهی‌اش رو اضافه کن. آمار کامل صنعت محاسبه می‌شه.</p>
       </div>
 
-      <!-- ⭐ بخش ساده: سهم اصلی -->
-      <div class="input-section industry-input-section">
-        <div class="input-section-title">
-          <span class="step-badge">۱</span>
-          🎯 سهم اصلی (Base)
-        </div>
+      <!-- ⭐ کانتینر مراحل ورودی (قابل باز/بسته شدن) -->
+      <div id="allCompareSections">
 
-        <div id="baseDrop" class="simple-drop">
-          <input id="baseFile" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt">
-          <span class="simple-drop-icon">📂</span>
-          <span class="simple-drop-text">فایل صورت مالی سهم اصلی</span>
-          <button type="button" class="simple-drop-btn" onclick="event.stopPropagation(); document.getElementById('baseFile').click()">📁 انتخاب فایل</button>
-          <div id="baseFileInfo" class="simple-file-info">
-            <span class="simple-file-name" id="baseFileName"></span>
+        <!-- ⭐ بخش ساده: سهم اصلی -->
+        <div class="input-section industry-input-section">
+          <div class="input-section-title">
+            <span class="step-badge">۱</span>
+            🎯 سهم اصلی (Base)
           </div>
-        </div>
 
-        <div class="simple-search-row">
-          <input id="baseSearchInput" type="text"
-                 placeholder="🔍 یا اسم نماد رو بنویس (مثلاً: فملی)"
-                 autocomplete="off">
-          <button id="baseSearchBtn" class="simple-search-btn" type="button">جستجو</button>
-        </div>
-        <div id="baseSearchResults" class="base-search-results"></div>
-        <div id="baseSearchMsg" class="base-search-msg" style="display:none"></div>
-
-        <!-- ⭐ کادر اطلاعات سهم انتخاب‌شده -->
-        <div id="baseInfoBox" class="base-info-box" style="display:none">
-          <div class="base-info-grid">
-            <div class="base-info-field">
-              <label>📊 نماد</label>
-              <input id="baseSymbolDisplay" type="text" readonly>
-            </div>
-            <div class="base-info-field">
-              <label>💰 قیمت (ریال)</label>
-              <input id="basePriceDisplay" type="text" readonly>
-            </div>
-            <div class="base-info-field">
-              <label>📈 تعداد سهام</label>
-              <input id="baseSharesDisplay" type="text" readonly>
-            </div>
-            <div class="base-info-field">
-              <label>🏭 گروه صنعت</label>
-              <input id="baseIndustryDisplay" type="text" readonly>
+          <div id="baseDrop" class="simple-drop">
+            <input id="baseFile" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt">
+            <span class="simple-drop-icon">📂</span>
+            <span class="simple-drop-text">فایل صورت مالی سهم اصلی</span>
+            <button type="button" class="simple-drop-btn" onclick="event.stopPropagation(); document.getElementById('baseFile').click()">📁 انتخاب فایل</button>
+            <div id="baseFileInfo" class="simple-file-info">
+              <span class="simple-file-name" id="baseFileName"></span>
             </div>
           </div>
+
+          <div class="simple-search-row">
+            <input id="baseSearchInput" type="text"
+                   placeholder="🔍 یا اسم نماد رو بنویس (مثلاً: فملی)"
+                   autocomplete="off">
+            <button id="baseSearchBtn" class="simple-search-btn" type="button">جستجو</button>
+          </div>
+          <div id="baseSearchResults" class="base-search-results"></div>
+          <div id="baseSearchMsg" class="base-search-msg" style="display:none"></div>
+
+          <div id="baseInfoBox" class="base-info-box" style="display:none">
+            <div class="base-info-grid">
+              <div class="base-info-field">
+                <label>📊 نماد</label>
+                <input id="baseSymbolDisplay" type="text" readonly>
+              </div>
+              <div class="base-info-field">
+                <label>💰 قیمت (ریال)</label>
+                <input id="basePriceDisplay" type="text" readonly>
+              </div>
+              <div class="base-info-field">
+                <label>📈 تعداد سهام</label>
+                <input id="baseSharesDisplay" type="text" readonly>
+              </div>
+              <div class="base-info-field">
+                <label>🏭 گروه صنعت</label>
+                <input id="baseIndustryDisplay" type="text" readonly>
+              </div>
+            </div>
+          </div>
+
+          <input id="baseSymbol" type="hidden">
+          <input id="baseIndustry" type="hidden">
+          <input id="basePrice" type="hidden">
+          <input id="baseShares" type="hidden">
         </div>
 
-        <!-- فیلدهای پنهان -->
-        <input id="baseSymbol" type="hidden">
-        <input id="baseIndustry" type="hidden">
-        <input id="basePrice" type="hidden">
-        <input id="baseShares" type="hidden">
-      </div>
+        <!-- ⭐ بخش ساده: هم‌گروهی‌ها -->
+        <div class="input-section industry-input-section">
+          <div class="input-section-title">
+            <span class="step-badge">۲</span>
+            👥 سهم‌های هم‌گروهی
+            <span class="optional-badge" id="peersCountBadge">۰ از ۵</span>
+          </div>
 
-      <!-- ⭐ بخش ساده: هم‌گروهی‌ها -->
-      <div class="input-section industry-input-section">
-        <div class="input-section-title">
-          <span class="step-badge">۲</span>
-          👥 سهم‌های هم‌گروهی
-          <span class="optional-badge" id="peersCountBadge">۰ از ۵</span>
+          <div id="peersDrop" class="simple-drop">
+            <input id="peersFileInput" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt" multiple style="display:none">
+            <span class="simple-drop-icon">👥</span>
+            <span class="simple-drop-text">فایل‌های هم‌گروهی (تا ۵ سهم)</span>
+            <button type="button" class="simple-drop-btn" onclick="event.stopPropagation(); document.getElementById('peersFileInput').click()">📁 انتخاب فایل‌ها</button>
+          </div>
+
+          <div id="peersList" class="simple-peers-list"></div>
         </div>
 
-        <div id="peersDrop" class="simple-drop">
-          <input id="peersFileInput" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt" multiple style="display:none">
-          <span class="simple-drop-icon">👥</span>
-          <span class="simple-drop-text">فایل‌های هم‌گروهی (تا ۵ سهم)</span>
-          <button type="button" class="simple-drop-btn" onclick="event.stopPropagation(); document.getElementById('peersFileInput').click()">📁 انتخاب فایل‌ها</button>
-        </div>
+      </div><!-- /allCompareSections -->
 
-        <div id="peersList" class="simple-peers-list"></div>
+      <!-- ⭐ دکمه بستن/باز کردن (بیرون کانتینر) -->
+      <div class="toggle-btn-wrapper">
+        <button type="button" id="compareInputToggleBtn" class="ghost action-toggle-btn" title="بستن/باز کردن ورودی‌ها">
+          <span id="compareInputToggleIcon">▼</span>
+          <span id="compareInputToggleText">بستن ورودی‌ها</span>
+        </button>
       </div>
 
       <div class="industry-actions">
@@ -741,5 +759,4 @@ if('serviceWorker' in navigator && location.protocol !== 'file:'){
   });
 }
 </script>
-<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "252cb64c8a2b41a28abd51983c72c6a6"}'></script><!-- End Cloudflare Web Analytics -->
 </body></html>
