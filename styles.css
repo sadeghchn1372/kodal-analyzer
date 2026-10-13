@@ -6067,3 +6067,241 @@ body.dark .score-note-top {
     font-size: 12.5px;
   }
 }
+
+/* ============================================================
+   🆕 باز/بسته کردن کل بخش ورودی (تحلیل تک شرکت + مقایسه)
+============================================================ */
+
+/* کانتینر بخش‌های ورودی */
+#allInputSections,
+#allCompareSections {
+  transition: max-height .4s ease, opacity .3s ease;
+  overflow: hidden;
+  max-height: 5000px;
+  opacity: 1;
+}
+
+#allInputSections.collapsed,
+#allCompareSections.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin: 0;
+}
+
+/* دکمه‌های باز/بسته */
+#inputSectionToggleBtn,
+#compareInputToggleBtn {
+  cursor: pointer;
+  transition: all .2s ease;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+#inputSectionToggleBtn:hover,
+#compareInputToggleBtn:hover {
+  background: rgba(23, 105, 224, .08);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* آیکون فلش */
+#inputSectionToggleIcon,
+#compareInputToggleIcon {
+  display: inline-block;
+  transition: transform .3s ease;
+  font-size: 11px;
+}
+
+#inputSectionToggleBtn.collapsed #inputSectionToggleIcon,
+#compareInputToggleBtn.collapsed #compareInputToggleIcon {
+  transform: rotate(-90deg);
+}
+
+/* موبایل: فشرده‌تر */
+@media (max-width: 600px) {
+  #inputSectionToggleBtn,
+  #compareInputToggleBtn {
+    font-size: 11.5px !important;
+    padding: 5px 12px !important;
+  }
+}
+/* ============================================================
+   🆕 دکمه‌های پایین ورودی‌ها (تحلیل تک شرکت)
+============================================================ */
+/* ⭐ کانتینر دکمه‌ها (پایین ورودی‌ها) */
+.action-buttons-bottom {
+  background: rgba(23, 105, 224, .03);
+  border-radius: 12px;
+  padding: 16px 14px;
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-top: 1px dashed var(--line);
+  position: relative;
+}
+
+/* ⭐ گروه دکمه‌های اصلی (وسط‌چین) */
+.action-buttons-main {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.action-buttons-main button {
+  min-width: 180px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* ⭐ wrapper دکمه بستن/باز کردن (بیرون کانتینر) */
+.toggle-btn-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+
+/* ⭐ دکمه بستن/باز کردن */
+.action-toggle-btn {
+  cursor: pointer;
+  transition: all .2s ease;
+  font-weight: 600;
+  border-radius: 8px;
+  font-size: 12.5px;
+  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  background: rgba(23, 105, 224, .05);
+  border: 1px solid rgba(23, 105, 224, .2);
+  color: var(--blue);
+}
+
+.action-toggle-btn:hover {
+  background: rgba(23, 105, 224, .12);
+  border-color: var(--blue);
+}
+
+.action-toggle-btn:hover {
+  background: rgba(23, 105, 224, .08);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.action-toggle-btn #inputSectionToggleIcon {
+  display: inline-block;
+  transition: transform .3s ease;
+  font-size: 11px;
+}
+
+.action-toggle-btn.collapsed #inputSectionToggleIcon {
+  transform: rotate(-90deg);
+}
+
+/* موبایل */
+@media (max-width: 700px) {
+  .action-buttons-bottom {
+    flex-direction: column;
+    padding: 14px 10px;
+  }
+  .action-buttons-main {
+    width: 100%;
+    flex-direction: column;
+  }
+  .action-buttons-main button {
+    width: 100%;
+  }
+  .action-toggle-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.action-buttons-bottom #go {
+  min-width: 160px;
+  font-size: 14.5px;
+  padding: 12px 26px;
+  box-shadow: 0 4px 14px rgba(23, 105, 224, .3);
+  transition: all .2s ease;
+}
+
+.action-buttons-bottom #go:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(23, 105, 224, .45);
+}
+
+.action-buttons-bottom #go:disabled {
+  box-shadow: none;
+  opacity: 0.5;
+}
+
+/* ============================================================
+   🆕 باز/بسته کردن کل بخش ورودی
+============================================================ */
+#allInputSections,
+#allCompareSections {
+  transition: max-height .4s ease, opacity .3s ease;
+  overflow: hidden;
+  max-height: 5000px;
+  opacity: 1;
+}
+
+#allInputSections.collapsed,
+#allCompareSections.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin: 0;
+}
+
+#inputSectionToggleBtn,
+#compareInputToggleBtn {
+  cursor: pointer;
+  transition: all .2s ease;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+#inputSectionToggleBtn:hover,
+#compareInputToggleBtn:hover {
+  background: rgba(23, 105, 224, .08);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+#inputSectionToggleIcon,
+#compareInputToggleIcon {
+  display: inline-block;
+  transition: transform .3s ease;
+  font-size: 11px;
+}
+
+#inputSectionToggleBtn.collapsed #inputSectionToggleIcon,
+#compareInputToggleBtn.collapsed #compareInputToggleIcon {
+  transform: rotate(-90deg);
+}
+
+/* موبایل */
+@media (max-width: 600px) {
+  .action-buttons-bottom {
+    flex-direction: column;
+  }
+  .action-buttons-bottom button {
+    width: 100%;
+  }
+  #inputSectionToggleBtn,
+  #compareInputToggleBtn {
+    font-size: 11.5px !important;
+    padding: 5px 12px !important;
+  }
+}
