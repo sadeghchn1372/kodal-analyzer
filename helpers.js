@@ -78,15 +78,30 @@
 
   const PERIOD_NAMES = ['دوره جاری','دوره مشابه سال قبل','سال مالی قبل','دوره ۴','دوره ۵'];
 
-  window.KodalHelpers = Object.assign(window.KodalHelpers || {}, {
-    __loaded: true,
-    fa2en, toFa, norm, toNum,
-    escapeHtml,
-    toman, tomanText, pct, num2, ratio,
-    formatNumberInput,
-    PERIOD_NAMES,
-    FA_DIGITS,
-  });
+// ⭐ توابع اضافی که compare.js لازم داره
+function quickRatio(ca, inv, cl){
+  if(ca == null || inv == null || cl == null || cl === 0) return null;
+  return (ca - inv) / cl;
+}
+
+function safeROE(net, eq){
+  // اگه equity منفی یا صفر باشه، ROE معنی نداره
+  if(net == null || eq == null || eq <= 0) return null;
+  return net / eq;
+}
+
+window.KodalHelpers = Object.assign(window.KodalHelpers || {}, {
+  __loaded: true,
+  fa2en, toFa, norm, toNum,
+  escapeHtml,
+  toman, tomanText, pct, num2, ratio,
+  formatNumberInput,
+  PERIOD_NAMES,
+  FA_DIGITS,
+  // ⭐ اضافه شد
+  quickRatio,
+  safeROE,
+});
 
   window.toFa = window.toFa || toFa;
   window.fa2en = window.fa2en || fa2en;

@@ -1,6 +1,7 @@
 /* ============================================================
-   compare.js — منطق تب «مقایسه با صنعت»  |  v2.1.3
+   compare.js — منطق تب «مقایسه با صنعت»  |  v2.1.4
    وابسته به: app.js (window.KodalHelpers)
+   تغییرات v2.1.4: برچسب «میانگین نمونه (n=X)» به جای «میانگین صنعت»
 ============================================================ */
 
 (function(){
@@ -530,7 +531,7 @@
       opMargin: H.ratio(v.opProfit, v.revenue),
       netMargin: H.ratio(v.net, v.revenue),
       roa: H.ratio(v.net, v.ta),
-      roe: H.safeROE(v.net, v.eq),   // ⭐ ROE امن
+      roe: H.safeROE(v.net, v.eq),
       assetTurnover: H.ratio(v.revenue, v.ta),
       invTurnover: H.ratio(v.cogs, v.inv),
       recvTurnover: H.ratio(v.revenue, v.recv),
@@ -719,6 +720,10 @@
     const bestScore = best(peerScores, 'higher');
     const worstScore = worst(peerScores, 'higher');
 
+    // ⭐ تعداد نمونه
+    const n = peers.length;
+    const nText = H.toFa(n);
+
     const baseLvl = H.scoreLevel(baseScore);
 
     const allScores = all.map(x => x.score).filter(s => s != null);
@@ -738,15 +743,16 @@
       <div class="cmp-score-card" style="border-top-color:#94a3b8">
         <div class="symbol">
           <span class="color-dot" style="background:#94a3b8"></span>
-          میانگین صنعت
+          میانگین نمونه (n=${nText})
         </div>
         <div class="num" style="color:#94a3b8">${avgScore == null ? '—' : H.toFa(Math.round(avgScore))}</div>
+        <div class="lvl" style="color:var(--sub);font-size:10.5px;margin-top:6px">از ${nText} سهم هم‌گروهی</div>
       </div>
 
       <div class="cmp-score-card" style="border-top-color:#16834a">
         <div class="symbol">
           <span class="color-dot" style="background:#16834a"></span>
-          بهترین صنعت
+          بهترین نمونه
         </div>
         <div class="num" style="color:#16834a">${bestScore == null ? '—' : H.toFa(bestScore)}</div>
       </div>
@@ -754,7 +760,7 @@
       <div class="cmp-score-card" style="border-top-color:#c62828">
         <div class="symbol">
           <span class="color-dot" style="background:#c62828"></span>
-          بدترین صنعت
+          بدترین نمونه
         </div>
         <div class="num" style="color:#c62828">${worstScore == null ? '—' : H.toFa(worstScore)}</div>
       </div>
@@ -799,6 +805,10 @@
     const peerZ = peers.map(p => p.zscore).filter(z => z != null && isFinite(z));
     const avgZ = avg(peerZ);
 
+    // ⭐ تعداد نمونه
+    const nZ = peers.length;
+    const nZText = H.toFa(nZ);
+
     let html = zCard(base, true);
 
     if(avgZ != null){
@@ -807,9 +817,10 @@
         <div class="cmp-zscore-card" style="border-top-color:#94a3b8">
           <div class="symbol">
             <span class="color-dot" style="background:#94a3b8"></span>
-            میانگین صنعت
+            میانگین نمونه (n=${nZText})
           </div>
           <div class="num" style="color:${zoneAvgColor}">${H.num2(avgZ)}</div>
+          <div class="zone" style="color:var(--sub);font-size:10.5px">از ${nZText} سهم</div>
         </div>
       `;
     }
@@ -822,7 +833,7 @@
         <div class="cmp-zscore-card" style="border-top-color:#16834a">
           <div class="symbol">
             <span class="color-dot" style="background:#16834a"></span>
-            🥇 بهترین صنعت
+            🥇 بهترین نمونه
           </div>
           <div class="num" style="color:${zBest}">${H.num2(bestZ)}</div>
         </div>
@@ -834,7 +845,7 @@
         <div class="cmp-zscore-card" style="border-top-color:#c62828">
           <div class="symbol">
             <span class="color-dot" style="background:#c62828"></span>
-            بدترین صنعت
+            بدترین نمونه
           </div>
           <div class="num" style="color:${zWorst}">${H.num2(worstZ)}</div>
         </div>
@@ -875,6 +886,10 @@
 
     const { base, peers } = INDUSTRY_RESULTS;
 
+    // ⭐ تعداد نمونه
+    const sampleSize = peers.length;
+    const sampleText = H.toFa(sampleSize);
+
     let html = '<div class="dupont-factors" style="margin-top:6px">';
 
     MAIN_RATIOS.forEach(ratio => {
@@ -884,6 +899,9 @@
       const avgVal = avg(peerVals);
       const bestVal = best(peerVals, ratio.dir);
       const worstVal = worst(peerVals, ratio.dir);
+
+      // ⭐ تعداد نمونه برای این ردیف
+      const nVal = H.toFa(peerVals.length);
 
       let color = '#94a3b8';
       let label = '—';
@@ -923,14 +941,17 @@
 
       html += `
         <div class="dupont-factor-row ratio-dupont-row">
-          <div class="dupont-factor-label">${ratio.label}</div>
+          <div class="dupont-factor-label">
+            ${ratio.label}
+            <span style="font-size:10px;color:var(--sub);font-weight:400">(n=${nVal})</span>
+          </div>
           <div class="dupont-factor-value-box" style="color:${color}">
             ${baseDisplay} — ${label}
           </div>
           <div class="dupont-factor-bar-inline ratio-bar-relative">
             <div class="dupont-factor-fill-inline" style="width:${basePct}%;background:${color}"></div>
-            <div class="ratio-avg-marker" style="left:${avgPct}%" title="میانگین صنعت: ${avgDisplay}">
-              <span class="ratio-avg-marker-label">میانگین</span>
+            <div class="ratio-avg-marker" style="left:${avgPct}%" title="میانگین نمونه (n=${nVal}): ${avgDisplay}">
+              <span class="ratio-avg-marker-label">میانگین (n=${nVal})</span>
             </div>
           </div>
         </div>
@@ -942,7 +963,10 @@
     html += `
       <div class="ratio-inline-legend" style="margin-top:14px">
         <span><i style="background:${BASE_COLOR};width:14px;height:3px;border-radius:2px"></i> سهم اصلی</span>
-        <span><i style="background:#1f2937;width:3px;height:12px;border-radius:2px"></i> میانگین صنعت</span>
+        <span><i style="background:#1f2937;width:3px;height:12px;border-radius:2px"></i> میانگین نمونه (n=${sampleText})</span>
+      </div>
+      <div style="text-align:center;font-size:11px;color:var(--sub);margin-top:8px;line-height:1.7">
+        ⚠️ میانگین فقط بر اساس <b>نمونه سهم‌های بارگذاری‌شده</b> است، نه میانگین کل صنعت.
       </div>
     `;
 
@@ -993,6 +1017,9 @@
     const totalPossible = criteria.length * (all.length - 1);
     const maxScore = ranked.length ? ranked[0].totalScore : 0;
 
+    // ⭐ تعداد نمونه
+    const nText = H.toFa(peers.length);
+
     let cardsHtml = '<div class="rank-cards">';
 
     ranked.forEach((r, i) => {
@@ -1033,6 +1060,7 @@
 
     let criteriaHtml = '<div class="rank-criteria-box">';
     criteriaHtml += '<div class="rank-criteria-title">📊 مقایسه معیار به معیار (به ترتیب رتبه)</div>';
+    criteriaHtml += `<div style="font-size:11.5px;color:var(--sub);margin-bottom:10px;text-align:right">📌 نمونه: سهم اصلی + ${nText} سهم هم‌گروهی</div>`;
     criteriaHtml += '<div class="dupont-factors" style="margin-top:6px">';
 
     criteria.forEach(c => {
@@ -1110,7 +1138,7 @@
         <div class="rank-winner-banner">
           <div class="rank-winner-icon">🏆</div>
           <div class="rank-winner-text">
-            <div class="rank-winner-label">برنده کلی</div>
+            <div class="rank-winner-label">برنده کلی (در نمونه)</div>
             <div class="rank-winner-symbol" style="color:${w.isBase ? BASE_COLOR : w.color}">
               ${w.isBase ? '🎯 ' : ''}${w.symbol}
             </div>
@@ -1333,7 +1361,7 @@
       return;
     }
     const data = {
-      version: '2.1.3',
+      version: '2.1.4',
       type: 'kodal_industries',
       exportDate: new Date().toISOString(),
       count: INDUSTRY_SAVED.length,
@@ -1596,6 +1624,6 @@
     init();
   }
 
-  console.log('%c📈 compare.js v2.1.3 لود شد', 'color:#f59e0b;font-weight:bold');
+  console.log('%c📈 compare.js v2.1.4 لود شد (با میانگین نمونه)', 'color:#f59e0b;font-weight:bold');
 
 })();

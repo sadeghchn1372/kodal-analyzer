@@ -2455,6 +2455,18 @@ function render(ci){
 
   const fmt = (name, x) => {
     if(x==null) return '—';
+
+    // ⭐ نسبت‌هایی که وقتی منفی می‌شن، معنی ندارن
+    const meaninglessIfNegative = /^(P\/E|PEG|P\/B|P\/S|EV\/EBITDA)$/.test(name);
+    if(meaninglessIfNegative && x < 0){
+      return '<span style="color:var(--bad);font-weight:700">زیان‌ده</span>';
+    }
+
+    // ⭐ EPS منفی
+    if(name === 'EPS' && x < 0){
+      return `<span style="color:var(--bad);font-weight:700">${toFa(Math.round(x).toLocaleString('en-US'))} ریال (زیان)</span>`;
+    }
+
     if(/حاشیه|ROA|ROE|ROCE|CFO به درآمد|نرخ رشد/.test(name)) return pct(x);
     if(/روز|CCC|چرخه تبدیل/.test(name)) return toFa(x.toFixed(0))+' روز';
     if(/سرمایه در گردش|آزاد FCF/.test(name)) return toman(x);
@@ -2471,11 +2483,35 @@ function render(ci){
     return 'good';
   };
 
+  // ⭐ برای نسبت‌هایی که معنی‌دار بودنشون مهمه
+  const meaningfulRatio = (name, x) => {
+    if(x == null) return false;
+    const meaninglessIfNegative = /^(P\/E|PEG|P\/B|P\/S|EV\/EBITDA)$/.test(name);
+    if(meaninglessIfNegative && x < 0) return false;
+    return true;
+  };
+
   function tableFor(list){
     return '<div class="ratio-cards">' + list.map(([name,x,bad,warn])=>{
-      const c = statusClass(x, bad, warn);
-      const label = c==='bad'?'ضعیف':c==='warn'?'قابل بررسی':c==='good'?'مطلوب':'—';
-      const color = c === 'bad' ? '#c62828' : c === 'warn' ? '#eab308' : c === 'good' ? '#16834a' : '#94a3b8';
+      // ⭐ اگه نسبت منفی و بی‌معنیه، برچسب خاص
+      const isMeaningless = !meaningfulRatio(name, x);
+      const isNegativeEPS = name === 'EPS' && x != null && x < 0;
+
+      let c, label, color;
+
+      if(isMeaningless){
+        c = 'bad';
+        label = 'زیان‌ده';
+        color = '#c62828';
+      } else if(isNegativeEPS){
+        c = 'bad';
+        label = 'زیان‌ده';
+        color = '#c62828';
+      } else {
+        c = statusClass(x, bad, warn);
+        label = c==='bad'?'ضعیف':c==='warn'?'قابل بررسی':c==='good'?'مطلوب':'—';
+        color = c === 'bad' ? '#c62828' : c === 'warn' ? '#eab308' : c === 'good' ? '#16834a' : '#94a3b8';
+      }
 
       let score = 50;
       if(c === 'bad') score = 15;
@@ -2483,7 +2519,9 @@ function render(ci){
       else if(c === 'good') score = 85;
 
       const hint = HINTS[name] || '';
-      const dynamicHint = makeHintDynamic(name, hint, c, x);
+      const dynamicHint = isMeaningless
+        ? 'این نسبت برای شرکت زیان‌ده معنی نداره. شرکت در حال حاضر زیان می‌ده.'
+        : makeHintDynamic(name, hint, c, x);
 
       return `
         <div class="ratio-card">

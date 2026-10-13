@@ -5178,3 +5178,22 @@ body.dark .ratio-avg-marker-label {
     font-size: 13px;
   }
 }
+
+/* ============================================================
+   🆕 برچسب امتیاز داخلی (calcScore)
+============================================================ */
+.score-note-top {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: rgba(23,105,224,.1);
+  color: var(--blue);
+  font-size: 11.5px;
+  font-weight: 600;
+  border-right: 3px solid var(--blue);
+  direction: rtl;
+}
+body.dark .score-note-top {
+  background: rgba(59,130,246,.15);
+}

@@ -462,8 +462,9 @@
     const botV = Math.max(0, minV - range * 0.15);
 
     const yAt = v => padT + plotH - ((v - botV) / (topV - botV)) * plotH;
-    // در حالت RTL: اولین نقطه (قدیمی‌ترین) سمت راست، آخرین نقطه (جدیدترین) سمت چپ
-    const xAt = i => (padL + plotW) - (plotW / (points.length - 1)) * i;
+    // ⭐ حالت LTR: قدیمی‌ترین سمت چپ، جدیدترین سمت راست
+    // این با ذهنیت کاربر ایرانی که می‌خواد «روند از چپ به راست صعودی» رو ببینه سازگاره
+    const xAt = i => padL + (plotW / (points.length - 1)) * i;
 
     let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
 
