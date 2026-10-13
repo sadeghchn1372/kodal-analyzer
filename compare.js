@@ -1732,6 +1732,47 @@
     init();
   }
 
+
+    /* ---------- دکمه باز/بسته کل بخش ورودی (مقایسه با صنعت) ---------- */
+    (function initCompareInputToggle(){
+      const btn = document.getElementById('compareInputToggleBtn');
+      const container = document.getElementById('allCompareSections');
+      const text = document.getElementById('compareInputToggleText');
+  
+      if(!btn || !container) return;
+  
+      const STORAGE_KEY = 'kodal_compare_sections_collapsed';
+  
+      function applyState(collapsed){
+        if(collapsed){
+          container.classList.add('collapsed');
+          btn.classList.add('collapsed');
+          if(text) text.textContent = 'باز کردن ورودی‌ها';
+        } else {
+          container.classList.remove('collapsed');
+          btn.classList.remove('collapsed');
+          if(text) text.textContent = 'بستن ورودی‌ها';
+        }
+      }
+  
+      // ⭐ پیش‌فرض: باز
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        applyState(saved === '1');
+      } catch(e) {
+        applyState(false);
+      }
+  
+      btn.onclick = () => {
+        const isCollapsed = container.classList.toggle('collapsed');
+        btn.classList.toggle('collapsed', isCollapsed);
+        if(text) text.textContent = isCollapsed ? 'باز کردن ورودی‌ها' : 'بستن ورودی‌ها';
+  
+        try {
+          localStorage.setItem(STORAGE_KEY, isCollapsed ? '1' : '0');
+        } catch(e) {}
+      };
+    })();
   console.log('%c📈 compare.js v2.3.0 لود شد', 'color:#f59e0b;font-weight:bold');
 
 })();
