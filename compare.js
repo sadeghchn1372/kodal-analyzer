@@ -669,7 +669,19 @@
       const x1 = wc != null ? wc / taZ : 0;
       const x2 = v.re != null ? v.re / taZ : 0;
       const x3 = v.opProfit != null ? v.opProfit / taZ : 0;
-      const x4 = v.eq != null ? v.eq / Math.max(v.tl || 0, 1) : 0;
+      
+      // ⭐ X4 اصلاح شد: ارزش بازار / کل بدهی
+      const MILLION_Z = 1_000_000;
+      const marketCapZ = (price != null && shares != null) ? price * shares : null;
+      const tlRialZ = (v.tl != null) ? v.tl * MILLION_Z : null;
+      
+      let x4 = 0;
+      if(marketCapZ != null && tlRialZ != null && tlRialZ > 0){
+        x4 = marketCapZ / tlRialZ;
+      } else if(v.eq != null && v.tl != null && v.tl > 0){
+        x4 = v.eq / v.tl;
+      }
+      
       const x5 = v.revenue != null ? v.revenue / taZ : 0;
       zscore = 1.2*x1 + 1.4*x2 + 3.3*x3 + 0.6*x4 + 1.0*x5;
     }

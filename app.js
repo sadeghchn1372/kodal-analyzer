@@ -1,9 +1,9 @@
 /* ============================================================
-   app.js — منطق اصلی تحلیل تک شرکت  |  v2.1.2
+   app.js — منطق اصلی تحلیل تک شرکت  |  v2.1.3
    وابسته به: helpers.js + ui-modal.js
-   تغییرات v2.1.2:
-   - حذف کامل دکمه خروجی PDF
-   - اصلاح ROE منفی کاذب
+   تغییرات v2.1.3:
+   - رفع خطای let MARKET تکراری
+   - اصلاح Z-Score با ارزش بازار (X4)
 ============================================================ */
 
 /* ---------- Utility (از helpers.js) ---------- */
@@ -111,12 +111,14 @@ function attachNumberFormatter(inputEl){
 let file = null;
 let PARSED = null;
 window.PARSED = null;
+
 let MARKET = {
   symbol: '',
   price: null,
   shares: null,
   periodMonths: 12,
 };
+window.MARKET = MARKET;
 
 const PERIOD_NAMES = ['دوره جاری','دوره مشابه سال قبل','سال مالی قبل','دوره ۴','دوره ۵'];
 window.PERIOD_NAMES = PERIOD_NAMES;
@@ -149,6 +151,7 @@ function loadMarketFromStorage(){
         shares: m.shares||null,
         periodMonths: m.periodMonths || 12,
       };
+      window.MARKET = MARKET;
     }
   }catch(e){}
 }
@@ -166,6 +169,10 @@ function applyMarketInputs(){
   } else if(!MARKET.periodMonths){
     MARKET.periodMonths = 12;
   }
+  
+  // ⭐ sync با window
+  window.MARKET = MARKET;
+  
   saveMarketToStorage();
 
   const hint = $('marketHint');
@@ -184,13 +191,6 @@ function applyMarketInputs(){
 
   if(PARSED) render(0);
 }
-
-// ⭐ دیگه از localStorage لود نمی‌کنیم تا قیمت قبلی با فایل جدید قاطی نشه
-// loadMarketFromStorage();
-
-setTimeout(() => {
-  // ⭐ فیلدها خالی می‌مونن — کاربر باید سرچ کنه
-}, 100);
 
 attachNumberFormatter($('stockPrice'));
 attachNumberFormatter($('stockCount'));
@@ -366,6 +366,7 @@ window.restoreAnalysis = function(idx){
         shares: item.market.shares||null,
         periodMonths: item.market.periodMonths || 12,
       };
+      window.MARKET = MARKET;   // ⭐ sync
       if($('symbolName')) $('symbolName').value = MARKET.symbol;
       if($('stockPrice')) $('stockPrice').value = MARKET.price ? formatNumberInput(MARKET.price) : '';
       if($('stockCount')) $('stockCount').value = MARKET.shares ? formatNumberInput(MARKET.shares) : '';
@@ -400,7 +401,7 @@ function downloadAllAnalyses(){
     return;
   }
   const data = {
-    version: '2.1.2',
+    version: '2.1.3',
     exportDate: new Date().toISOString(),
     count: SAVED_LIST.length,
     analyses: SAVED_LIST,
@@ -1805,7 +1806,7 @@ function renderEBITDA(v){
 }
 
 /* ============================================================
-   Altman Z-Score
+   Altman Z-Score — با ارزش بازار
 ============================================================ */
 function renderZScore(v){
   const ta = v.ta;
@@ -1817,9 +1818,26 @@ function renderZScore(v){
   const x1 = wc != null ? wc / ta : 0;
   const x2 = v.re != null ? v.re / ta : 0;
   const x3 = v.opProfit != null ? v.opProfit / ta : 0;
-  const x4 = v.eq != null ? v.eq / Math.max(v.tl || 0, 1) : 0;
+  
+  // ⭐ اصلاح: X4 = ارزش بازار / کل بدهی (استاندارد علمی)
+  const sharesFromCap = (v.capital != null) ? v.capital * 1000 : null;
+  const sharesNow = (MARKET.shares) || sharesFromCap;
+  const priceNow = MARKET.price;
+  const marketCapRial = (priceNow != null && sharesNow != null) ? priceNow * sharesNow : null;
+  const tlRial = (v.tl != null) ? v.tl * 1_000_000 : null;
+  
+  let x4 = 0;
+  let usedMarketCap = false;
+  if(marketCapRial != null && tlRial != null && tlRial > 0){
+    x4 = marketCapRial / tlRial;
+    usedMarketCap = true;
+  } else if(v.eq != null && v.tl != null && v.tl > 0){
+    x4 = v.eq / v.tl;
+  }
+  
   const x5 = v.revenue != null ? v.revenue / ta : 0;
   const z = 1.2*x1 + 1.4*x2 + 3.3*x3 + 0.6*x4 + 1.0*x5;
+  
   let zone, color, desc;
   if(z > 2.99){
     zone = 'منطقه امن ✅';
@@ -1834,6 +1852,11 @@ function renderZScore(v){
     color = '#c62828';
     desc = `🔴 Z-Score ${num2(z)} — ریسک ورشکستگی بالاست؛ نیاز به بررسی جدی ساختار مالی دارد.`;
   }
+  
+  const zNote = usedMarketCap
+    ? '📌 محاسبه بر اساس ارزش بازار سهام (استاندارد علمی)'
+    : '⚠️ قیمت سهام وارد نشده — از ارزش دفتری استفاده شد (دقت کمتر)';
+  
   const pos = Math.max(0, Math.min(100, (z / 4) * 100));
 
   $('zscoreBox').innerHTML = `
@@ -1847,6 +1870,7 @@ function renderZScore(v){
         <span>۰</span><span>۱.۸۱</span><span>۲.۹۹</span><span>۴+</span>
       </div>
       <div class="zscore-note" style="border-right-color:${color}">${desc}</div>
+      <div style="margin-top:10px;font-size:11.5px;color:var(--sub);text-align:center;padding:6px 10px;background:rgba(102,112,133,.08);border-radius:8px">${zNote}</div>
     </div>
   `;
 }
@@ -2120,7 +2144,21 @@ function updateAccordionSummaries(v){
       const x1 = wc != null ? wc / ta : 0;
       const x2 = v.re != null ? v.re / ta : 0;
       const x3 = v.opProfit != null ? v.opProfit / ta : 0;
-      const x4 = v.eq != null ? v.eq / Math.max(v.tl || 0, 1) : 0;
+      
+      // ⭐ X4 با ارزش بازار
+      const sharesFromCap2 = (v.capital != null) ? v.capital * 1000 : null;
+      const sharesNow2 = MARKET.shares || sharesFromCap2;
+      const priceNow2 = MARKET.price;
+      const marketCapRial2 = (priceNow2 != null && sharesNow2 != null) ? priceNow2 * sharesNow2 : null;
+      const tlRial2 = (v.tl != null) ? v.tl * 1_000_000 : null;
+      
+      let x4 = 0;
+      if(marketCapRial2 != null && tlRial2 != null && tlRial2 > 0){
+        x4 = marketCapRial2 / tlRial2;
+      } else if(v.eq != null && v.tl != null && v.tl > 0){
+        x4 = v.eq / v.tl;
+      }
+      
       const x5 = v.revenue != null ? v.revenue / ta : 0;
       const z = 1.2*x1 + 1.4*x2 + 3.3*x3 + 0.6*x4 + 1.0*x5;
       let label, cls;
@@ -2328,6 +2366,9 @@ window.__rebuildCharts = rebuildAllCharts;
    render — رندر اصلی
 ============================================================ */
 function render(ci){
+  // ⭐ مهم: MARKET رو sync کن قبل از هر رندر
+  window.MARKET = MARKET;
+  
   const v = {
     revenue: val('revenue',ci), cogs: val('cogs',ci), gross: val('grossProfit',ci),
     opEx: val('opEx',ci), opProfit: val('opProfit',ci), financeCost: val('financeCost',ci),
@@ -2383,7 +2424,7 @@ function render(ci){
   const eps = (epsFromFile != null) ? epsFromFile :
               ((netRial != null && shares != null && shares !== 0) ? netRial / shares : null);
 
-  const pe = (price != null && eps != null && eps !== 0) ? price / eps : null;
+  const pe = (price != null && eps != null && eps > 0) ? price / eps : null;
   const pb = (marketCap != null && eqRial != null && eqRial !== 0 && eqRial > 0) ? marketCap / eqRial : null;
   const ps = (marketCap != null && revRial != null && revRial !== 0) ? marketCap / revRial : null;
   const ev = (marketCap != null) ? (marketCap + (tlRial || 0) - (cashRial || 0)) : null;
@@ -2405,24 +2446,37 @@ function render(ci){
   const roce = (v.opProfit != null && v.ta != null && v.cl != null && (v.ta - v.cl) !== 0)
     ? v.opProfit / (v.ta - v.cl) : null;
 
-  const peg = (pe != null && growthNet != null && growthNet > 0)
+  const peg = (pe != null && pe > 0 && growthNet != null && growthNet > 0)
     ? pe / (growthNet * 100) : null;
 
   const cashInterestCoverage = (v.cfo != null && v.financeCost != null && Math.abs(v.financeCost) > 0)
     ? v.cfo / Math.abs(v.financeCost) : null;
 
+  // ⭐ پوشش بهره استاندارد: EBIT / هزینه بهره
+  const interestCoverage = (() => {
+    if(v.financeCost == null || v.financeCost === 0 || v.opProfit == null) return null;
+    const depAbs = (v.deprec != null) ? Math.abs(v.deprec) : 0;
+    const ebit = v.opProfit + depAbs;
+    return ebit / Math.abs(v.financeCost);
+  })();
+
+  // ⭐ نسبت آنی: null-safe
+  const quickRatioSafe = (v.ca != null && v.inv != null && v.cl != null && v.cl !== 0)
+    ? (v.ca - v.inv) / v.cl
+    : null;
+
   const R = {
     liq: [
       ['نسبت جاری',        ratio(v.ca, v.cl),                       x=>x<1, x=>x>=1&&x<2],
-      ['نسبت آنی (Quick)', ratio((v.ca??0)-(v.inv??0), v.cl),        x=>x<0.7, x=>x>=0.7&&x<1],
+      ['نسبت آنی (Quick)', quickRatioSafe,                            x=>x<0.7, x=>x>=0.7&&x<1],
       ['نسبت نقد',          ratio(v.cash, v.cl),                     x=>x<0.1, x=>x>=0.1&&x<0.3],
       ['سرمایه در گردش',   (v.ca!=null&&v.cl!=null)?(v.ca-v.cl):null, x=>x<0, ()=>false],
     ],
     lev: [
       ['بدهی به دارایی',              ratio(v.tl, v.ta),              x=>x>0.7, x=>x>0.5&&x<=0.7],
-      ['بدهی به حقوق صاحبان سهام',   ratio(v.tl, v.eq),              x=>x>2,  x=>x>1&&x<=2],
-      ['پوشش بهره',                   ratio(v.opProfit, Math.abs(v.financeCost||0)) || null, x=>x<2, x=>x>=2&&x<4],
-      ['اهرم حقوق مالکانه',           ratio(v.ta, v.eq),              x=>x>4,  x=>x>2&&x<=4],
+      ['بدهی به حقوق صاحبان سهام',   (v.eq != null && v.eq > 0) ? ratio(v.tl, v.eq) : null, x=>x>2,  x=>x>1&&x<=2],
+      ['پوشش بهره',                   interestCoverage, x=>x<2, x=>x>=2&&x<4],
+      ['اهرم حقوق مالکانه',           (v.eq != null && v.eq > 0) ? ratio(v.ta, v.eq) : null, x=>x>4,  x=>x>2&&x<=4],
     ],
     prof: [
       ['حاشیه سود ناخالص',  ratio(v.gross, v.revenue),  x=>x<0.1, x=>x<0.2],
@@ -2692,8 +2746,8 @@ function render(ci){
     A.push({t:type, x:`نسبت جاری ${label}.`, hint});
   }
 
-  const de = ratio(v.tl, v.eq);
-  if(de != null && v.eq > 0){
+  const de = (v.eq != null && v.eq > 0) ? ratio(v.tl, v.eq) : null;
+  if(de != null){
     let label, type, hint;
     if(de > 2){
       type = 'bad';
@@ -2823,8 +2877,8 @@ function renderSummary(v, extras){
     else desc = 'ریسک نقدینگی';
     parts.push(`نسبت جاری <span class="stat">${num2(cr)}</span> (${desc})`);
   }
-  const de = ratio(v.tl, v.eq);
-  if(de != null && v.eq > 0){
+  const de = (v.eq != null && v.eq > 0) ? ratio(v.tl, v.eq) : null;
+  if(de != null){
     let desc = '';
     if(de > 2) desc = 'اهرم بالا';
     else if(de > 1) desc = 'اهرم متعادل';
@@ -3254,6 +3308,7 @@ window.restoreFromExternal = function(reportData){
         shares: reportData.market.shares || null,
         periodMonths: reportData.market.periodMonths || 12,
       };
+      window.MARKET = MARKET;   // ⭐ sync
       if($('symbolName')) $('symbolName').value = MARKET.symbol;
       if($('stockPrice')) $('stockPrice').value = MARKET.price ? formatNumberInput(MARKET.price) : '';
       if($('stockCount')) $('stockCount').value = MARKET.shares ? formatNumberInput(MARKET.shares) : '';
@@ -3503,25 +3558,21 @@ document.addEventListener('keydown', (e) => {
   function applyState(collapsed){
     if(collapsed){
       container.classList.add('collapsed');
-      btn.classList.add('collapsed');
       if(text) text.textContent = 'باز کردن ورودی‌ها';
     } else {
       container.classList.remove('collapsed');
-      btn.classList.remove('collapsed');
       if(text) text.textContent = 'بستن ورودی‌ها';
     }
   }
 
-  // ⭐ پیش‌فرض همیشه باز
   applyState(false);
 
   btn.onclick = () => {
     const isCollapsed = container.classList.toggle('collapsed');
-    btn.classList.toggle('collapsed', isCollapsed);
     if(text) text.textContent = isCollapsed ? 'باز کردن ورودی‌ها' : 'بستن ورودی‌ها';
   };
 
   console.log('✅ دکمه باز/بسته ورودی‌ها فعال شد');
 })();
 
-console.log('%c🎯 app.js v2.1.2 لود شد (بدون PDF + با اصلاح ROE منفی)', 'color:#1769e0;font-weight:bold');
+console.log('%c🎯 app.js v2.1.3 لود شد (MARKET تکراری رفع شد + Z-Score استاندارد)', 'color:#1769e0;font-weight:bold');

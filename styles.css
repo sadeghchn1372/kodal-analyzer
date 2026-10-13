@@ -1,5 +1,5 @@
 /* ============================================================
-   styles.css — تحلیلگر کدال  |  v2.0.0
+   styles.css — تحلیلگر کدال  |  v2.1.0
 ============================================================ */
 
 @import url('Vazirmatn-font-face.css');
@@ -440,35 +440,6 @@ body.dark .one-line-note{background:rgba(59,130,246,.1)}
 .legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
 .pie-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
 
-/* ============================================================
-   ۱۰. DuPont
-============================================================ */
-.dupont{
-  display:grid;
-  grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;
-  gap:8px;
-  align-items:center;
-  margin-top:10px;
-}
-.dupont-box{
-  background:linear-gradient(135deg,#eef4ff,#dbeafe);
-  border-radius:12px;
-  padding:14px;
-  text-align:center;
-  border:1px solid #bfdbfe;
-}
-body.dark .dupont-box{background:linear-gradient(135deg,#1e3a8a,#172554);border-color:#3b82f6}
-.dupont-box .lbl{font-size:11px;color:var(--sub);display:block;margin-bottom:6px}
-.dupont-box .val{font-size:18px;font-weight:700;color:var(--blue);direction:ltr}
-.dupont-op{font-size:24px;color:var(--sub);font-weight:700}
-.dupont-result{
-  background:linear-gradient(135deg,#d1fae5,#a7f3d0);
-  border-color:#6ee7b7;
-}
-body.dark .dupont-result{background:linear-gradient(135deg,#065f46,#064e3b);border-color:#10b981}
-.dupont-result .val{color:#065f46}
-body.dark .dupont-result .val{color:#6ee7b7}
-
 /* ---------- DuPont Hero (v1.7) ---------- */
 .dupont-hero{
   text-align:center;
@@ -639,7 +610,7 @@ body.dark .dupont-result .val{color:#6ee7b7}
 }
 
 /* ============================================================
-   ۱۱. Z-Score
+   ۱۰. Z-Score
 ============================================================ */
 .zscore-wrap{
   display:flex;
@@ -699,7 +670,7 @@ body.dark .dupont-result .val{color:#6ee7b7}
 }
 
 /* ============================================================
-   ۱۲. کیفیت سود
+   ۱۱. کیفیت سود
 ============================================================ */
 .qual-grid{
   display:grid;
@@ -789,17 +760,7 @@ body.dark .dupont-result .val{color:#6ee7b7}
 .qual-legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
 
 /* ============================================================
-   ۱۳. متغیرهای مشترک (تکرارشده‌ها یکسان‌سازی شد)
-============================================================ */
-.legend span,
-.qual-legend span{
-  display:flex;
-  align-items:center;
-  gap:5px;
-}
-
-/* ============================================================
-   ۱۴. بج‌های هشدار
+   ۱۲. بج‌های هشدار
 ============================================================ */
 .wl-alert-badge{
   display:inline-flex;
@@ -901,7 +862,7 @@ body.dark .wl-alert-badge.success{
 .wl-alert-popup .down{color:#c62828}
 
 /* ============================================================
-   ۱۵. لیست ذخیره‌شده
+   ۱۳. لیست ذخیره‌شده
 ============================================================ */
 .saved-list{display:grid;gap:8px;margin-top:10px}
 .saved-item{
@@ -934,7 +895,7 @@ body.dark .wl-alert-badge.success{
 }
 
 /* ============================================================
-   ۱۶. مودال‌ها (یکسان‌سازی شده)
+   ۱۴. مودال‌ها
 ============================================================ */
 #saveModal,
 #saveCompareModal,
@@ -1041,7 +1002,7 @@ body.dark .wl-alert-badge.success{
 }
 
 /* ============================================================
-   ۱۷. Toast
+   ۱۵. Toast
 ============================================================ */
 #saveToast{
   position:fixed;
@@ -1064,8 +1025,9 @@ body.dark .wl-alert-badge.success{
 }
 #saveToast.show{opacity:1;visibility:visible}
 #saveToast.error{background:#c62828}
+
 /* ============================================================
-   ۱۸. Watch Mode Selector
+   ۱۶. Watch Mode Selector
 ============================================================ */
 .watch-mode-selector{
   display:flex;
@@ -1111,7 +1073,7 @@ body.dark .wl-alert-badge.success{
 .watch-mode-option span{flex:1}
 
 /* ============================================================
-   ۱۹. Summary Box
+   ۱۷. Summary Box
 ============================================================ */
 .summary-box{
   background:linear-gradient(135deg,#f0f7ff,#e6f0ff);
@@ -1140,7 +1102,7 @@ body.dark .summary-box{
 body.dark .summary-box .stat{background:rgba(255,255,255,.1)}
 
 /* ============================================================
-   ۲۰. Alert Box
+   ۱۸. Alert Box
 ============================================================ */
 .alert{
   padding:12px 14px;
@@ -1164,7 +1126,7 @@ body.dark .summary-box .stat{background:rgba(255,255,255,.1)}
 }
 
 /* ============================================================
-   ۲۱. Saved Controls
+   ۱۹. Saved Controls
 ============================================================ */
 .saved-controls{
   display:grid;
@@ -1216,7 +1178,7 @@ body.dark .saved-item .star.off{color:#475569}
 }
 
 /* ============================================================
-   ۲۲. مقایسه شرکت‌ها
+   ۲۰. مقایسه شرکت‌ها
 ============================================================ */
 .cmp-list{display:grid;gap:10px}
 .cmp-item{
@@ -1436,7 +1398,6 @@ body.dark .saved-item .star.off{color:#475569}
   color:var(--good);
   position:relative;
 }
-.cmp-table td.best-cell::before{content:" ";font-size:12px}
 .cmp-table td.worst-cell{
   background:rgba(198,40,40,.08);
   color:var(--bad);
@@ -1463,7 +1424,7 @@ body.dark .saved-item .star.off{color:#475569}
 body.dark .cmp-hint{background:rgba(59,130,246,.1)}
 
 /* ============================================================
-   ۲۳. گزارش فعالیت ماهانه
+   ۲۱. گزارش فعالیت ماهانه
 ============================================================ */
 .monthly-kpi-grid{
   display:grid;
@@ -1575,7 +1536,7 @@ body.dark .monthly-notes{
 }
 
 /* ============================================================
-   ۲۴. دیدبان
+   ۲۲. دیدبان
 ============================================================ */
 .wl-section{animation:fadeIn .25s ease}
 
@@ -1598,7 +1559,6 @@ body.dark .monthly-notes{
   transform:translateY(-3px);
   box-shadow:0 8px 24px rgba(0,0,0,.1);
 }
-.wl-card.activity-card{border-top-color:#f59e0b}
 
 .wl-card .wl-head{
   display:flex;
@@ -1644,10 +1604,6 @@ body.dark .monthly-notes{
   font-weight:600;
   margin-bottom:10px;
 }
-.wl-card.activity-card .wl-reports-count{
-  background:rgba(245,158,11,.12);
-  color:#d97706;
-}
 
 .wl-card .wl-actions{
   display:flex;
@@ -1685,50 +1641,6 @@ body.dark .monthly-notes{
   border-radius:8px;
 }
 
-.wl-report-item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:10px 14px;
-  border:1px solid var(--line);
-  border-radius:10px;
-  background:var(--chart-bg);
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:8px;
-}
-.wl-report-item .rep-info{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  align-items:center;
-  flex:1;
-}
-.wl-report-item .rep-month{
-  font-weight:700;
-  color:var(--txt);
-}
-.wl-report-item .rep-sales{
-  font-size:12px;
-  color:var(--sub);
-  direction:ltr;
-}
-.wl-report-item .rep-actions{
-  display:flex;
-  gap:6px;
-}
-.wl-report-item .rep-actions button{
-  padding:5px 10px;
-  font-size:12px;
-  border-radius:8px;
-}
-.wl-report-item .rep-actions .delete-btn{
-  color:var(--bad);
-  border:1px solid var(--bad);
-  background:transparent;
-}
-.wl-report-item .rep-actions .delete-btn:hover{background:rgba(198,40,40,.1)}
-
 /* ---------- انتخابگر نمودار دیدبان ---------- */
 .wl-chart-selector{
   display:flex;
@@ -1764,7 +1676,7 @@ body.dark .monthly-notes{
 }
 
 /* ============================================================
-   ۲۵. فوتر کپی‌رایت
+   ۲۳. فوتر کپی‌رایت
 ============================================================ */
 .footer-credit{
   margin:30px auto 20px;
@@ -1829,8 +1741,31 @@ body.dark .monthly-notes{
   transform:translateY(-2px);
   box-shadow:0 6px 18px rgba(34,158,217,.4);
 }
+.footer-message {
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: all .2s ease;
+  direction: ltr;
+}
+.footer-message:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
+}
+
 /* ============================================================
-   ۲۶. Grid / Table اصلی
+   ۲۴. Grid / Table اصلی
 ============================================================ */
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .metric{
@@ -1869,7 +1804,7 @@ tr:hover td{background:var(--hover)}
 .bad{color:var(--bad);font-weight:600}
 
 /* ============================================================
-   ۲۷. تحلیل خودکار
+   ۲۵. تحلیل خودکار
 ============================================================ */
 .analysis-item{
   padding:12px 14px;
@@ -1888,7 +1823,7 @@ tr:hover td{background:var(--hover)}
 .analysis-item .help{margin-right:auto}
 
 /* ============================================================
-   ۲۸. تب‌های داخلی (نسبت‌ها)
+   ۲۶. تب‌های داخلی (نسبت‌ها)
 ============================================================ */
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .tab{
@@ -1902,7 +1837,7 @@ tr:hover td{background:var(--hover)}
 .tab.active{background:var(--blue);color:#fff}
 
 /* ============================================================
-   ۲۹. خطا
+   ۲۷. خطا
 ============================================================ */
 .err{
   background:rgba(239,68,68,.1);
@@ -1914,7 +1849,7 @@ tr:hover td{background:var(--hover)}
 }
 
 /* ============================================================
-   ۳۰. Help Tooltip
+   ۲۸. Help Tooltip
 ============================================================ */
 .help{
   display:inline-flex;
@@ -1968,7 +1903,7 @@ body.dark #globalTooltip{
 }
 
 /* ============================================================
-   ۳۱. Inner Tabs (v1.6 — تب‌های داخلی تحلیل تک شرکت)
+   ۲۹. Inner Tabs
 ============================================================ */
 .inner-tabs{
   display:flex;
@@ -2038,7 +1973,7 @@ body.dark .inner-tab.active{
 .inner-panel .pie-row{margin-top:8px}
 
 /* ============================================================
-   ۳۲. Quick Metrics (v1.6 — داشبورد امتیازی)
+   ۳۰. Quick Metrics
 ============================================================ */
 .quick-metrics-grid{
   display:grid;
@@ -2089,7 +2024,6 @@ body.dark .qm-card:hover{box-shadow:0 8px 20px rgba(0,0,0,.4)}
 }
 .qm-change span{display:inline-flex;align-items:center;gap:3px}
 
-/* رنگ‌ها */
 .qm-card.qm-good{
   border-right-color:var(--good);
   background:linear-gradient(135deg, rgba(16,185,129,.06), var(--chart-bg));
@@ -2119,7 +2053,7 @@ body.dark .qm-card.qm-bad{
 .qm-card.qm-empty .qm-value{color:var(--sub)}
 
 /* ============================================================
-   ۳۳. Card Collapse (کارت‌های باز/بسته شونده)
+   ۳۱. Card Collapse
 ============================================================ */
 .card h2.collapsible-h2{
   cursor:pointer;
@@ -2164,7 +2098,7 @@ body.dark .qm-card.qm-bad{
 .card.collapsed h2.collapsible-h2{margin-bottom:0}
 
 /* ============================================================
-   ۳۴. Accordion هوشمند (v1.7 — تحلیل جامع)
+   ۳۲. Accordion هوشمند
 ============================================================ */
 .acc-card{
   background:var(--chart-bg);
@@ -2282,7 +2216,7 @@ body.dark .acc-summary.acc-summary-warn{color:#fbbf24}
 .acc-body > h3:first-child{margin-top:0}
 
 /* ============================================================
-   ۳۵. EBITDA (v1.7 — نسخه داستانی)
+   ۳۳. EBITDA
 ============================================================ */
 .ebitda-hero{
   text-align:center;
@@ -2437,7 +2371,7 @@ body.dark .acc-summary.acc-summary-warn{color:#fbbf24}
 .ebitda-story-suggestion b{color:var(--blue)}
 
 /* ============================================================
-   ۳۶. Ratio Cards (v1.8 — نسبت‌ها با نمودار افقی)
+   ۳۴. Ratio Cards
 ============================================================ */
 .ratio-cards{
   display:flex;
@@ -2512,7 +2446,7 @@ body.dark .ratio-card-status{background:rgba(255,255,255,.08)}
 body.dark .ratio-card-hint{opacity:0.5}
 
 /* ============================================================
-   ۳۷. EPS (v1.8.1 — سود هر سهم + پیش‌بینی سالانه)
+   ۳۵. EPS
 ============================================================ */
 .eps-hero{margin-top:6px}
 .eps-grid{
@@ -2580,7 +2514,7 @@ body.dark .ratio-card-hint{opacity:0.5}
 body.dark .eps-note{background:rgba(59,130,246,.1)}
 
 /* ============================================================
-   ۳۸. v1.5 — مقایسه با صنعت
+   ۳۶. تب مقایسه با صنعت
 ============================================================ */
 .industry-input-section{
   border-right:4px solid #f59e0b;
@@ -2590,310 +2524,6 @@ body.dark .industry-input-section{
   background:linear-gradient(135deg, rgba(245,158,11,.08), var(--chart-bg));
 }
 
-/* ---------- زیربخش‌ها ---------- */
-.industry-sub-section{
-  padding:16px;
-  border-radius:12px;
-  background:var(--card);
-  border:1px solid var(--line);
-  margin-bottom:16px;
-}
-.industry-sub-section:last-of-type{margin-bottom:0}
-.industry-sub-title{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:13.5px;
-  font-weight:700;
-  color:var(--txt);
-  margin-bottom:14px;
-  padding-bottom:10px;
-  border-bottom:1px solid var(--line);
-  flex-wrap:wrap;
-}
-.sub-badge{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:22px;
-  height:22px;
-  border-radius:50%;
-  background:var(--blue);
-  color:#fff;
-  font-size:11.5px;
-  font-weight:700;
-  flex-shrink:0;
-}
-.industry-sub-section:first-of-type .sub-badge{background:#f59e0b}
-
-/* ---------- سهم اصلی (Base) ---------- */
-.base-symbol-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr 1fr;
-  gap:10px;
-  margin-bottom:14px;
-}
-
-/* دراپ افقی سهم اصلی */
-.base-drop-horizontal{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  padding:12px 16px;
-  border:2px dashed #98a2b3;
-  border-radius:12px;
-  background:linear-gradient(135deg, var(--chart-bg), var(--card));
-  transition:.25s ease;
-  flex-wrap:wrap;
-  position:relative;
-  cursor:pointer;
-}
-.base-drop-horizontal:hover{
-  border-color:var(--blue);
-  background:linear-gradient(135deg, rgba(23,105,224,.05), var(--card));
-  box-shadow:0 6px 18px rgba(23,105,224,.1);
-}
-.base-drop-horizontal.hover{
-  background:rgba(23,105,224,.08);
-  border-color:var(--blue);
-  border-style:solid;
-  box-shadow:0 8px 24px rgba(23,105,224,.18);
-}
-.base-drop-horizontal input[type="file"]{
-  position:absolute;
-  width:1px;
-  height:1px;
-  opacity:0;
-  pointer-events:none;
-}
-.base-drop-left{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex:1;
-  min-width:200px;
-}
-.base-drop-icon{
-  font-size:26px;
-  line-height:1;
-  filter:drop-shadow(0 2px 4px rgba(0,0,0,.06));
-  transition:transform .3s ease;
-}
-.base-drop-horizontal:hover .base-drop-icon{transform:scale(1.1) rotate(-5deg)}
-.base-drop-text{
-  font-size:13.5px;
-  font-weight:600;
-  color:var(--txt);
-  line-height:1.5;
-}
-.base-drop-right{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-shrink:0;
-  flex-wrap:wrap;
-  min-width:0;
-}
-.base-file-info-inline{
-  display:none;
-  align-items:center;
-  gap:8px;
-  padding:6px 12px;
-  border-radius:8px;
-  background:rgba(16,185,129,.1);
-  border:1px solid rgba(16,185,129,.3);
-  color:var(--good);
-  font-size:12px;
-  font-weight:600;
-}
-.base-file-info-inline.active{display:inline-flex}
-.base-file-info-inline .file-name{
-  max-width:180px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  direction:ltr;
-}
-
-/* ---------- هم‌گروهی‌ها ---------- */
-.peers-list{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  min-height:60px;
-  padding:6px;
-  border-radius:12px;
-  transition:background .2s, box-shadow .2s;
-}
-.peers-list.hover{
-  background:rgba(23,105,224,.08);
-  box-shadow:0 0 0 2px rgba(23,105,224,.3) inset;
-}
-
-/* دراپ افقی هم‌گروهی‌ها */
-.peers-drop-horizontal{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  padding:14px 18px;
-  border:2px dashed #98a2b3;
-  border-radius:12px;
-  background:linear-gradient(135deg, var(--chart-bg), var(--card));
-  transition:.25s ease;
-  flex-wrap:wrap;
-  position:relative;
-  cursor:pointer;
-}
-.peers-drop-horizontal:hover{
-  border-color:var(--blue);
-  background:linear-gradient(135deg, rgba(23,105,224,.05), var(--card));
-  box-shadow:0 6px 18px rgba(23,105,224,.1);
-}
-.peers-drop-horizontal.hover{
-  background:rgba(23,105,224,.08);
-  border-color:var(--blue);
-  border-style:solid;
-  box-shadow:0 8px 24px rgba(23,105,224,.18);
-}
-.peers-drop-left{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  flex:1;
-  min-width:220px;
-}
-.peers-drop-icon{
-  font-size:28px;
-  line-height:1;
-  filter:drop-shadow(0 2px 4px rgba(0,0,0,.06));
-  transition:transform .3s ease;
-}
-.peers-drop-horizontal:hover .peers-drop-icon{
-  transform:scale(1.1) rotate(-5deg);
-}
-.peers-drop-text{
-  font-size:14px;
-  font-weight:600;
-  color:var(--txt);
-  line-height:1.5;
-}
-.peers-drop-hint{
-  font-size:11.5px;
-  color:var(--sub);
-  font-weight:400;
-}
-.peers-drop-right{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-shrink:0;
-  flex-wrap:wrap;
-  min-width:0;
-}
-.peers-count-badge{
-  padding:6px 14px;
-  border-radius:10px;
-  background:rgba(102,112,133,.15);
-  color:var(--sub);
-  font-size:13px;
-  font-weight:700;
-  direction:rtl;
-  font-variant-numeric:tabular-nums;
-  transition:.2s;
-}
-.peers-count-badge.has-some{
-  background:rgba(23,105,224,.12);
-  color:var(--blue);
-}
-.peers-count-badge.full{
-  background:rgba(198,40,40,.12);
-  color:var(--bad);
-}
-
-/* ---------- آیتم هم‌گروهی ---------- */
-.peer-item{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:10px 12px;
-  border:1px solid var(--line);
-  border-radius:12px;
-  background:var(--card);
-  flex-wrap:wrap;
-  transition:box-shadow .15s;
-}
-.peer-item:hover{box-shadow:0 3px 10px rgba(0,0,0,.06)}
-.peer-item .color-dot{
-  width:14px;
-  height:14px;
-  border-radius:50%;
-  flex-shrink:0;
-}
-.peer-item .symbol-input{
-  flex:1;
-  min-width:90px;
-  max-width:130px;
-  padding:8px 12px;
-  border-radius:8px;
-  border:1px solid var(--line);
-  background:var(--chart-bg);
-  color:var(--txt);
-  font:inherit;
-  font-weight:600;
-  direction:rtl;
-}
-.peer-item .symbol-input:focus{
-  outline:2px solid var(--blue);
-  border-color:var(--blue);
-}
-.peer-item .price-input,
-.peer-item .shares-input{
-  width:130px;
-  padding:8px 12px;
-  border-radius:8px;
-  border:1px solid var(--line);
-  background:var(--chart-bg);
-  color:var(--txt);
-  font:inherit;
-  direction:rtl;
-  text-align:right;
-  font-variant-numeric:tabular-nums;
-}
-.peer-item .price-input:focus,
-.peer-item .shares-input:focus{
-  outline:2px solid var(--blue);
-  border-color:var(--blue);
-}
-.peer-item .field-label{
-  font-size:11.5px;
-  color:var(--sub);
-  display:flex;
-  flex-direction:column;
-  gap:3px;
-}
-.peer-item .remove-btn{
-  padding:5px 12px;
-  font-size:12px;
-  color:var(--bad);
-  border:1px solid var(--bad);
-  background:transparent;
-  border-radius:8px;
-  cursor:pointer;
-  margin-right:auto;
-  transition:background .15s;
-}
-.peer-item .remove-btn:hover{background:rgba(198,40,40,.1)}
-.peer-item .file-info{
-  font-size:11.5px;
-  color:var(--sub);
-  direction:ltr;
-  flex-basis:100%;
-  padding-right:24px;
-}
-
-/* ---------- دکمه‌های اقدام ---------- */
 .industry-actions{
   display:flex;
   gap:8px;
@@ -2904,51 +2534,6 @@ body.dark .industry-input-section{
   border-top:1px dashed var(--line);
 }
 
-/* ---------- خلاصه جایگاه سهم اصلی ---------- */
-.base-position-summary{margin-top:6px}
-.base-position-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
-  gap:12px;
-}
-.bp-card{
-  padding:16px;
-  border-radius:14px;
-  background:var(--chart-bg);
-  border:1px solid var(--chart-br);
-  text-align:center;
-  transition:transform .15s;
-  border-top:4px solid var(--blue);
-}
-.bp-card:hover{transform:translateY(-2px)}
-.bp-card .bp-label{
-  font-size:12px;
-  color:var(--sub);
-  margin-bottom:8px;
-  font-weight:600;
-}
-.bp-card .bp-value{
-  font-size:22px;
-  font-weight:700;
-  line-height:1.2;
-  direction:rtl;
-}
-.bp-card .bp-sub{
-  font-size:11.5px;
-  color:var(--sub);
-  margin-top:6px;
-  line-height:1.6;
-}
-.bp-card.bp-base{
-  border-top-color:#f59e0b;
-  background:linear-gradient(135deg, rgba(245,158,11,.08), var(--chart-bg));
-}
-.bp-card.bp-rank{border-top-color:#8b5cf6}
-.bp-card.bp-better{border-top-color:#16834a}
-.bp-card.bp-worse{border-top-color:#c62828}
-.bp-card.bp-score{border-top-color:#1769e0}
-
-/* ---------- جدول اصلی صنعت ---------- */
 .industry-table{
   width:100%;
   border-collapse:collapse;
@@ -2985,13 +2570,12 @@ body.dark .industry-input-section{
 body.dark .industry-table th.base-col,
 body.dark .industry-table td.base-col{background:rgba(245,158,11,.12)}
 
-/* ---------- کارت دو صنعت ---------- */
 #twoIndustriesCompareBox h2{font-size:16px;margin-bottom:14px}
 #twoIndustriesCompareBox{border-top:4px solid #8b5cf6}
 #compareTwoIndustriesCard{margin-top:55px !important}
 
 /* ============================================================
-   ۳۹. کارت‌های ذخیره‌شده (v1.8 — یکسان‌سازی شده)
+   ۳۷. کارت‌های ذخیره‌شده (فشرده)
 ============================================================ */
 #savedCard,
 #industrySavedCard{
@@ -3095,7 +2679,7 @@ body.dark .industry-table td.base-col{background:rgba(245,158,11,.12)}
 }
 
 /* ============================================================
-   ۴۰. کارت پشتیبان‌گیری دیدبان (یکسان‌سازی شده)
+   ۳۸. کارت پشتیبان‌گیری دیدبان
 ============================================================ */
 #wlBackupCard{
   padding:10px 12px !important;
@@ -3124,7 +2708,7 @@ body.dark .industry-table td.base-col{background:rgba(245,158,11,.12)}
 #wlBackupCard > div{gap:6px !important}
 
 /* ============================================================
-   ۴۱. System License UI
+   ۳۹. System License UI
 ============================================================ */
 .license-modal-overlay{
   position:fixed;
@@ -3518,23 +3102,18 @@ body.dark .industry-table td.base-col{background:rgba(245,158,11,.12)}
 .license-indicator.danger .li-btn:hover{background:#a01e1e}
 
 /* ============================================================
-   ۴۲. Responsive
+   ۴۰. Responsive
 ============================================================ */
 @media (max-width: 900px){
   .market-grid{grid-template-columns:1fr 1fr}
   .cmp-item .price-input,
   .cmp-item .shares-input{width:120px}
-  .base-symbol-grid{grid-template-columns:1fr 1fr}
-  .peer-item .price-input,
-  .peer-item .shares-input{width:110px}
 }
 
 @media (max-width: 800px){
   .grid{grid-template-columns:1fr 1fr}
   .charts-row,
   .pie-row{grid-template-columns:1fr}
-  .dupont{grid-template-columns:1fr}
-  .dupont-op{text-align:center}
   .saved-controls{grid-template-columns:1fr}
   h1{font-size:26px}
   .main-tabs{width:100%;justify-content:center}
@@ -3546,55 +3125,26 @@ body.dark .industry-table td.base-col{background:rgba(245,158,11,.12)}
 }
 
 @media (max-width: 700px){
-  .base-drop-horizontal{
-    flex-direction:column;
-    align-items:stretch;
-    gap:12px;
-  }
-  .base-drop-left{
-    justify-content:center;
-    text-align:center;
-  }
-  .base-drop-right{justify-content:center}
-  .base-file-info-inline .file-name{max-width:130px}
-
-  .peers-drop-horizontal{
-    flex-direction:column;
-    align-items:stretch;
-    gap:12px;
-    padding:14px;
-  }
-  .peers-drop-left{
-    justify-content:center;
-    text-align:center;
-    flex-direction:column;
-    gap:6px;
-  }
-  .peers-drop-right{justify-content:center}
-  .peers-drop-icon{font-size:24px}
-  .peers-drop-hint{display:none}
-
-  .industry-sub-section{padding:12px}
-  .industry-sub-title{font-size:12.5px}
+  .industry-input-section{padding:12px}
+  .industry-actions{flex-direction:column}
+  .industry-actions button{width:100%}
 }
 
 @media (max-width: 640px){
-  .base-symbol-grid{grid-template-columns:1fr}
-  .peer-item{
+  .cmp-item{
     flex-direction:column;
     align-items:stretch;
   }
-  .peer-item .symbol-input,
-  .peer-item .price-input,
-  .peer-item .shares-input{
+  .cmp-item .symbol-input,
+  .cmp-item .price-input,
+  .cmp-item .shares-input{
     width:100%;
     max-width:none;
   }
-  .peer-item .remove-btn{
+  .cmp-item .remove-btn{
     margin-right:0;
     align-self:flex-end;
   }
-  .base-position-grid{grid-template-columns:1fr}
 }
 
 @media (max-width: 600px){
@@ -3602,10 +3152,6 @@ body.dark .industry-table td.base-col{background:rgba(245,158,11,.12)}
   h1{font-size:22px}
   .cmp-scores{grid-template-columns:1fr}
   .cmp-zscore-wrap{grid-template-columns:1fr}
-  .cmp-item{flex-direction:column;align-items:stretch}
-  .cmp-item .symbol-input,
-  .cmp-item .price-input,
-  .cmp-item .shares-input{width:100%;max-width:none}
   .footer-links{flex-direction:column;width:100%}
   .footer-link{justify-content:center;width:100%}
   .monthly-kpi-grid{grid-template-columns:1fr}
@@ -3684,7 +3230,6 @@ body.dark .industry-table td.base-col{background:rgba(245,158,11,.12)}
   .plan-info{grid-column:2 / span 2;font-size:11px;text-align:right}
   .license-indicator{left:10px;right:10px;bottom:10px;max-width:none}
 
-  /* فاصله کارت‌های ذخیره‌شده در موبایل */
   #savedCard,
   #industrySavedCard,
   #wlBackupCard{
@@ -3707,7 +3252,7 @@ body.dark .industry-table td.base-col{background:rgba(245,158,11,.12)}
 }
 
 /* ============================================================
-   ۴۳. Print
+   ۴۱. Print
 ============================================================ */
 @media print{
   body{
@@ -3761,15 +3306,9 @@ body.dark .industry-table td.base-col{background:rgba(245,158,11,.12)}
   #sendToWatchBtn,
   #mSendToWatchBtn,
   .wl-actions,
-  .wl-report-item .rep-actions,
   #wlDownloadBtn,
   #wlUploadBtn,
-  .industry-base-section,
-  .industry-peers-section,
   .industry-actions,
-  .peers-list,
-  #addPeerBtn,
-  #clearPeersBtn,
   .inner-tabs{
     display:none !important;
   }
@@ -3794,7 +3333,6 @@ body.dark .industry-table td.base-col{background:rgba(245,158,11,.12)}
   .zscore-note,
   .cmp-score-card,
   .cmp-zscore-card,
-  .text-insight-item,
   .qual-box{
     page-break-inside:avoid;
   }
@@ -3881,11 +3419,9 @@ body.dark .industry-table td.base-col{background:rgba(245,158,11,.12)}
 
 .print-header{display:none}
 
-
 /* ============================================================
-   🆕 نسبت‌های صنعت — سبک DuPont (افقی، فشرده، رنگی)
+   ۴۲. نسبت‌های صنعت — سبک DuPont (افقی)
 ============================================================ */
-
 .ratio-dupont-row {
   grid-template-columns: 130px auto 1fr !important;
   padding: 10px 14px !important;
@@ -3916,7 +3452,6 @@ body.dark .industry-table td.base-col{background:rgba(245,158,11,.12)}
   transition: width .8s ease;
 }
 
-/* نشانگر میانگین — واضح‌تر */
 .ratio-avg-marker {
   position: absolute;
   top: -8px;
@@ -3937,7 +3472,6 @@ body.dark .ratio-avg-marker {
   border-color: #ffffff;
 }
 
-/* فلش کوچک بالای خط میانگین */
 .ratio-avg-marker::before {
   content: '';
   position: absolute;
@@ -3955,7 +3489,6 @@ body.dark .ratio-avg-marker::before {
   border-top-color: #ffffff;
 }
 
-/* برچسب «میانگین» بالای خط */
 .ratio-avg-marker-label {
   position: absolute;
   top: -22px;
@@ -3980,7 +3513,6 @@ body.dark .ratio-avg-marker-label {
   border-color: #ffffff;
 }
 
-/* راهنما */
 .ratio-inline-legend {
   display: flex;
   gap: 16px;
@@ -4003,7 +3535,6 @@ body.dark .ratio-avg-marker-label {
   display: inline-block;
 }
 
-/* موبایل */
 @media (max-width: 700px) {
   .ratio-dupont-row {
     grid-template-columns: 1fr auto !important;
@@ -4032,16 +3563,9 @@ body.dark .ratio-avg-marker-label {
   }
 }
 
-
-
-
-
-
 /* ============================================================
-   🆕 رتبه‌بندی بصری — سبک DuPont
+   ۴۳. رتبه‌بندی بصری
 ============================================================ */
-
-/* ⭐ برنده کلی */
 .rank-winner-banner {
   display: flex;
   align-items: center;
@@ -4087,7 +3611,6 @@ body.dark .ratio-avg-marker-label {
   direction: rtl;
 }
 
-/* ⭐ کارت‌های رتبه‌بندی */
 .rank-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -4175,7 +3698,6 @@ body.dark .ratio-avg-marker-label {
   font-weight: 700;
 }
 
-/* ⭐ بخش معیارها */
 .rank-criteria-box {
   padding: 16px;
   background: var(--chart-bg);
@@ -4228,7 +3750,6 @@ body.dark .ratio-avg-marker-label {
   background: rgba(102,112,133,.1);
 }
 
-/* ⭐ ردیف‌های رتبه */
 .rank-row {
   display: grid;
   grid-template-columns: 40px 100px auto 1fr;
@@ -4298,7 +3819,6 @@ body.dark .ratio-avg-marker-label {
   transition: width .8s ease;
 }
 
-/* ⭐ راهنما */
 .rank-legend {
   display: flex;
   gap: 14px;
@@ -4324,7 +3844,6 @@ body.dark .ratio-avg-marker-label {
   border-radius: 3px;
 }
 
-/* موبایل */
 @media (max-width: 700px) {
   .rank-winner-banner {
     padding: 12px 14px;
@@ -4391,11 +3910,9 @@ body.dark .ratio-avg-marker-label {
   }
 }
 
-
 /* ============================================================
-   🆕 رتبه عددی جایگزین مدال
+   ۴۴. رتبه عددی
 ============================================================ */
-
 .rank-card-num {
   font-size: 36px !important;
   font-weight: 800 !important;
@@ -4406,7 +3923,6 @@ body.dark .ratio-avg-marker-label {
   font-variant-numeric: tabular-nums;
 }
 
-/* در موبایل کوچیک‌تر */
 @media (max-width: 700px) {
   .rank-card-num {
     font-size: 28px !important;
@@ -4414,11 +3930,9 @@ body.dark .ratio-avg-marker-label {
   }
 }
 
-
 /* ============================================================
-   🆕 Hero کارت جایگاه سهم + امتیاز + Z-Score
+   ۴۵. Hero کارت جایگاه سهم + امتیاز + Z-Score
 ============================================================ */
-
 .base-position-hero {
   display: grid;
   grid-template-columns: minmax(140px, 1fr) auto minmax(200px, 1.5fr);
@@ -4511,46 +4025,11 @@ body.dark .ratio-avg-marker-label {
   direction: ltr;
 }
 
-/* ⭐ کارت‌های اطلاعاتی */
 .score-info-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 10px;
   margin-bottom: 14px;
-}
-
-.score-info-card {
-  padding: 10px 12px;
-  background: var(--chart-bg);
-  border: 1px solid var(--chart-br);
-  border-radius: 12px;
-  text-align: center;
-  border-top: 3px solid #94a3b8;
-}
-
-.score-info-card.sic-good { border-top-color: #16834a; }
-.score-info-card.sic-bad { border-top-color: #c62828; }
-
-.sic-label {
-  font-size: 11px;
-  color: var(--sub);
-  margin-bottom: 4px;
-  font-weight: 600;
-}
-
-.sic-num {
-  font-size: 19px;
-  font-weight: 800;
-  direction: ltr;
-  line-height: 1.1;
-  margin-bottom: 4px;
-  font-variant-numeric: tabular-nums;
-}
-
-.sic-sub {
-  font-size: 10.5px;
-  color: var(--sub);
-  line-height: 1.4;
 }
 
 .score-info-card {
@@ -4592,13 +4071,11 @@ body.dark .ratio-avg-marker-label {
   line-height: 1.4;
 }
 
-/* ⭐ ردیف با پس‌زمینه سهم اصلی */
 .rank-row-base-row {
   background: rgba(245,158,11,.08) !important;
   border-right: 3px solid var(--warn);
 }
 
-/* ⭐ در ردیف‌های DuPont که ستون اسم شامل شماره رتبه هم هست */
 .ratio-dupont-row .dupont-factor-label {
   display: flex;
   align-items: center;
@@ -4610,7 +4087,6 @@ body.dark .ratio-avg-marker-label {
   flex-shrink: 0;
 }
 
-/* موبایل */
 @media (max-width: 700px) {
   .base-position-hero {
     grid-template-columns: 1fr;
@@ -4634,42 +4110,36 @@ body.dark .ratio-avg-marker-label {
     font-size: 20px;
   }
 }
-/* ============================================================
-   🆕 فیکس نمایش EPS در موبایل
-============================================================ */
 
+/* ============================================================
+   ۴۶. فیکس EPS در موبایل
+============================================================ */
 @media (max-width: 700px) {
-  /* مطمئن شو کارت EPS ارتفاع کافی داره */
   .acc-card[data-acc="eps"] .acc-body {
     max-height: none !important;
     overflow: visible !important;
   }
 
-  /* grid رو به صورت تک ستونی */
   .eps-grid {
     grid-template-columns: 1fr !important;
     gap: 10px !important;
   }
 
-  /* خود کارت‌ها */
   .eps-card {
     padding: 14px 12px !important;
     min-height: auto !important;
   }
 
-  /* عدد بزرگ EPS */
   .eps-card-num {
     font-size: 26px !important;
     line-height: 1.1 !important;
   }
 
-  /* برچسب */
   .eps-card-label {
     font-size: 12px !important;
     margin-bottom: 8px !important;
   }
 
-  /* واحد و دوره */
   .eps-card-unit {
     font-size: 12px !important;
     margin-bottom: 6px !important;
@@ -4680,7 +4150,6 @@ body.dark .ratio-avg-marker-label {
     padding: 2px 8px !important;
   }
 
-  /* متن توضیحات */
   .eps-note {
     font-size: 11.5px !important;
     line-height: 1.7 !important;
@@ -4688,13 +4157,11 @@ body.dark .ratio-avg-marker-label {
     margin-top: 10px !important;
   }
 
-  /* دکمه باز شدن EPS (اگه هست) */
   .acc-card[data-acc="eps"] .acc-header {
     flex-wrap: wrap;
   }
 }
 
-/* فیکس خاص برای موبایل‌های کوچیک */
 @media (max-width: 400px) {
   .eps-card-num {
     font-size: 22px !important;
@@ -4703,10 +4170,10 @@ body.dark .ratio-avg-marker-label {
     font-size: 11px !important;
   }
 }
-/* ============================================================
-   🆕 پاسخ پویا در توضیحات نسبت‌ها
-============================================================ */
 
+/* ============================================================
+   ۴۷. پاسخ پویا در توضیحات نسبت‌ها
+============================================================ */
 .ratio-hint-answer {
   font-weight: 700;
   transition: color .3s ease;
@@ -4714,7 +4181,6 @@ body.dark .ratio-avg-marker-label {
   margin: 0 2px;
 }
 
-/* انیمیشن ملایم ظاهر شدن پاسخ */
 @keyframes hintAnswerFade {
   from { opacity: 0; transform: translateY(-3px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -4725,33 +4191,7 @@ body.dark .ratio-avg-marker-label {
 }
 
 /* ============================================================
-   🆕 دکمه پیام‌ها در فوتر
-============================================================ */
-.footer-message {
-  background: linear-gradient(135deg, #10b981, #059669);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-  border: 0;
-  cursor: pointer;
-  font: inherit;
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border-radius: 12px;
-  text-decoration: none;
-  font-size: 13.5px;
-  font-weight: 600;
-  transition: all .2s ease;
-  direction: ltr;
-}
-.footer-message:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
-}
-
-/* ============================================================
-   🆕 مودال پیام‌ها
+   ۴۸. مودال پیام‌های سازنده
 ============================================================ */
 #messageModal {
   position: fixed;
@@ -4824,7 +4264,7 @@ body.dark .ratio-avg-marker-label {
 }
 
 /* ============================================================
-   🆕 کارت هشدار DuPont (equity منفی)
+   ۴۹. DuPont negative equity — لیست دلایل
 ============================================================ */
 .dupont-negative-equity {
   padding: 22px 20px;
@@ -4915,33 +4355,6 @@ body.dark .ratio-avg-marker-label {
   font-size: 12.5px;
 }
 
-/* حالت موبایل */
-@media (max-width: 600px) {
-  .dupont-negative-equity {
-    padding: 16px 14px;
-  }
-  .dupont-negative-equity .dne-icon {
-    font-size: 38px;
-  }
-  .dupont-negative-equity .dne-title {
-    font-size: 16px;
-  }
-  .dupont-negative-equity .dne-subtitle {
-    font-size: 12.5px;
-  }
-  .dupont-negative-equity .dne-stats {
-    grid-template-columns: 1fr 1fr;
-  }
-  .dupont-negative-equity .dne-stat-value {
-    font-size: 13px;
-  }
-  .dupont-negative-equity .dne-explain {
-    font-size: 12px;
-  }
-}
-/* ============================================================
-   🆕 DuPont negative equity — لیست دلایل
-============================================================ */
 .dne-explain-title {
   font-size: 13.5px;
   font-weight: 700;
@@ -4992,13 +4405,32 @@ body.dark .ratio-avg-marker-label {
   display: inline-block;
 }
 
-
-
-
-
+@media (max-width: 600px) {
+  .dupont-negative-equity {
+    padding: 16px 14px;
+  }
+  .dupont-negative-equity .dne-icon {
+    font-size: 38px;
+  }
+  .dupont-negative-equity .dne-title {
+    font-size: 16px;
+  }
+  .dupont-negative-equity .dne-subtitle {
+    font-size: 12.5px;
+  }
+  .dupont-negative-equity .dne-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .dupont-negative-equity .dne-stat-value {
+    font-size: 13px;
+  }
+  .dupont-negative-equity .dne-explain {
+    font-size: 12px;
+  }
+}
 
 /* ============================================================
-   🆕 بخش جستجوی سریع سهم (stock-search) — v1.2.0 فشرده
+   ۵۰. جستجوی سریع سهم (stock-search)
 ============================================================ */
 .stock-search-section {
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), var(--chart-bg));
@@ -5063,7 +4495,6 @@ body.dark .ratio-avg-marker-label {
   transform: none;
 }
 
-/* لیست نتایج */
 .stock-search-results {
   display: flex;
   flex-direction: column;
@@ -5125,7 +4556,6 @@ body.dark .ratio-avg-marker-label {
   border-radius: 8px;
 }
 
-/* پیام موفقیت / خطا — فشرده و افقی */
 .search-result-msg {
   display: flex;
   align-items: center;
@@ -5156,7 +4586,6 @@ body.dark .ratio-avg-marker-label {
   color: var(--bad);
 }
 
-/* موبایل */
 @media (max-width: 600px) {
   .stock-search-row {
     flex-direction: column;
@@ -5172,16 +4601,6 @@ body.dark .ratio-avg-marker-label {
     width: 100%;
     margin-top: 4px;
   }
-}
-
-/* موبایل */
-@media (max-width: 600px) {
-  .stock-search-row {
-    flex-direction: column;
-  }
-  #stockSearchBtn {
-    width: 100%;
-  }
   .stock-result-item .sri-symbol {
     min-width: 60px;
     font-size: 13px;
@@ -5189,7 +4608,7 @@ body.dark .ratio-avg-marker-label {
 }
 
 /* ============================================================
-   🆕 برچسب امتیاز داخلی (calcScore)
+   ۵۱. برچسب امتیاز داخلی
 ============================================================ */
 .score-note-top {
   display: inline-block;
@@ -5206,509 +4625,13 @@ body.dark .ratio-avg-marker-label {
 body.dark .score-note-top {
   background: rgba(59,130,246,.15);
 }
-/* ============================================================
-   🆕 سرچ سریع برای سهم اصلی (تب مقایسه با صنعت)
-============================================================ */
-.base-search-section {
-  padding: 12px 14px;
-  background: linear-gradient(135deg, rgba(245,158,11,.06), var(--chart-bg));
-  border-radius: 12px;
-  border-right: 3px solid #f59e0b;
-  margin-bottom: 14px;
-}
-
-.base-search-section > label {
-  display: block;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--txt);
-  margin-bottom: 8px;
-}
-
-.base-search-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-#baseSearchInput {
-  flex: 1;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1.5px solid var(--line);
-  background: var(--card);
-  color: var(--txt);
-  font: inherit;
-  font-size: 13.5px;
-  direction: rtl;
-  transition: .15s;
-}
-
-#baseSearchInput:focus {
-  outline: none;
-  border-color: #f59e0b;
-  box-shadow: 0 0 0 3px rgba(245,158,11,.15);
-}
-
-#baseSearchBtn {
-  padding: 10px 18px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #fff;
-  font: inherit;
-  font-weight: 700;
-  font-size: 13px;
-  border: 0;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: .15s;
-}
-
-#baseSearchBtn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 5px 14px rgba(245,158,11,.4);
-}
-
-#baseSearchBtn:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-
-.base-search-results {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 6px;
-}
-
-.base-search-results:empty {
-  margin-top: 0;
-}
-/* ⭐ استایل نتایج جستجو در تب مقایسه با صنعت */
-.base-search-results .stock-result-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: var(--card);
-  border: 1.5px solid var(--line);
-  cursor: pointer;
-  transition: all .15s;
-}
-
-.base-search-results .stock-result-item:hover {
-  background: rgba(245, 158, 11, 0.08);
-  border-color: #f59e0b;
-  transform: translateX(-3px);
-  box-shadow: 0 3px 12px rgba(245, 158, 11, 0.15);
-}
-
-.base-search-results .stock-result-item .sri-symbol {
-  font-weight: 700;
-  color: #f59e0b;
-  font-size: 14px;
-  min-width: 75px;
-  direction: rtl;
-}
-
-.base-search-results .stock-result-item .sri-name {
-  font-size: 12.5px;
-  color: var(--sub);
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* ⭐ استایل گروه صنعت در نتایج (برای هر دو تب) */
-.stock-result-item .sri-industry {
-  font-size: 11px;
-  color: #8b5cf6;
-  background: rgba(139, 92, 246, 0.12);
-  padding: 3px 10px;
-  border-radius: 6px;
-  white-space: nowrap;
-  font-weight: 600;
-  border: 1px solid rgba(139, 92, 246, 0.2);
-}
-
-.base-search-msg {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 12.5px;
-  line-height: 1.7;
-  margin-top: 8px;
-}
-
-.base-search-msg.success {
-  background: rgba(16,185,129,.1);
-  border-right: 3px solid var(--good);
-  color: var(--txt);
-}
-
-.base-search-msg.error {
-  background: rgba(198,40,40,.1);
-  border-right: 3px solid var(--bad);
-  color: var(--bad);
-}
 
 /* ============================================================
-   🆕 سرچ برای هر سهم هم‌گروهی
+   ۵۲. نسخه ساده‌شده تب «مقایسه با صنعت»
 ============================================================ */
-.peer-item .peer-search-input {
-  width: 130px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1.5px solid #f59e0b;
-  background: rgba(245,158,11,.05);
-  color: var(--txt);
-  font: inherit;
-  font-size: 12px;
-  direction: rtl;
-  transition: .15s;
-}
-
-.peer-item .peer-search-input:focus {
-  outline: none;
-  border-color: #d97706;
-  box-shadow: 0 0 0 3px rgba(245,158,11,.15);
-}
-
-.peer-search-msg {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-  flex-basis: 100%;
-}
-
-@media (max-width: 900px) {
-  .peer-item .peer-search-input {
-    width: 110px;
-  }
-}
-
-@media (max-width: 640px) {
-  .peer-item .peer-search-input {
-    width: 100%;
-  }
-}
-/* ============================================================
-   🆕 نسخه ساده‌شده تب «مقایسه با صنعت»
-============================================================ */
-
-/* ---------- دراپ‌زون ساده ---------- */
 .simple-row {
   margin-bottom: 10px;
 }
-
-.simple-drop {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border: 2px dashed var(--line);
-  border-radius: 12px;
-  background: var(--chart-bg);
-  cursor: pointer;
-  transition: .2s;
-  position: relative;
-  flex-wrap: wrap;
-}
-
-.simple-drop:hover {
-  border-color: var(--blue);
-  background: rgba(23,105,224,.04);
-}
-
-.simple-drop.hover {
-  border-color: var(--blue);
-  background: rgba(23,105,224,.08);
-  border-style: solid;
-}
-
-.simple-drop input[type="file"] {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.simple-drop-icon {
-  font-size: 22px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.simple-drop-text {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--txt);
-  flex: 1;
-}
-
-.simple-drop-btn {
-  padding: 7px 14px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--blue), #1e40af);
-  color: #fff;
-  border: 0;
-  font: inherit;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: .15s;
-  flex-shrink: 0;
-}
-
-.simple-drop-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(23,105,224,.3);
-}
-
-.simple-file-info {
-  display: none;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: rgba(16,185,129,.1);
-  border: 1px solid rgba(16,185,129,.3);
-  font-size: 11.5px;
-  color: var(--good);
-  font-weight: 600;
-  max-width: 100%;
-}
-
-.simple-file-info.active {
-  display: inline-flex;
-}
-
-.simple-file-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  direction: ltr;
-  max-width: 200px;
-}
-
-/* ---------- سرچ ساده ---------- */
-.simple-search-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.simple-search-row input {
-  flex: 1;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1.5px solid var(--line);
-  background: var(--card);
-  color: var(--txt);
-  font: inherit;
-  font-size: 13px;
-  direction: rtl;
-  transition: .15s;
-}
-
-.simple-search-row input:focus {
-  outline: none;
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(23,105,224,.12);
-}
-
-.simple-search-btn {
-  padding: 10px 20px;
-  border-radius: 10px;
-  background: var(--blue);
-  color: #fff;
-  border: 0;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: .15s;
-}
-
-.simple-search-btn:hover:not(:disabled) {
-  background: #0f5bc4;
-}
-
-.simple-search-btn:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-
-/* ---------- لیست هم‌گروهی‌ها (ساده) ---------- */
-.simple-peers-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.simple-peer-item {
-  display: grid;
-  grid-template-columns: 10px 1fr auto auto;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  transition: .15s;
-  position: relative;
-}
-
-.simple-peer-item:hover {
-  border-color: var(--blue);
-  box-shadow: 0 2px 8px rgba(23,105,224,.08);
-}
-
-.simple-peer-item.loading {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-.simple-peer-color {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.simple-peer-info {
-  min-width: 0;
-  flex: 1;
-}
-
-.simple-peer-name {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  font-size: 13.5px;
-}
-
-.simple-peer-name b {
-  color: var(--txt);
-  font-weight: 700;
-}
-
-.simple-peer-file {
-  font-size: 11px;
-  color: var(--sub);
-  direction: ltr;
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.simple-peer-meta {
-  font-size: 11.5px;
-  color: var(--sub);
-  margin-top: 3px;
-  direction: rtl;
-}
-
-.simple-peer-search input {
-  width: 130px;
-  padding: 7px 11px;
-  border-radius: 8px;
-  border: 1.5px solid var(--line);
-  background: var(--chart-bg);
-  color: var(--txt);
-  font: inherit;
-  font-size: 12px;
-  direction: rtl;
-  transition: .15s;
-}
-
-.simple-peer-search input:focus {
-  outline: none;
-  border-color: #f59e0b;
-  box-shadow: 0 0 0 3px rgba(245,158,11,.12);
-}
-
-.simple-peer-remove {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--bad);
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: .15s;
-  flex-shrink: 0;
-}
-
-.simple-peer-remove:hover {
-  background: rgba(198,40,40,.1);
-  border-color: var(--bad);
-}
-
-.simple-peer-error {
-  grid-column: 1 / -1;
-  font-size: 11px;
-  color: var(--bad);
-  padding: 4px 0;
-}
-
-/* ---------- موبایل ---------- */
-@media (max-width: 700px) {
-  .simple-drop {
-    flex-direction: column;
-    text-align: center;
-    gap: 8px;
-  }
-  .simple-drop-text {
-    width: 100%;
-  }
-  .simple-drop-btn {
-    width: 100%;
-  }
-  .simple-search-row {
-    flex-direction: column;
-  }
-  .simple-search-btn {
-    width: 100%;
-  }
-  .simple-peer-item {
-    grid-template-columns: 10px 1fr auto;
-    grid-template-rows: auto auto;
-    gap: 8px;
-  }
-  .simple-peer-info {
-    grid-column: 2;
-    grid-row: 1;
-  }
-  .simple-peer-search {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-  .simple-peer-search input {
-    width: 100%;
-  }
-  .simple-peer-remove {
-    grid-column: 3;
-    grid-row: 1;
-  }
-}
-/* ============================================================
-   🆕 نسخه ساده تب «مقایسه با صنعت» v2.3.0
-============================================================ */
 
 .simple-drop {
   display: flex;
@@ -5985,8 +4908,9 @@ body.dark .score-note-top {
   .simple-peer-search input { width: 100%; }
   .simple-peer-remove { grid-column: 3; grid-row: 1; }
 }
+
 /* ============================================================
-   🆕 کادر اطلاعات سهم انتخاب‌شده (تب مقایسه با صنعت)
+   ۵۳. کادر اطلاعات سهم انتخاب‌شده
 ============================================================ */
 .base-info-box {
   margin-top: 14px;
@@ -6052,7 +4976,6 @@ body.dark .score-note-top {
   color: #8b5cf6;
 }
 
-/* موبایل */
 @media (max-width: 800px) {
   .base-info-grid {
     grid-template-columns: 1fr 1fr;
@@ -6069,10 +4992,8 @@ body.dark .score-note-top {
 }
 
 /* ============================================================
-   🆕 باز/بسته کردن کل بخش ورودی (تحلیل تک شرکت + مقایسه)
+   ۵۴. باز/بسته کردن کل بخش ورودی
 ============================================================ */
-
-/* کانتینر بخش‌های ورودی */
 #allInputSections,
 #allCompareSections {
   transition: max-height .4s ease, opacity .3s ease;
@@ -6088,7 +5009,6 @@ body.dark .score-note-top {
   margin: 0;
 }
 
-/* دکمه‌های باز/بسته */
 #inputSectionToggleBtn,
 #compareInputToggleBtn {
   cursor: pointer;
@@ -6104,7 +5024,6 @@ body.dark .score-note-top {
   color: var(--blue);
 }
 
-/* آیکون فلش */
 #inputSectionToggleIcon,
 #compareInputToggleIcon {
   display: inline-block;
@@ -6117,7 +5036,6 @@ body.dark .score-note-top {
   transform: rotate(-90deg);
 }
 
-/* موبایل: فشرده‌تر */
 @media (max-width: 600px) {
   #inputSectionToggleBtn,
   #compareInputToggleBtn {
@@ -6125,10 +5043,10 @@ body.dark .score-note-top {
     padding: 5px 12px !important;
   }
 }
+
 /* ============================================================
-   🆕 دکمه‌های پایین ورودی‌ها (تحلیل تک شرکت)
+   ۵۵. دکمه‌های پایین ورودی‌ها (تحلیل تک شرکت)
 ============================================================ */
-/* ⭐ کانتینر دکمه‌ها (پایین ورودی‌ها) */
 .action-buttons-bottom {
   background: rgba(23, 105, 224, .03);
   border-radius: 12px;
@@ -6143,7 +5061,6 @@ body.dark .score-note-top {
   position: relative;
 }
 
-/* ⭐ گروه دکمه‌های اصلی (وسط‌چین) */
 .action-buttons-main {
   display: flex;
   gap: 10px;
@@ -6162,7 +5079,6 @@ body.dark .score-note-top {
   gap: 6px;
 }
 
-/* ⭐ wrapper دکمه بستن/باز کردن (بیرون کانتینر) */
 .toggle-btn-wrapper {
   display: flex;
   justify-content: flex-end;
@@ -6171,7 +5087,6 @@ body.dark .score-note-top {
   border-top: 1px dashed var(--line);
 }
 
-/* ⭐ دکمه بستن/باز کردن */
 .action-toggle-btn {
   cursor: pointer;
   transition: all .2s ease;
@@ -6193,12 +5108,6 @@ body.dark .score-note-top {
   border-color: var(--blue);
 }
 
-.action-toggle-btn:hover {
-  background: rgba(23, 105, 224, .08);
-  border-color: var(--blue);
-  color: var(--blue);
-}
-
 .action-toggle-btn #inputSectionToggleIcon {
   display: inline-block;
   transition: transform .3s ease;
@@ -6209,7 +5118,6 @@ body.dark .score-note-top {
   transform: rotate(-90deg);
 }
 
-/* موبایل */
 @media (max-width: 700px) {
   .action-buttons-bottom {
     flex-direction: column;
@@ -6247,61 +5155,43 @@ body.dark .score-note-top {
 }
 
 /* ============================================================
-   🆕 باز/بسته کردن کل بخش ورودی
+   ۵۶. فایل‌های کمکی — سرچ برای هم‌گروهی‌ها
 ============================================================ */
-#allInputSections,
-#allCompareSections {
-  transition: max-height .4s ease, opacity .3s ease;
-  overflow: hidden;
-  max-height: 5000px;
-  opacity: 1;
-}
-
-#allInputSections.collapsed,
-#allCompareSections.collapsed {
-  max-height: 0;
-  opacity: 0;
-  margin: 0;
-}
-
-#inputSectionToggleBtn,
-#compareInputToggleBtn {
-  cursor: pointer;
-  transition: all .2s ease;
-  font-weight: 600;
+.peer-item .peer-search-input {
+  width: 130px;
+  padding: 8px 12px;
   border-radius: 8px;
+  border: 1.5px solid #f59e0b;
+  background: rgba(245,158,11,.05);
+  color: var(--txt);
+  font: inherit;
+  font-size: 12px;
+  direction: rtl;
+  transition: .15s;
 }
 
-#inputSectionToggleBtn:hover,
-#compareInputToggleBtn:hover {
-  background: rgba(23, 105, 224, .08);
-  border-color: var(--blue);
-  color: var(--blue);
+.peer-item .peer-search-input:focus {
+  outline: none;
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(245,158,11,.15);
 }
 
-#inputSectionToggleIcon,
-#compareInputToggleIcon {
-  display: inline-block;
-  transition: transform .3s ease;
-  font-size: 11px;
+.peer-search-msg {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex-basis: 100%;
 }
 
-#inputSectionToggleBtn.collapsed #inputSectionToggleIcon,
-#compareInputToggleBtn.collapsed #compareInputToggleIcon {
-  transform: rotate(-90deg);
-}
-
-/* موبایل */
-@media (max-width: 600px) {
-  .action-buttons-bottom {
-    flex-direction: column;
+@media (max-width: 900px) {
+  .peer-item .peer-search-input {
+    width: 110px;
   }
-  .action-buttons-bottom button {
+}
+
+@media (max-width: 640px) {
+  .peer-item .peer-search-input {
     width: 100%;
-  }
-  #inputSectionToggleBtn,
-  #compareInputToggleBtn {
-    font-size: 11.5px !important;
-    padding: 5px 12px !important;
   }
 }
