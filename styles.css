@@ -13,7 +13,7 @@
   --txt:#1f2937;
   --sub:#667085;
   --line:#e5e7eb;
-  --blue:#1769e0;
+  --blue:#8b5cf6;
   --good:#16834a;
   --warn:#a15c00;
   --bad:#c62828;
@@ -29,7 +29,7 @@ body.dark{
   --txt:#e2e8f0;
   --sub:#94a3b8;
   --line:#334155;
-  --blue:#3b82f6;
+  --blue:#a78bfa;
   --good:#34d399;
   --warn:#fbbf24;
   --bad:#f87171;
@@ -5194,4 +5194,25 @@ body.dark .score-note-top {
   .peer-item .peer-search-input {
     width: 100%;
   }
+}
+#stockSearchInput::placeholder {
+  color: #e53935 !important;
+  opacity: 0.75;
+  font-weight: 600;
+}
+#baseSearchInput::placeholder {
+  color: #e53935 !important;
+  opacity: 0.75;
+  font-weight: 600;
+}
+#stockSearchInput::placeholder,
+#baseSearchInput::placeholder {
+  text-align: center;
+}
+.simple-drop-text {
+  text-align: center;
+}
+#stockSearchInput,
+#baseSearchInput {
+  border: 2px dashed rgba(229, 57, 53, 0.6) !important;
 }

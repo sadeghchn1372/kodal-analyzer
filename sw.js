@@ -6,7 +6,7 @@
    - سایر فایل‌ها: Network First با fallback به cache
 ============================================================ */
 
-const CACHE_VERSION = 'kodal-v2.0.5';
+const CACHE_VERSION = 'kodal-v2.0.6';
 const CACHE_NAME = CACHE_VERSION;
 
 // فایل‌های اصلی که همیشه کش می‌شن (App Shell)
@@ -20,7 +20,8 @@ const PRECACHE_URLS = [
   './styles.css',
   './Vazirmatn-font-face.css',
   './xlsx.full.min.js',
-  './manifest.json'
+  './manifest.json',
+  './sector-patch.js'   // ⭐ این خط اضافه بشه
 ];
 
 // نصب: کش کردن App Shell

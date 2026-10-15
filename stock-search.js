@@ -1,6 +1,6 @@
 /* ============================================================
    stock-search.js — جستجو + دریافت خودکار از TSETMC
-   نسخه: 1.5.0 — با گروه صنعت + کادر اطلاعات
+   نسخه: 2.2.0 — افزودن گروه هلدینگ چندرشته‌ای
 ============================================================ */
 
 (function(){
@@ -14,8 +14,56 @@
   const $ = id => document.getElementById(id);
 
   /* ============================================================
-     فیلتر کردن نتایج TSETMC — فقط سهام معمولی
-     flow: 1=بورس, 2=فرابورس, 3=اختیار, 4=پایه, 5=اوراق
+     ⭐ تشخیص نوع صنعت از روی اسم گروه
+     گروه‌ها: normal | bank | insurance | leasing | investment
+  ============================================================ */
+  function detectSectorType(industry){
+    if(!industry) return 'normal';
+
+    const s = String(industry)
+      .replace(/\u200c|\u200f|\u200e/g, '')
+      .replace(/[يى]/g, 'ی')
+      .replace(/[ك]/g, 'ک')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    // ---- بانک ----
+    if(/بانک|موسسه اعتباری|موسسات اعتباری|صرافی/.test(s)) return 'bank';
+
+    // ---- بیمه (باید قبل از investment چک بشه) ----
+    // «بیمه و صندوق بازنشستگی به جز تامین اجتماعی» → insurance
+    // ولی «سرمایه‌گذاری صنعت بیمه» (وبیمه) → investment
+    if(/بیمه/.test(s) && !/سرمایه ?گذاری/.test(s) && !/سرمايه ?گذاري/.test(s)) return 'insurance';
+    if(/صندوق بازنشستگی/.test(s) && !/سرمایه ?گذاری/.test(s) && !/سرمايه ?گذاري/.test(s)) return 'insurance';
+
+    // ---- لیزینگ ----
+    if(/لیزینگ/.test(s)) return 'leasing';
+
+    // ---- سایر واسطه‌گری‌های مالی = گروه لیزینگ‌ها ----
+    // نمادهایی مثل ولیز، ولساپا، ولبهمن، ولصنم اینجا قرار می‌گیرن
+    if(/سایر\s*واسطه/.test(s)) return 'leasing';
+
+    // ---- شرکت‌های چند رشته‌ای صنعتی (هلدینگ) = investment ----
+    // نمادهایی مثل وغدیر، شستا، وامید، وبانک
+    if(/چند\s*رشته/.test(s)) return 'investment';
+
+    // ---- سرمایه‌گذاری (تمام اشکال نوشتاری) ----
+    if(/سرمایه ?گذاری/.test(s)) return 'investment';
+    if(/سرمايه ?گذاري/.test(s)) return 'investment';
+    if(/^سرمایه ?گذاریها$/.test(s)) return 'investment';
+    if(/^سرمايه ?گذاريها$/.test(s)) return 'investment';
+    if(/سرمایه ?گذاری ?ها/.test(s)) return 'investment';
+    if(/سرمايه ?گذاري ?ها/.test(s)) return 'investment';
+    if(/شرکت ?های ?سرمایه ?گذاری/.test(s)) return 'investment';
+    if(/شرکت ?هاي ?سرمايه ?گذاري/.test(s)) return 'investment';
+
+    return 'normal';
+  }
+  window.detectSectorType = detectSectorType;
+
+  /* ============================================================
+     فیلتر کردن نتایج TSETMC
   ============================================================ */
   function _isRegularStock(item){
     const sym = (item.lVal18AFC || '').trim();
@@ -23,20 +71,12 @@
     const flow = item.flow || 0;
 
     if(!sym) return false;
-
-    // فقط بورس (1)، فرابورس (2)، پایه (4)
     if(![1, 2, 4].includes(flow)) return false;
-
-    // حذف حق تقدم
     if(/^ح\s*\./.test(name.trim())) return false;
     if(/حق\s*تقدم/i.test(name)) return false;
     if(/حق\s*تقدم/i.test(sym)) return false;
-
-    // حذف اختیار
     if(/^اختيار|^اختیار/i.test(name)) return false;
     if(/^اختيار|^اختیار/i.test(sym)) return false;
-
-    // حذف اوراق و سلف
     if(/^اوراق/.test(sym) || /^اوراق/.test(name)) return false;
     if(/^سلف/.test(sym) || /سلف\s*فروش/i.test(name)) return false;
 
@@ -71,9 +111,6 @@
     }));
   }
 
-  /* ============================================================
-     قیمت لحظه‌ای
-  ============================================================ */
   async function fetchPriceInfo(insCode){
     const url = `https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceInfo/${insCode}`;
     const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
@@ -97,9 +134,6 @@
     return { lastPrice, closePrice, yesterdayPrice, changePercent };
   }
 
-  /* ============================================================
-     اطلاعات کامل سهم (تعداد سهام + گروه صنعت)
-  ============================================================ */
   async function fetchInstrumentInfo(insCode){
     const url = `https://cdn.tsetmc.com/api/Instrument/GetInstrumentInfo/${insCode}`;
     const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
@@ -114,7 +148,6 @@
       shares = info.zTitad;
     }
 
-    // ⭐ استخراج گروه صنعت
     let industry = '';
     if(info.sector && info.sector.lSecVal){
       industry = String(info.sector.lSecVal).trim();
@@ -123,9 +156,6 @@
     return { shares, industry };
   }
 
-  /* ============================================================
-     پر کردن فیلدهای معمولی (برای ویرایش و ذخیره‌سازی)
-  ============================================================ */
   function fillFields(data){
     if($('symbolName')) $('symbolName').value = data.symbol || '';
 
@@ -145,9 +175,6 @@
     });
   }
 
-  /* ============================================================
-     ⭐ پر کردن کادر اطلاعات (مثل تب مقایسه با صنعت)
-  ============================================================ */
   function fillInfoBox(data){
     const priceText = data.lastPrice
       ? H.toFa(Math.round(data.lastPrice).toLocaleString('en-US'))
@@ -162,11 +189,9 @@
     if($('stockIndustryDisplay')) $('stockIndustryDisplay').value = data.industry || '—';
 
     if($('stockInfoBox')) $('stockInfoBox').style.display = 'block';
+    if($('stockInfoSection')) $('stockInfoSection').style.display = 'block';
   }
 
-  /* ============================================================
-     نمایش پیام
-  ============================================================ */
   function showMessage(html, type){
     const box = $('searchResultMsg');
     if(!box) return;
@@ -183,30 +208,24 @@
     }
   }
 
-  /* ============================================================
-     ساخت UI جستجو
-  ============================================================ */
   function buildSearchUI(){
     if($('stockSearchInput')) return;
 
     const anchor = $('stockSearchAnchor');
-    if(!anchor){
-      console.warn('⚠️ stock-search.js: anchor پیدا نشد');
-      return;
-    }
+    if(!anchor) return;
 
     const section = document.createElement('div');
     section.className = 'input-section stock-search-section';
     section.innerHTML = `
       <div class="input-section-title">
         <span class="step-badge">۲</span>
-        🔍 جستجوی سریع سهم
-        <span class="optional-badge">قیمت، تعداد سهام و گروه صنعت خودکار پر می‌شه</span>
+        🔍 جستجوی سهم
+       
       </div>
 
       <div class="stock-search-row">
         <input id="stockSearchInput" type="text"
-               placeholder="مثلاً: فملی، فولاد، شپنا"
+               placeholder="⚠️ وارد کردن نماد الزامی است"
                autocomplete="off">
         <button id="stockSearchBtn" class="primary" type="button">
           🔍 جستجو
@@ -226,13 +245,8 @@
         handleSearch();
       }
     });
-
-    console.log('✅ stock-search.js: UI ساخته شد');
   }
 
-  /* ============================================================
-     مدیریت جستجو
-  ============================================================ */
   async function handleSearch(){
     const input = $('stockSearchInput');
     const resultsBox = $('stockSearchResults');
@@ -270,7 +284,6 @@
         return;
       }
 
-      // نمایش لیست نتایج
       resultsBox.innerHTML = results.slice(0, 10).map((r, i) => `
         <div class="stock-result-item" data-idx="${i}">
           <span class="sri-symbol">${H.escapeHtml(r.symbol)}</span>
@@ -290,9 +303,6 @@
     }
   }
 
-  /* ============================================================
-     انتخاب سهم
-  ============================================================ */
   async function selectStock(stock){
     const resultsBox = $('stockSearchResults');
     if(resultsBox) resultsBox.innerHTML = '';
@@ -306,18 +316,31 @@
       const data = {
         symbol: stock.symbol,
         name: stock.name,
-        industry: instData?.industry || '',   // ⭐ گروه صنعت از instrumentInfo
+        industry: instData?.industry || '',
         ...priceData,
         shares: instData?.shares || null,
       };
 
-      // ⭐ پر کردن فیلدهای معمولی (ویرایش‌پذیر)
-      fillFields(data);
+      // ⭐ تشخیص نوع صنعت
+      const sectorType = detectSectorType(data.industry);
+      const industryName = data.industry || '';
 
-      // ⭐ پر کردن کادر اطلاعات (نمایش قشنگ)
+      // ⭐ ذخیره توی window.MARKET
+      if(window.MARKET){
+        window.MARKET.sectorType = sectorType;
+        window.MARKET.industry = industryName;
+      }
+
+      // ⭐ صدا زدن تابع app.js برای ست کردن MARKET محلی
+      if(window.__kodal_setSector){
+        window.__kodal_setSector(sectorType, industryName);
+      }
+
+      console.log('🏭 نوع صنعت:', sectorType, '| گروه:', industryName);
+
+      fillFields(data);
       fillInfoBox(data);
 
-      // آپدیت فیلد «صنعت» برای تب مقایسه
       if($('baseIndustry') && data.industry){
         $('baseIndustry').value = data.industry;
       }
@@ -339,7 +362,6 @@
         ? H.toFa(Math.round(data.shares).toLocaleString('en-US'))
         : '—';
 
-      // نمایش گروه صنعت در پیام
       const industryHtml = data.industry
         ? `<span style="color:#8b5cf6;font-size:11.5px;background:rgba(139,92,246,.12);padding:2px 8px;border-radius:6px;font-weight:600">🏭 ${H.escapeHtml(data.industry)}</span>`
         : '';
@@ -359,14 +381,23 @@
         window.showToast(`✅ ${data.symbol} بارگذاری شد`);
       }
 
+      // ⭐ فعال کردن دکمه تحلیل
+      const goBtn = $('go');
+      if(goBtn){
+        goBtn.disabled = false;
+        console.log('✅ دکمه تحلیل فعال شد');
+      }
+
+      // ⭐ اگه تحلیل قبلاً انجام شده بود، دوباره رندر کن
+      if(window.PARSED && typeof window.render === 'function'){
+        window.render(0);
+      }
+
     }catch(err){
       showMessage('❌ ' + H.escapeHtml(err.message), 'error');
     }
   }
 
-  /* ============================================================
-     اجرا
-  ============================================================ */
   function init(){
     const anchor = $('stockSearchAnchor');
     if(anchor){
@@ -384,7 +415,6 @@
         buildSearchUI();
       } else if(tries >= maxTries){
         clearInterval(timer);
-        console.warn('⚠️ stock-search.js: anchor بعد از ۵ ثانیه پیدا نشد');
       }
     }, 200);
   }
@@ -395,6 +425,6 @@
     init();
   }
 
-  console.log('%c🔍 stock-search.js v1.5.0 لود شد (گروه صنعت + کادر اطلاعات)', 'color:#8b5cf6;font-weight:bold');
+  console.log('%c🔍 stock-search.js v2.2.0 لود شد (با گروه هلدینگ)', 'color:#8b5cf6;font-weight:bold');
 
 })();

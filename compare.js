@@ -1,6 +1,8 @@
 /* ============================================================
-   compare.js — منطق تب «مقایسه با صنعت»  |  v2.3.0
+   compare.js — منطق تب «مقایسه با صنعت»  |  v2.9.0
    وابسته به: helpers.js + ui-modal.js
+   تغییرات v2.9.0:
+   - افزودن گروه leasing (لیزینگ)
 ============================================================ */
 
 (function(){
@@ -44,8 +46,7 @@
   }
 
   /* ============================================================
-     فیلتر کردن نتایج TSETMC — فقط سهام معمولی
-     flow: 1=بورس, 2=فرابورس, 3=اختیار, 4=پایه, 5=اوراق
+     فیلتر کردن نتایج TSETMC
   ============================================================ */
   function _isRegularStock(item){
     const sym = (item.lVal18AFC || '').trim();
@@ -53,20 +54,12 @@
     const flow = item.flow || 0;
 
     if(!sym) return false;
-
-    // فقط بورس (1)، فرابورس (2)، پایه (4)
     if(![1, 2, 4].includes(flow)) return false;
-
-    // حذف حق تقدم
     if(/^ح\s*\./.test(name.trim())) return false;
     if(/حق\s*تقدم/i.test(name)) return false;
     if(/حق\s*تقدم/i.test(sym)) return false;
-
-    // حذف اختیار
     if(/^اختيار|^اختیار/i.test(name)) return false;
     if(/^اختيار|^اختیار/i.test(sym)) return false;
-
-    // حذف اوراق و سلف
     if(/^اوراق/.test(sym) || /^اوراق/.test(name)) return false;
     if(/^سلف/.test(sym) || /سلف\s*فروش/i.test(name)) return false;
 
@@ -123,7 +116,6 @@
       shares = info.zTitad;
     }
 
-    // ⭐ استخراج گروه صنعت
     let industry = '';
     if(info.sector && info.sector.lSecVal){
       industry = String(info.sector.lSecVal).trim();
@@ -173,6 +165,19 @@
     baseSearchMsg.innerHTML = html;
   }
 
+  function _clearErrorBox(){
+    const errBox = $('industryErr');
+    if(errBox) errBox.style.display = 'none';
+  }
+
+  function _showErrorBox(msg){
+    const errBox = $('industryErr');
+    if(errBox){
+      errBox.style.display = 'block';
+      errBox.textContent = msg;
+    }
+  }
+
   async function _selectBaseStock(stock){
     const baseSearchResults = $('baseSearchResults');
     if(baseSearchResults) baseSearchResults.innerHTML = '';
@@ -197,7 +202,19 @@
       BASE.industry = industry;
       BASE.price = lastPrice;
       BASE.shares = shares;
+
+      // ⭐ تشخیص نوع صنعت
+      if(window.detectSectorType){
+        const sectorType = window.detectSectorType(industry);
+        if(window.MARKET){
+          window.MARKET.sectorType = sectorType;
+          window.MARKET.industry = industry;
+        }
+        console.log('🏭 compare.js — نوع صنعت:', sectorType, '| گروه:', industry);
+      }
+
       updateCompareButton();
+      _clearErrorBox();
 
       // ⭐ پر کردن کادر اطلاعات
       const priceText = lastPrice ? H.toFa(Math.round(lastPrice).toLocaleString('en-US')) : '—';
@@ -210,7 +227,6 @@
 
       if($('baseInfoBox')) $('baseInfoBox').style.display = 'block';
 
-      // پیام کوتاه
       _showBaseMsg(`✅ <b>${H.escapeHtml(stock.symbol)}</b> — ${H.escapeHtml(stock.name)} بارگذاری شد`, 'success');
     }catch(err){
       _showBaseMsg('❌ ' + H.escapeHtml(err.message), 'error');
@@ -253,7 +269,6 @@
       if(pick){
         await _selectBaseStock(pick);
       } else {
-        // ⭐ نمایش نتایج با استایل بهتر
         baseSearchResults.innerHTML = results.slice(0, 10).map((r, i) => `
           <div class="stock-result-item" data-idx="${i}">
             <span class="sri-symbol">${H.escapeHtml(r.symbol)}</span>
@@ -263,9 +278,7 @@
 
         baseSearchResults.querySelectorAll('.stock-result-item').forEach((el, i) => {
           el.onclick = async () => {
-            // ⭐ اول لیست رو پاک کن
             baseSearchResults.innerHTML = '';
-            // بعد سهم رو انتخاب کن
             await _selectBaseStock(results[i]);
           };
         });
@@ -281,7 +294,6 @@
   }
 
   function bindBaseInputs(){
-    // ⭐ فایل سهم اصلی
     const baseFileInput = $('baseFile');
     if(baseFileInput){
       baseFileInput.onchange = async (e) => {
@@ -292,7 +304,6 @@
       };
     }
 
-    // ⭐ دراپ سهم اصلی
     const drop = $('baseDrop');
     if(drop){
       ['dragover', 'dragenter'].forEach(ev => {
@@ -314,7 +325,6 @@
       });
     }
 
-    // ⭐ سرچ سهم اصلی
     const baseSearchBtn = $('baseSearchBtn');
     const baseSearchInput = $('baseSearchInput');
     if(baseSearchBtn) baseSearchBtn.onclick = _doBaseSearch;
@@ -326,8 +336,7 @@
   }
 
   async function loadBaseFile(file){
-    const errBox = $('industryErr');
-    if(errBox) errBox.style.display = 'none';
+    _clearErrorBox();
 
     try{
       const lines = await H.getLines(file);
@@ -364,21 +373,17 @@
 
       updateCompareButton();
     }catch(e){
-      if(errBox){
-        errBox.style.display = 'block';
-        errBox.textContent = 'خطا در فایل سهم اصلی: ' + (e.message || e);
-      }
+      _showErrorBox('خطا در فایل سهم اصلی: ' + (e.message || e));
     }
   }
 
   /* ============================================================
-     رندر لیست هم‌گروهی‌ها (ساده)
+     رندر لیست هم‌گروهی‌ها
   ============================================================ */
   function renderPeers(){
     const box = $('peersList');
     if(!box) return;
 
-    // ⭐ آپدیت badge تعداد
     const badge = $('peersCountBadge');
     if(badge){
       badge.textContent = `${H.toFa(PEERS.length)} از ${H.toFa(MAX_PEERS)}`;
@@ -425,7 +430,7 @@
 
           <div class="simple-peer-search">
             <input type="text"
-                   placeholder="🔍 سرچ نماد"
+                   placeholder="⚠️ وارد کردن نماد الزامی است"
                    id="peer-search-${i}"
                    onkeydown="window.indPeerSearchKey(${i}, event)">
           </div>
@@ -440,7 +445,7 @@
   }
 
   /* ============================================================
-     سرچ برای هر peer (ساده)
+     سرچ برای هر peer
   ============================================================ */
   window.indPeerSearchKey = async function(idx, event){
     if(event && event.key !== 'Enter') return;
@@ -510,24 +515,25 @@
   async function addPeerFiles(fileList){
     if(!fileList || !fileList.length) return;
 
-    const errBox = $('industryErr');
-    if(errBox) errBox.style.display = 'none';
+    if(!BASE.industry){
+      _showErrorBox('⚠️ اول سهم اصلی رو از باکس «جستجوی سریع سهم» سرچ کن، بعد هم‌گروهی‌ها رو اضافه کن.');
+      if(window.showToast) window.showToast('⚠️ اول سهم اصلی رو سرچ کن', true);
+      return;
+    }
+
+    _clearErrorBox();
 
     const remaining = MAX_PEERS - PEERS.length;
 
     if(remaining <= 0){
-      if(errBox){
-        errBox.style.display = 'block';
-        errBox.textContent = `حداکثر ${H.toFa(MAX_PEERS)} سهم هم‌گروهی مجازه.`;
-      }
+      _showErrorBox(`حداکثر ${H.toFa(MAX_PEERS)} سهم هم‌گروهی مجازه.`);
       return;
     }
 
     const files = Array.from(fileList).slice(0, remaining);
 
-    if(fileList.length > remaining && errBox){
-      errBox.style.display = 'block';
-      errBox.textContent = `حداکثر ${H.toFa(MAX_PEERS)} سهم هم‌گروهی مجازه. فقط ${H.toFa(remaining)} سهم اضافه شد.`;
+    if(fileList.length > remaining){
+      _showErrorBox(`حداکثر ${H.toFa(MAX_PEERS)} سهم هم‌گروهی مجازه. فقط ${H.toFa(remaining)} سهم اضافه شد.`);
     }
 
     for(const f of files){
@@ -600,6 +606,9 @@
     }
   }
 
+  /* ============================================================
+     استخراج مقادیر + فیلتر بر اساس صنعت
+  ============================================================ */
   function extractValues(parsed, price, shares){
     const ci = 0;
     const val = k => parsed?.[k]?.[ci] ?? null;
@@ -634,54 +643,72 @@
     const detectedMonths = parsed?._detectedInfo?.months || 12;
     const annualizeFactor = 12 / detectedMonths;
 
+    // ⭐ تشخیص نوع صنعت
+    const sectorType = (window.MARKET && window.MARKET.sectorType) || 'normal';
+    const isBank = (sectorType === 'bank');
+    const isInvestment = (sectorType === 'investment');
+    const isInsurance = (sectorType === 'insurance');
+    const isLeasing = (sectorType === 'leasing');
+
     const r = {
-      currentRatio: H.ratio(v.ca, v.cl),
-      quickRatio: H.quickRatio(v.ca, v.inv, v.cl),
-      cashRatio: H.ratio(v.cash, v.cl),
+      // نسبت‌های نقدینگی — بیمه و بانک ترازنامه جاری/غیرجاری نداره
+      currentRatio: (isBank || isInsurance) ? null : H.ratio(v.ca, v.cl),
+      quickRatio: (isBank || isInsurance || isInvestment) ? null : H.quickRatio(v.ca, v.inv, v.cl),
+      cashRatio: (isBank || isInsurance) ? null : H.ratio(v.cash, v.cl),
+
+      // اهرم — برای همه
       debtToAsset: H.ratio(v.tl, v.ta),
       debtToEquity: H.ratio(v.tl, v.eq),
-      // ⭐ اصلاح: استفاده از EBIT (سود عملیاتی + استهلاک) طبق استاندارد
       interestCoverage: (() => {
+        if(isInvestment || isInsurance) return null;
         if(v.financeCost == null || v.financeCost === 0 || v.opProfit == null) return null;
         const depAbs = (v.deprec != null) ? Math.abs(v.deprec) : 0;
         const ebit = v.opProfit + depAbs;
         return ebit / Math.abs(v.financeCost);
       })(),
       equityMultiplier: H.ratio(v.ta, v.eq),
-      grossMargin: H.ratio(v.gross, v.revenue),
+
+      // سودآوری — برای همه
+      grossMargin: (isInvestment || isInsurance) ? null : H.ratio(v.gross, v.revenue),
       opMargin: H.ratio(v.opProfit, v.revenue),
       netMargin: H.ratio(v.net, v.revenue),
       roa: H.ratio(v.net, v.ta),
       roe: H.safeROE(v.net, v.eq),
+
+      // کارایی — برای بانک، سرمایه‌گذاری، بیمه و لیزینگ فیلتر می‌شه
+      // ⭐ لیزینگ: گردش موجودی و DSO معنی نداره (لیزینگ انبار و فروش نسیه نداره)
       assetTurnover: H.ratio(v.revenue, v.ta),
-      invTurnover: H.ratio(v.cogs, v.inv),
-      recvTurnover: H.ratio(v.revenue, v.recv),
-      dso: (v.recv && v.revenue) ? 365 * (v.recv / v.revenue) : null,
+      invTurnover: (isBank || isInvestment || isInsurance || isLeasing) ? null : H.ratio(v.cogs, v.inv),
+      recvTurnover: (isBank || isInvestment || isInsurance) ? null : H.ratio(v.revenue, v.recv),
+      dso: (isBank || isInvestment || isInsurance) ? null : ((v.recv && v.revenue) ? 365 * (v.recv / v.revenue) : null),
+
+      // جریان نقد — برای همه
       cfoToNet: H.ratio(v.cfo, v.net),
       fcf: (v.cfo != null && v.capex != null) ? (v.cfo - Math.abs(v.capex)) : null,
       cfoToRevenue: H.ratio(v.cfo, v.revenue),
     };
 
+    // Z-Score — برای بانک، سرمایه‌گذاری و بیمه معنی نداره
+    // ⭐ لیزینگ: Z-Score می‌مونه (چون ترازنامه ساختار تولیدی داره)
     const taZ = v.ta;
     let zscore = null;
-    if(taZ != null && taZ !== 0){
+    if(!isBank && !isInvestment && !isInsurance && taZ != null && taZ !== 0){
       const wc = (v.ca != null && v.cl != null) ? (v.ca - v.cl) : null;
       const x1 = wc != null ? wc / taZ : 0;
       const x2 = v.re != null ? v.re / taZ : 0;
       const x3 = v.opProfit != null ? v.opProfit / taZ : 0;
-      
-      // ⭐ X4 اصلاح شد: ارزش بازار / کل بدهی
+
       const MILLION_Z = 1_000_000;
       const marketCapZ = (price != null && shares != null) ? price * shares : null;
       const tlRialZ = (v.tl != null) ? v.tl * MILLION_Z : null;
-      
+
       let x4 = 0;
       if(marketCapZ != null && tlRialZ != null && tlRialZ > 0){
         x4 = marketCapZ / tlRialZ;
       } else if(v.eq != null && v.tl != null && v.tl > 0){
         x4 = v.eq / v.tl;
       }
-      
+
       const x5 = v.revenue != null ? v.revenue / taZ : 0;
       zscore = 1.2*x1 + 1.4*x2 + 3.3*x3 + 0.6*x4 + 1.0*x5;
     }
@@ -720,14 +747,41 @@
     };
   }
 
+  /* ============================================================
+     آپدیت دکمه مقایسه + hint
+  ============================================================ */
   function updateCompareButton(){
     const btn = $('compareIndustryGo');
     if(!btn) return;
-    const valid = BASE.parsed && PEERS.filter(p => p.parsed).length >= 2;
+
+    const hasBaseFile = !!BASE.parsed;
+    const hasBaseIndustry = !!BASE.industry;
+    const validPeers = PEERS.filter(p => p.parsed).length;
+    const valid = hasBaseFile && hasBaseIndustry && validPeers >= 2;
     btn.disabled = !valid;
+
+    const hintEl = $('compareGoHint');
+    if(hintEl){
+      hintEl.style.display = 'none';
+    }
   }
 
+  /* ============================================================
+     اجرای مقایسه
+  ============================================================ */
   window.runIndustryCompare = function(){
+    if(!BASE.symbol || !BASE.industry){
+      _showErrorBox('⚠️ اول سهم اصلی رو از باکس «جستجوی سریع سهم» سرچ کن — بدون این کار، معیارهای نامربوط حذف نمی‌شن.');
+      if(window.showToast) window.showToast('⚠️ اول سهم اصلی رو سرچ کن', true);
+      return;
+    }
+
+    if(!window.MARKET || !window.MARKET.sectorType){
+      _showErrorBox('⚠️ نوع صنعت تشخیص داده نشد. سهم اصلی رو دوباره از باکس «جستجوی سریع سهم» سرچ کن.');
+      if(window.showToast) window.showToast('⚠️ نوع صنعت مشخص نیست', true);
+      return;
+    }
+
     if(window.License){
       const status = window.License.getStatus();
       if(status.state !== 'active'){
@@ -745,18 +799,18 @@
     }
 
     if(!BASE.parsed){
-      const errBox = $('industryErr');
-      if(errBox){ errBox.style.display = 'block'; errBox.textContent = 'اول فایل سهم اصلی رو بارگذاری کن.'; }
+      _showErrorBox('اول فایل سهم اصلی رو بارگذاری کن.');
       return;
     }
 
     const validPeers = PEERS.filter(p => p.parsed);
 
     if(validPeers.length < 2){
-      const errBox = $('industryErr');
-      if(errBox){ errBox.style.display = 'block'; errBox.textContent = 'حداقل ۲ سهم هم‌گروهی سالم لازمه.'; }
+      _showErrorBox('حداقل ۲ سهم هم‌گروهی سالم لازمه.');
       return;
     }
+
+    _clearErrorBox();
 
     const baseData = extractValues(BASE.parsed, BASE.price, BASE.shares);
     const base = {
@@ -803,23 +857,48 @@
     }, 250);
   };
 
+  /* ============================================================
+     رندر خروجی + مدیریت تب‌ها
+  ============================================================ */
   function renderIndustryOutput(){
+    const container = document.querySelector('#industryOut');
+    if(container){
+      container.querySelectorAll('.inner-tab').forEach(t => t.style.display = '');
+      container.querySelectorAll('.inner-panel').forEach(p => p.style.display = '');
+    }
+
     try{ renderIndustryScores(); }catch(e){ console.error('renderIndustryScores:', e); }
     try{ renderIndustryZScore(); }catch(e){ console.error('renderIndustryZScore:', e); }
     try{ renderIndustryMainTable(); }catch(e){ console.error('renderIndustryMainTable:', e); }
     try{ renderIndustryRanking(); }catch(e){ console.error('renderIndustryRanking:', e); }
 
     setTimeout(() => {
-      const container = document.querySelector('#industryOut');
-      if(!container) return;
-      const tabs = container.querySelectorAll('.inner-tab');
-      const panels = container.querySelectorAll('.inner-panel');
+      const cont = document.querySelector('#industryOut');
+      if(!cont) return;
+      const tabs = cont.querySelectorAll('.inner-tab');
+      const panels = cont.querySelectorAll('.inner-panel');
+
       tabs.forEach(t => t.classList.remove('active'));
       panels.forEach(p => p.classList.remove('active'));
-      const firstTab = container.querySelector('.inner-tab[data-indinner="scores"]');
-      const firstPanel = container.querySelector('.inner-panel[data-indpanel="scores"]');
-      if(firstTab) firstTab.classList.add('active');
-      if(firstPanel) firstPanel.classList.add('active');
+
+      let firstVisibleTab = null;
+      tabs.forEach(t => {
+        if(!firstVisibleTab && t.style.display !== 'none'){
+          firstVisibleTab = t;
+        }
+      });
+
+      if(firstVisibleTab){
+        firstVisibleTab.classList.add('active');
+        const targetKey = firstVisibleTab.dataset.indinner;
+        const targetPanel = cont.querySelector(`.inner-panel[data-indpanel="${targetKey}"]`);
+        if(targetPanel) targetPanel.classList.add('active');
+      } else {
+        const scoresTab = cont.querySelector('.inner-tab[data-indinner="scores"]');
+        const scoresPanel = cont.querySelector('.inner-panel[data-indpanel="scores"]');
+        if(scoresTab){ scoresTab.style.display = ''; scoresTab.classList.add('active'); }
+        if(scoresPanel){ scoresPanel.style.display = ''; scoresPanel.classList.add('active'); }
+      }
     }, 50);
   }
 
@@ -830,16 +909,23 @@
     const tabs = container.querySelectorAll('.inner-tab');
     const panels = container.querySelectorAll('.inner-panel');
 
+    const targetTab = container.querySelector(`.inner-tab[data-indinner="${target}"]`);
+    if(targetTab && targetTab.style.display === 'none'){
+      return;
+    }
+
     tabs.forEach(t => t.classList.remove('active'));
     panels.forEach(p => p.classList.remove('active'));
 
-    const tab = container.querySelector('.inner-tab[data-indinner="' + target + '"]');
-    if(tab) tab.classList.add('active');
+    if(targetTab) targetTab.classList.add('active');
 
-    const panel = container.querySelector('.inner-panel[data-indpanel="' + target + '"]');
+    const panel = container.querySelector(`.inner-panel[data-indpanel="${target}"]`);
     if(panel) panel.classList.add('active');
   };
 
+  /* ============================================================
+     امتیاز سلامت
+  ============================================================ */
   function renderIndustryScores(){
     const box = $('industryScores');
     if(!box) return;
@@ -899,11 +985,38 @@
     `;
   }
 
+  /* ============================================================
+     Z-Score — برای بانک، سرمایه‌گذاری و بیمه پنهان می‌شه
+  ============================================================ */
   function renderIndustryZScore(){
     const box = $('industryZScore');
     if(!box) return;
 
+    const tabBtn = document.querySelector('#industryOut .inner-tab[data-indinner="zscore"]');
+    const panelEl = document.querySelector('#industryOut .inner-panel[data-indpanel="zscore"]');
+
+    const sectorType = (window.MARKET && window.MARKET.sectorType) || 'normal';
+
+    // ⭐ بانک، سرمایه‌گذاری و بیمه → کل تب پنهان
+    if(sectorType === 'bank' || sectorType === 'investment' || sectorType === 'insurance'){
+      if(tabBtn) tabBtn.style.display = 'none';
+      if(panelEl) panelEl.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+
     const { base, peers } = INDUSTRY_RESULTS;
+
+    const allZ = [base, ...peers].map(x => x.zscore).filter(z => z != null && isFinite(z));
+    if(allZ.length === 0){
+      if(tabBtn) tabBtn.style.display = 'none';
+      if(panelEl) panelEl.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+
+    if(tabBtn) tabBtn.style.display = '';
+    if(panelEl) panelEl.style.display = '';
 
     function zCard(r, isBase){
       const z = r.zscore;
@@ -986,6 +1099,9 @@
     box.innerHTML = html;
   }
 
+  /* ============================================================
+     لیست نسبت‌های جدول اصلی
+  ============================================================ */
   const MAIN_RATIOS = [
     { key: 'grossMargin',   label: 'حاشیه سود ناخالص',   getter: r => r.r.grossMargin,   dir: 'higher', fmt: 'pct' },
     { key: 'opMargin',      label: 'حاشیه سود عملیاتی',  getter: r => r.r.opMargin,      dir: 'higher', fmt: 'pct' },
@@ -1011,6 +1127,9 @@
     }
   }
 
+  /* ============================================================
+     جدول اصلی — با فیلتر بانکی، سرمایه‌گذاری، بیمه و لیزینگ
+  ============================================================ */
   function renderIndustryMainTable(){
     const box = $('industryMainTable');
     if(!box) return;
@@ -1020,9 +1139,43 @@
     const sampleSize = peers.length;
     const sampleText = H.toFa(sampleSize);
 
+    const sectorType = (window.MARKET && window.MARKET.sectorType) || 'normal';
+    let ratiosToShow = MAIN_RATIOS;
+
+    if(sectorType === 'bank'){
+      const hiddenForBank = [
+        'currentRatio',
+        'quickRatio',
+        'dso',
+      ];
+      ratiosToShow = MAIN_RATIOS.filter(r => !hiddenForBank.includes(r.key));
+    } else if(sectorType === 'investment'){
+      const hiddenForInvestment = [
+        'grossMargin',
+        'quickRatio',
+        'dso',
+      ];
+      ratiosToShow = MAIN_RATIOS.filter(r => !hiddenForInvestment.includes(r.key));
+    } else if(sectorType === 'insurance'){
+      // ⭐ بیمه: نسبت جاری، آنی، DSO، حاشیه سود ناخالص
+      const hiddenForInsurance = [
+        'currentRatio',
+        'quickRatio',
+        'dso',
+        'grossMargin',
+      ];
+      ratiosToShow = MAIN_RATIOS.filter(r => !hiddenForInsurance.includes(r.key));
+    } else if(sectorType === 'leasing'){
+      // ⭐ لیزینگ: DSO (چون مطالبات = اقساط لیزینگ، نه فروش نسیه)
+      const hiddenForLeasing = [
+        'dso',
+      ];
+      ratiosToShow = MAIN_RATIOS.filter(r => !hiddenForLeasing.includes(r.key));
+    }
+
     let html = '<div class="dupont-factors" style="margin-top:6px">';
 
-    MAIN_RATIOS.forEach(ratio => {
+    ratiosToShow.forEach(ratio => {
       const baseVal = _cmpVal(ratio.getter(base));
       const peerVals = peers.map(p => _cmpVal(ratio.getter(p))).filter(v => v != null);
 
@@ -1102,6 +1255,9 @@
     box.innerHTML = html;
   }
 
+  /* ============================================================
+     رتبه‌بندی — با فیلتر بانکی، سرمایه‌گذاری، بیمه و لیزینگ
+  ============================================================ */
   function renderIndustryRanking(){
     const box = $('industryRanking');
     if(!box) return;
@@ -1109,7 +1265,7 @@
     const { base, peers } = INDUSTRY_RESULTS;
     const all = [base, ...peers];
 
-    const criteria = [
+    let criteria = [
       { label: 'حاشیه سود خالص', getter: r => r.r.netMargin, dir: 'higher', fmt: 'pct' },
       { label: 'ROE', getter: r => r.r.roe, dir: 'higher', fmt: 'pct' },
       { label: 'ROA', getter: r => r.r.roa, dir: 'higher', fmt: 'pct' },
@@ -1119,6 +1275,17 @@
       { label: 'کیفیت سود', getter: r => r.r.cfoToNet, dir: 'higher', fmt: 'num' },
       { label: 'رشد درآمد', getter: r => r.revGrowth, dir: 'higher', fmt: 'pct' },
     ];
+
+    const sectorType = (window.MARKET && window.MARKET.sectorType) || 'normal';
+    if(sectorType === 'bank'){
+      criteria = criteria.filter(c => c.label !== 'نسبت جاری');
+    } else if(sectorType === 'investment'){
+      criteria = criteria.filter(c => c.label !== 'نسبت جاری');
+    } else if(sectorType === 'insurance'){
+      // ⭐ بیمه: نسبت جاری معنی نداره
+      criteria = criteria.filter(c => c.label !== 'نسبت جاری');
+    }
+    // ⭐ لیزینگ: نسبت جاری می‌مونه (لیزینگ ترازنامه جاری/غیرجاری داره)
 
     const scores = all.map(() => 0);
 
@@ -1292,6 +1459,9 @@
     box.innerHTML = winnerHtml + cardsHtml + criteriaHtml + legendHtml;
   }
 
+  /* ============================================================
+     ذخیره صنعت
+  ============================================================ */
   function openSaveIndustryModal(){
     if(!INDUSTRY_RESULTS){
       if(window.showToast) window.showToast('اول یه مقایسه انجام بده!', true);
@@ -1455,6 +1625,14 @@
         shares: item.snapshot.base.shares,
       };
 
+      if(window.detectSectorType && item.snapshot.base.industry){
+        const sectorType = window.detectSectorType(item.snapshot.base.industry);
+        if(window.MARKET){
+          window.MARKET.sectorType = sectorType;
+          window.MARKET.industry = item.snapshot.base.industry;
+        }
+      }
+
       PEERS = item.snapshot.peers.map((p, i) => ({
         file: null,
         parsed: JSON.parse(JSON.stringify(p.parsed)),
@@ -1481,7 +1659,7 @@
       return;
     }
     const data = {
-      version: '2.3.0',
+      version: '2.9.0',
       type: 'kodal_industries',
       exportDate: new Date().toISOString(),
       count: INDUSTRY_SAVED.length,
@@ -1616,6 +1794,8 @@
       const aVal = aStats?.avg ?? null;
       const bVal = bStats?.avg ?? null;
 
+      if(aVal == null && bVal == null) return;
+
       let winner = '—';
       let winnerColor = 'var(--sub)';
       if(aVal != null && bVal != null && aVal !== bVal){
@@ -1736,6 +1916,7 @@
     bindButtons();
     renderPeers();
     renderIndustrySaved();
+    updateCompareButton();
   }
 
   if(document.readyState === 'loading'){
@@ -1744,47 +1925,46 @@
     init();
   }
 
+  /* ---------- دکمه باز/بسته کل بخش ورودی ---------- */
+  (function initCompareInputToggle(){
+    const btn = document.getElementById('compareInputToggleBtn');
+    const container = document.getElementById('allCompareSections');
+    const text = document.getElementById('compareInputToggleText');
 
-    /* ---------- دکمه باز/بسته کل بخش ورودی (مقایسه با صنعت) ---------- */
-    (function initCompareInputToggle(){
-      const btn = document.getElementById('compareInputToggleBtn');
-      const container = document.getElementById('allCompareSections');
-      const text = document.getElementById('compareInputToggleText');
-  
-      if(!btn || !container) return;
-  
-      const STORAGE_KEY = 'kodal_compare_sections_collapsed';
-  
-      function applyState(collapsed){
-        if(collapsed){
-          container.classList.add('collapsed');
-          btn.classList.add('collapsed');
-          if(text) text.textContent = 'باز کردن ورودی‌ها';
-        } else {
-          container.classList.remove('collapsed');
-          btn.classList.remove('collapsed');
-          if(text) text.textContent = 'بستن ورودی‌ها';
-        }
+    if(!btn || !container) return;
+
+    const STORAGE_KEY = 'kodal_compare_sections_collapsed';
+
+    function applyState(collapsed){
+      if(collapsed){
+        container.classList.add('collapsed');
+        btn.classList.add('collapsed');
+        if(text) text.textContent = 'باز کردن ورودی‌ها';
+      } else {
+        container.classList.remove('collapsed');
+        btn.classList.remove('collapsed');
+        if(text) text.textContent = 'بستن ورودی‌ها';
       }
-  
-      // ⭐ پیش‌فرض: باز
+    }
+
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      applyState(saved === '1');
+    } catch(e) {
+      applyState(false);
+    }
+
+    btn.onclick = () => {
+      const isCollapsed = container.classList.toggle('collapsed');
+      btn.classList.toggle('collapsed', isCollapsed);
+      if(text) text.textContent = isCollapsed ? 'باز کردن ورودی‌ها' : 'بستن ورودی‌ها';
+
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        applyState(saved === '1');
-      } catch(e) {
-        applyState(false);
-      }
-  
-      btn.onclick = () => {
-        const isCollapsed = container.classList.toggle('collapsed');
-        btn.classList.toggle('collapsed', isCollapsed);
-        if(text) text.textContent = isCollapsed ? 'باز کردن ورودی‌ها' : 'بستن ورودی‌ها';
-  
-        try {
-          localStorage.setItem(STORAGE_KEY, isCollapsed ? '1' : '0');
-        } catch(e) {}
-      };
-    })();
-  console.log('%c📈 compare.js v2.3.0 لود شد', 'color:#f59e0b;font-weight:bold');
+        localStorage.setItem(STORAGE_KEY, isCollapsed ? '1' : '0');
+      } catch(e) {}
+    };
+  })();
+
+  console.log('%c📈 compare.js v2.9.0 لود شد (با گروه لیزینگ)', 'color:#f59e0b;font-weight:bold');
 
 })();

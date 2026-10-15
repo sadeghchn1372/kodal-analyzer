@@ -164,8 +164,8 @@
 
   <div class="main-tabs">
     <button class="main-tab active" data-maintab="single" onclick="switchMainTab('single')">📊 تحلیل تک شرکت</button>
-    <button class="main-tab" data-maintab="compare" onclick="switchMainTab('compare')">📈 مقایسه با صنعت</button>
-    <button class="main-tab" data-maintab="industries" onclick="switchMainTab('industries')">⚖️ مقایسه صنایع</button>
+    <button class="main-tab" data-maintab="compare" onclick="switchMainTab('compare')">📈 مقایسه با هم‌گروهی‌ها</button>
+    <button class="main-tab" data-maintab="industries" onclick="switchMainTab('industries')" style="display:none">⚖️ مقایسه صنایع</button>
     <button class="main-tab" data-maintab="watchlist" onclick="switchMainTab('watchlist')">👁️ دیدبان</button>
   </div>
 
@@ -188,7 +188,7 @@
         <div class="input-section">
           <div class="input-section-title">
             <span class="step-badge">۱</span>
-            📁 فایل صورت مالی (اکسل یا CSV یا HTML)
+            📁 فایل اکسل صورت مالی
           </div>
 
           <div id="drop" class="drop">
@@ -216,22 +216,17 @@
         <div id="stockSearchAnchor"></div>
 
         <!-- ===== مرحله ۳: اطلاعات شرکت ===== -->
-        <div class="input-section">
+        <div class="input-section" id="stockInfoSection" style="display:none">
           <div class="input-section-title">
             <span class="step-badge">۳</span>
             📈 اطلاعات شرکت
-            <span class="optional-badge">برای نسبت‌های ارزش‌گذاری</span>
           </div>
 
           <input id="symbolName" type="hidden">
           <input id="stockPrice" type="hidden">
           <input id="stockCount" type="hidden">
 
-          <div id="stockInfoEmptyMsg" class="market-hint" style="text-align:center;padding:14px">
-            💡 برای پر شدن خودکار اطلاعات، نماد رو توی باکس «جستجوی سریع سهم» (بالاتر) سرچ کن.
-          </div>
-
-          <div id="stockInfoBox" class="base-info-box" style="display:none">
+          <div id="stockInfoBox" class="base-info-box">
             <div class="base-info-grid">
               <div class="base-info-field">
                 <label>📊 نماد</label>
@@ -259,6 +254,7 @@
         <div class="action-buttons-bottom">
           <div class="action-buttons-main">
             <button id="go" class="primary" disabled>🔍 تحلیل کن</button>
+            
             <button id="saveBtn" class="ghost" style="display:none" disabled>💾 ذخیره تحلیل</button>
             <button id="sendToWatchBtn" class="ghost" style="display:none" disabled>👁️ افزودن به دیدبان</button>
           </div>
@@ -473,7 +469,7 @@
 
     <!-- کارت تحلیل‌های ذخیره‌شده -->
     <div class="card" id="savedCard">
-      <h2>📚 تحلیل‌های ذخیره‌شده <span class="help" data-tip="هر تحلیلی که انجام می‌دی می‌تونی ذخیره کنی.&#10;ذخیره‌سازی خودکار توی مرورگر (localStorage) — با بستن مرورگر نمی‌ره.">?</span></h2>
+      <h2>📚 تحلیل‌های ذخیره‌شده</h2>
       <div class="saved-controls">
         <input id="savedSearch" type="text" placeholder="🔍 جستجو در اسم تحلیل‌ها..." class="saved-search">
         <select id="savedSort" class="saved-sort">
@@ -493,13 +489,12 @@
 
   </div><!-- /tabSingle -->
 
-  <!-- ================== تب ۲: مقایسه با صنعت ================== -->
+  <!-- ================== تب ۲: مقایسه با هم‌گروهی‌ها ================== -->
   <div id="tabCompare" class="tab-panel">
 
     <div class="card">
       <div class="topbar">
-        <h1>📈 مقایسه با صنعت</h1>
-        <p class="sub" style="margin:0">یه سهم اصلی انتخاب کن، بعد تا ۵ سهم هم‌گروهی‌اش رو اضافه کن. آمار کامل صنعت محاسبه می‌شه.</p>
+        <h1>📈 مقایسه با هم‌گروهی‌ها</h1>
       </div>
 
       <!-- ⭐ کانتینر مراحل ورودی (قابل باز/بسته شدن) -->
@@ -509,13 +504,13 @@
         <div class="input-section industry-input-section">
           <div class="input-section-title">
             <span class="step-badge">۱</span>
-            🎯 سهم اصلی (Base)
+            🎯 سهم اصلی
           </div>
 
           <div id="baseDrop" class="simple-drop">
             <input id="baseFile" type="file" accept=".xls,.xlsx,.csv,.html,.htm,.txt">
             <span class="simple-drop-icon">📂</span>
-            <span class="simple-drop-text">فایل صورت مالی سهم اصلی</span>
+            <span class="simple-drop-text">فایل اکسل صورت مالی سهم اصلی</span>
             <button type="button" class="simple-drop-btn" onclick="event.stopPropagation(); document.getElementById('baseFile').click()">📁 انتخاب فایل</button>
             <div id="baseFileInfo" class="simple-file-info">
               <span class="simple-file-name" id="baseFileName"></span>
@@ -524,7 +519,7 @@
 
           <div class="simple-search-row">
             <input id="baseSearchInput" type="text"
-                   placeholder="🔍 یا اسم نماد رو بنویس (مثلاً: فملی)"
+                    placeholder="⚠️ وارد کردن نماد الزامی است"
                    autocomplete="off">
             <button id="baseSearchBtn" class="simple-search-btn" type="button">جستجو</button>
           </div>
@@ -587,7 +582,8 @@
       </div>
 
       <div class="industry-actions">
-        <button id="compareIndustryGo" class="primary" disabled onclick="window.runIndustryCompare && window.runIndustryCompare()">🔍 مقایسه با صنعت</button>
+        <div id="compareGoHint" style="display:none"></div>
+        <button id="compareIndustryGo" class="primary" disabled onclick="window.runIndustryCompare && window.runIndustryCompare()">🔍 مقایسه با هم‌گروهی‌ها</button>
         <button id="saveIndustryBtn" class="ghost" style="display:none" disabled>💾 ذخیره آمار صنعت</button>
       </div>
 
@@ -627,7 +623,7 @@
     </div>
 
     <div class="card" id="industrySavedCard">
-      <h2>📚 مقایسه‌های قبلی سهم و صنعت <span class="help" data-tip="هر صنعتی که ذخیره کنی اینجا نگه داشته می‌شه.&#10;می‌تونی بعداً باهاش مقایسه کنی.">?</span></h2>
+      <h2>📚 مقایسه‌های قبلی سهم و هم گروهی ها</h2>
       <div class="saved-controls">
         <input id="industrySavedSearch" type="text" placeholder="🔍 جستجو در صنایع..." class="saved-search">
         <select id="industrySavedSort" class="saved-sort">
@@ -653,7 +649,7 @@
     <div class="card" id="compareTwoIndustriesCard">
       <h2>⚖️ انتخاب صنایع</h2>
       <p style="font-size:13px;color:var(--sub);margin:0 0 14px">
-        برای مقایسه، دو صنعت باید از قبل توی تب «مقایسه با صنعت» ذخیره شده باشن.
+        برای مقایسه، دو صنعت باید از قبل توی تب «مقایسه با هم‌گروهی‌ها» ذخیره شده باشن.
       </p>
       <div style="display:flex;justify-content:center;padding:8px 0">
         <button id="compareTwoIndustriesBtn" class="primary">⚖️ انتخاب و مقایسه</button>
@@ -744,6 +740,7 @@
 <script src="compare.js"></script>
 <script src="watchlist.js"></script>
 <script src="stock-search.js"></script>
+<script src="sector-patch.js"></script>
 
 <script>
 if('serviceWorker' in navigator && location.protocol !== 'file:'){

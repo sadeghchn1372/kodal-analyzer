@@ -1,5 +1,5 @@
 /* ============================================================
-   helpers.js — توابع مشترک همه ماژول‌ها  |  v1.0.0
+   helpers.js — توابع مشترک همه ماژول‌ها  |  v1.2.0
 ============================================================ */
 (function(){
   'use strict';
@@ -49,23 +49,22 @@
     })[c]);
   }
 
+  // ⭐ ورودی به میلیون ریاله → تبدیل به میلیارد/میلیون تومان
   const toman = x => {
     if(x == null) return '—';
-    const abs = Math.abs(x);
-    // میلیون (x < 1000)
+    
+    const milToman = x / 10;
+    const abs = Math.abs(milToman);
+    const unitStyle = 'font-size:0.75em;font-weight:600;opacity:0.85;';
+    
+    // میلیون تومان (زیر ۱۰۰۰ میلیون تومان)
     if(abs < 1000){
-      return '<bdi dir="ltr">' + toFa(Math.round(x).toLocaleString('en-US')) + ' M</bdi>';
+      return '<bdi dir="rtl">' + toFa(Math.round(milToman).toLocaleString('en-US')) + 
+             ' <span style="' + unitStyle + '">میلیون تومان</span></bdi>';
     }
-    // میلیارد (1000 تا 1000000)
-    if(abs < 1_000_000){
-      return '<bdi dir="ltr">' + toFa((x / 1000).toFixed(1)) + ' B</bdi>';
-    }
-    // هزار میلیارد = همت
-    if(abs < 1_000_000_000){
-      return '<bdi dir="ltr">' + toFa((x / 1_000_000).toFixed(2)) + ' همت</bdi>';
-    }
-    // تریلیون
-    return '<bdi dir="ltr">' + toFa((x / 1_000_000_000).toFixed(2)) + ' T</bdi>';
+    // میلیارد تومان (همیشه)
+    return '<bdi dir="rtl">' + toFa(Math.round(milToman / 1000).toLocaleString('en-US')) + 
+           ' <span style="' + unitStyle + '">میلیارد تومان</span></bdi>';
   };
 
   const tomanText = x => {
@@ -88,33 +87,33 @@
 
   const PERIOD_NAMES = ['دوره جاری','دوره مشابه سال قبل','سال مالی قبل','دوره ۴','دوره ۵'];
 
-// ⭐ توابع اضافی که compare.js لازم داره
-function quickRatio(ca, inv, cl){
-  if(ca == null || inv == null || cl == null || cl === 0) return null;
-  return (ca - inv) / cl;
-}
+  // ⭐ توابع اضافی که compare.js لازم داره
+  function quickRatio(ca, inv, cl){
+    if(ca == null || inv == null || cl == null || cl === 0) return null;
+    return (ca - inv) / cl;
+  }
 
-function safeROE(net, eq){
-  // اگه equity منفی یا صفر باشه، ROE معنی نداره
-  if(net == null || eq == null || eq <= 0) return null;
-  return net / eq;
-}
+  function safeROE(net, eq){
+    // اگه equity منفی یا صفر باشه، ROE معنی نداره
+    if(net == null || eq == null || eq <= 0) return null;
+    return net / eq;
+  }
 
-window.KodalHelpers = Object.assign(window.KodalHelpers || {}, {
-  __loaded: true,
-  fa2en, toFa, norm, toNum,
-  escapeHtml,
-  toman, tomanText, pct, num2, ratio,
-  formatNumberInput,
-  PERIOD_NAMES,
-  FA_DIGITS,
-  // ⭐ اضافه شد
-  quickRatio,
-  safeROE,
-});
+  window.KodalHelpers = Object.assign(window.KodalHelpers || {}, {
+    __loaded: true,
+    fa2en, toFa, norm, toNum,
+    escapeHtml,
+    toman, tomanText, pct, num2, ratio,
+    formatNumberInput,
+    PERIOD_NAMES,
+    FA_DIGITS,
+    // ⭐ اضافه شد
+    quickRatio,
+    safeROE,
+  });
 
   window.toFa = window.toFa || toFa;
   window.fa2en = window.fa2en || fa2en;
 
-  console.log('%c🔧 helpers.js v1.0.0 لود شد', 'color:#8b5cf6;font-weight:bold');
+  console.log('%c🔧 helpers.js v1.2.0 لود شد', 'color:#8b5cf6;font-weight:bold');
 })();
