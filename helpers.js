@@ -99,6 +99,28 @@
     return net / eq;
   }
 
+  /* ============================================================
+   فیلتر سهم‌های اصلی TSETMC
+   (حذف حق تقدم، اختیار، اوراق، سلف و...)
+============================================================ */
+function isRegularStock(item){
+  const sym = (item.lVal18AFC || '').trim();
+  const name = (item.lVal30 || '');
+  const flow = item.flow || 0;
+
+  if(!sym) return false;
+  if(![1, 2, 4].includes(flow)) return false;
+  if(/^ح\s*\./.test(name.trim())) return false;
+  if(/حق\s*تقدم/i.test(name)) return false;
+  if(/حق\s*تقدم/i.test(sym)) return false;
+  if(/^اختيار|^اختیار/i.test(name)) return false;
+  if(/^اختيار|^اختیار/i.test(sym)) return false;
+  if(/^اوراق/.test(sym) || /^اوراق/.test(name)) return false;
+  if(/^سلف/.test(sym) || /سلف\s*فروش/i.test(name)) return false;
+
+  return true;
+}
+  
   window.KodalHelpers = Object.assign(window.KodalHelpers || {}, {
     __loaded: true,
     fa2en, toFa, norm, toNum,
@@ -110,6 +132,7 @@
     // ⭐ اضافه شد
     quickRatio,
     safeROE,
+    isRegularStock,
   });
 
   window.toFa = window.toFa || toFa;

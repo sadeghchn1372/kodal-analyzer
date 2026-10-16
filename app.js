@@ -3507,7 +3507,14 @@ window.restoreFromExternal = function(reportData){
   if(!btn) return;
 
   btn.onclick = async () => {
-    if(!confirm('اپ به‌روزرسانی می‌شه و کش پاک می‌شه. مطمئنی؟')) return;
+    const ok = await KodalUI.confirm({
+      title: 'به‌روزرسانی اپ',
+      icon: '🔄',
+      message: 'آیا آپدیت برنامه بررسی شود؟',
+      confirmText: 'بله، به‌روزرسانی کن',
+      danger: true,
+    });
+    if(!ok) return;
 
     btn.disabled = true;
     btn.textContent = '⏳ در حال بررسی آپدیت...';

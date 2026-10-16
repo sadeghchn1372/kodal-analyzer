@@ -45,26 +45,7 @@
     return direction === 'lower' ? Math.max(...v) : Math.min(...v);
   }
 
-  /* ============================================================
-     فیلتر کردن نتایج TSETMC
-  ============================================================ */
-  function _isRegularStock(item){
-    const sym = (item.lVal18AFC || '').trim();
-    const name = (item.lVal30 || '');
-    const flow = item.flow || 0;
 
-    if(!sym) return false;
-    if(![1, 2, 4].includes(flow)) return false;
-    if(/^ح\s*\./.test(name.trim())) return false;
-    if(/حق\s*تقدم/i.test(name)) return false;
-    if(/حق\s*تقدم/i.test(sym)) return false;
-    if(/^اختيار|^اختیار/i.test(name)) return false;
-    if(/^اختيار|^اختیار/i.test(sym)) return false;
-    if(/^اوراق/.test(sym) || /^اوراق/.test(name)) return false;
-    if(/^سلف/.test(sym) || /سلف\s*فروش/i.test(name)) return false;
-
-    return true;
-  }
 
   async function _searchSymbolTsetmc(query){
     if(!query || !query.trim()) return null;
@@ -77,7 +58,8 @@
     const results = data.instrumentSearch;
     if(!results || !results.length) return [];
 
-    const filtered = results.filter(_isRegularStock);
+    
+    const filtered = results.filter(H.isRegularStock);
 
     return filtered.map(item => ({
       insCode: item.insCode,
@@ -1593,11 +1575,17 @@
     renderIndustrySaved();
   };
 
-  window.indEditName = function(idx){
+  window.indEditName = async function(idx){
     if(!INDUSTRY_SAVED[idx]) return;
     const cur = INDUSTRY_SAVED[idx].name;
-    const nn = prompt('اسم جدید:', cur);
-    if(nn && nn.trim()){
+    const nn = await KodalUI.prompt({
+      title: 'ویرایش نام صنعت',
+      icon: '✏️',
+      message: 'اسم جدید رو وارد کن:',
+      value: cur,
+      confirmText: 'ذخیره',
+    });
+    if(nn != null && nn.trim()){
       INDUSTRY_SAVED[idx].name = nn.trim();
       saveIndustriesToStorage();
       renderIndustrySaved();
@@ -1605,12 +1593,22 @@
     }
   };
 
-  window.indDelete = function(idx){
-    if(!confirm('این صنعت حذف بشه؟')) return;
+
+  window.indDelete = async function(idx){
+    const ok = await KodalUI.confirm({
+      title: 'حذف صنعت',
+      icon: '🗑️',
+      message: 'این صنعت حذف بشه؟',
+      confirmText: 'بله، حذف کن',
+      danger: true,
+    });
+    if(!ok) return;
     INDUSTRY_SAVED.splice(idx, 1);
     saveIndustriesToStorage();
     renderIndustrySaved();
+    if(window.showToast) window.showToast('✅ حذف شد');
   };
+
 
   window.indRestore = function(idx){
     const item = INDUSTRY_SAVED[idx];
@@ -1649,7 +1647,11 @@
 
       if(window.showToast) window.showToast('✅ صنعت بازیابی شد');
     }catch(e){
-      alert('خطا در بازیابی: ' + e.message);
+      KodalUI.alert({
+        title: 'خطا',
+        icon: '❌',
+        message: 'خطا در بازیابی: ' + e.message,
+      });
     }
   };
 

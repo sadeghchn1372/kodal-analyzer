@@ -4115,9 +4115,16 @@ body.dark .ratio-avg-marker-label {
    ۴۶. فیکس EPS در موبایل
 ============================================================ */
 @media (max-width: 700px) {
-  .acc-card[data-acc="eps"] .acc-body {
+  .acc-card[data-acc="eps"].acc-open .acc-body {
     max-height: none !important;
     overflow: visible !important;
+  }
+
+  .acc-card[data-acc="eps"]:not(.acc-open) .acc-body {
+    max-height: 0 !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    padding: 0 14px !important;
   }
 
   .eps-grid {
