@@ -187,7 +187,7 @@
 
       // ⭐ تشخیص نوع صنعت
       if(window.detectSectorType){
-        const sectorType = window.detectSectorType(industry, stock.symbol);
+        const sectorType = window.detectSectorType(industry);
         if(window.MARKET){
           window.MARKET.sectorType = sectorType;
           window.MARKET.industry = industry;
@@ -346,12 +346,34 @@
         }
       }
 
-      const info = $('baseFileInfo');
-      const nameEl = $('baseFileName');
-      if(info && nameEl){
-        nameEl.textContent = file.name;
-        info.classList.add('active');
-      }
+
+
+const info = $('baseFileInfo');
+const nameEl = $('baseFileName');
+if(info && nameEl){
+  // کوتاه کردن اسم فایل اگه کد سیستمی باشه
+  const shortened = (function(name){
+    if(!name) return '—';
+    if(/[\u0600-\u06FF]/.test(name)) return name;
+    const uuidMatch = name.match(/^([a-f0-9]{8})-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i);
+    if(uuidMatch){
+      const ext = name.split('.').pop();
+      return uuidMatch[1] + '...' + (ext ? '.' + ext : '');
+    }
+    if(name.length > 30){
+      const ext = name.includes('.') ? '.' + name.split('.').pop() : '';
+      return name.substring(0, 20) + '...' + ext;
+    }
+    return name;
+  })(file.name);
+  
+  nameEl.textContent = shortened;
+  nameEl.title = file.name;
+  info.classList.add('active');
+}
+
+
+
 
       updateCompareButton();
     }catch(e){
@@ -388,7 +410,25 @@
     }
 
     box.innerHTML = PEERS.map((peer, i) => {
-      const fileName = peer.file ? peer.file.name : '—';
+      // کوتاه کردن اسم فایل هم‌گروهی اگه کد سیستمی باشه
+let fileName = '—';
+if(peer.file){
+  const fName = peer.file.name;
+  if(/[\u0600-\u06FF]/.test(fName)){
+    fileName = fName;
+  } else {
+    const uuidMatch = fName.match(/^([a-f0-9]{8})-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i);
+    if(uuidMatch){
+      const ext = fName.split('.').pop();
+      fileName = uuidMatch[1] + '...' + (ext ? '.' + ext : '');
+    } else if(fName.length > 30){
+      const ext = fName.includes('.') ? '.' + fName.split('.').pop() : '';
+      fileName = fName.substring(0, 20) + '...' + ext;
+    } else {
+      fileName = fName;
+    }
+  }
+}
       const symbolVal = (peer.symbol || '');
       const priceVal = peer.price ? H.toFa(Math.round(peer.price).toLocaleString('en-US')) + ' ریال' : '—';
       const sharesVal = peer.shares ? H.toFa(Math.round(peer.shares).toLocaleString('en-US')) + ' سهم' : '—';

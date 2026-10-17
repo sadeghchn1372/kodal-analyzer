@@ -557,12 +557,49 @@ if($('saveModal')) $('saveModal').addEventListener('click', (e) => {
   if(e.target.id === 'saveModal') closeSaveModal();
 });
 
+
+/* ============================================================
+   📄 کوتاه کردن اسم فایل (اگه کد سیستمی باشه)
+============================================================ */
+function shortenFileName(fileName){
+  if(!fileName) return '—';
+  
+  // اگه اسم فایل فارسی داره، کامل نشون بده
+  if(/[\u0600-\u06FF]/.test(fileName)){
+    return fileName;
+  }
+  
+  // چک کن ببین اسم فایل شبیه UUID هست یا نه
+  // الگو: 8-4-4-4-12 کاراکتر (مثل 0e6300d4-44e3-4832-b739-b1123fcf.xlsx)
+  const uuidPattern = /^([a-f0-9]{8})-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i;
+  const match = fileName.match(uuidPattern);
+  
+  if(match){
+    // فقط بخش اول (8 کاراکتر) رو نگه دار و پسوند فایل رو اضافه کن
+    const ext = fileName.split('.').pop();
+    return match[1] + '...' + (ext ? '.' + ext : '');
+  }
+  
+  // اگه اسم خیلی طولانی بود (بیشتر از ۳۰ کاراکتر)، کوتاهش کن
+  if(fileName.length > 30){
+    const ext = fileName.includes('.') ? '.' + fileName.split('.').pop() : '';
+    return fileName.substring(0, 20) + '...' + ext;
+  }
+  
+  return fileName;
+}
+
+
 /* ---------- File Input / Drop ---------- */
 function showFileInfo(f){
   if(!f) return;
   const info = $('fileInfo');
   const nameEl = $('fileName');
-  if(info && nameEl){ nameEl.textContent = f.name; info.classList.add('active'); }
+  if(info && nameEl){ 
+    nameEl.textContent = shortenFileName(f.name);
+    nameEl.title = f.name; // وقتی موس روش می‌ره، اسم کامل نشون داده می‌شه
+    info.classList.add('active'); 
+  }
 }
 function hideFileInfo(){
   const info = $('fileInfo');

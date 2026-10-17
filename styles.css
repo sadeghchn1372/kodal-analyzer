@@ -5776,3 +5776,15 @@ body.dark .capital-interp {
     min-width: 0;
   }
 }
+/* اسم فایل — کوتاه‌شده */
+.drop-file-info .file-name {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.simple-file-name {
+  cursor: help;
+}
