@@ -204,10 +204,34 @@
               <span class="file-icon">✅</span>
               <span class="file-name" id="fileName"></span>
             </div>
+
+
             <div id="periodInfoBox" class="period-info-box" style="display:none">
               <label>📅 دوره صورت مالی:</label>
-              <span id="periodInfoText" class="period-info-text">—</span>
+              <span id="periodInfoText" class="period-info-text" style="display:none">—</span>
+              
+              <!-- ⭐ انتخابگر دستی دوره -->
+              <div class="period-edit-row">
+                <select id="periodMonthsSelect" class="period-select">
+                  <option value="3">۳ ماهه</option>
+                  <option value="6">۶ ماهه</option>
+                  <option value="9">۹ ماهه</option>
+                  <option value="12">سالانه</option>
+                </select>
+                <select id="periodYearSelect" class="period-select">
+                  <option value="1400">۱۴۰۰</option>
+                  <option value="1401">۱۴۰۱</option>
+                  <option value="1402">۱۴۰۲</option>
+                  <option value="1403">۱۴۰۳</option>
+                  <option value="1404">۱۴۰۴</option>
+                  <option value="1405">۱۴۰۵</option>
+                  <option value="1406">۱۴۰۶</option>
+                </select>
+                <span id="periodAutoBadge" class="period-auto-badge">✓ خودکار</span>
+              </div>
             </div>
+
+
             <div id="err" class="err" style="display:none"></div>
           </div>
         </div>
@@ -278,7 +302,6 @@
       <div class="inner-tabs">
         <button class="inner-tab active" data-inner="quick">نگاه سریع</button>
         <button class="inner-tab" data-inner="overview">تحلیل جامع</button>
-        <button class="inner-tab" data-inner="auto">تحلیل خودکار</button>
         <button class="inner-tab" data-inner="charts">نمودارها</button>
         <button class="inner-tab" data-inner="ratios">نسبت‌ها</button>
         <button class="inner-tab" data-inner="summary">جمع‌بندی</button>
@@ -315,6 +338,10 @@
           </div>
         </div>
 
+
+
+
+
         <div class="acc-card" data-acc="dupont">
           <div class="acc-header">
             <div class="acc-header-right">
@@ -332,6 +359,9 @@
             <div id="dupontNote" class="one-line-note"></div>
           </div>
         </div>
+
+
+
 
         <div class="acc-card" data-acc="ebitda">
           <div class="acc-header">
@@ -368,6 +398,9 @@
           </div>
         </div>
 
+
+
+
         <div class="acc-card" data-acc="eps">
           <div class="acc-header">
             <div class="acc-header-right">
@@ -383,6 +416,26 @@
             <div id="epsBox"></div>
           </div>
         </div>
+
+        <!-- ============================================================
+            کارت پتانسیل افزایش سرمایه
+        ============================================================ -->
+        <div class="acc-card" data-acc="capital">
+          <div class="acc-header">
+            <div class="acc-header-right">
+              <span class="acc-icon">💰</span>
+              <span class="acc-title">پتانسیل افزایش سرمایه</span>
+            </div>
+            <div class="acc-header-left">
+              <span class="acc-summary" id="accCapitalSummary">—</span>
+              <span class="acc-arrow">▼</span>
+            </div>
+          </div>
+          <div class="acc-body">
+            <div id="capitalPotentialBox"></div>
+          </div>
+        </div>
+
 
         <div class="acc-card" data-acc="quality">
           <div class="acc-header">
@@ -404,15 +457,8 @@
 
       </div>
 
-      <div class="inner-panel" data-innerpanel="auto">
 
-        <h3 class="inner-section-title">🚨 هشدارهای هوشمند <span class="help" data-tip="📖 هشدارهای خودکار بر اساس تغییرات.">?</span></h3>
-        <div id="alerts"></div>
 
-        <h3 class="inner-section-title" style="margin-top:24px">🧠 تحلیل خودکار <span class="help" data-tip="📖 جمع‌بندی خودکار از نسبت‌های مهم با علامت رنگی.">?</span></h3>
-        <div id="analysis"></div>
-
-      </div>
 
       <div class="inner-panel" data-innerpanel="charts">
 
@@ -456,14 +502,27 @@
 
       </div>
 
+
+
+
       <div class="inner-panel" data-innerpanel="summary">
 
-        <h3 class="inner-section-title">📝 جمع‌بندی متنی خودکار <span class="help" data-tip="📖 یه پاراگراف که همه‌چیز رو خلاصه می‌کنه.">?</span>
+        <h3 class="inner-section-title">📝 جمع‌بندی هوشمند <span class="help" data-tip="📖 این بخش به زبان ساده می‌گه شرکت چه وضعیتی داره.">?</span>
           <button id="copySummary" class="ghost" style="margin-right:auto;font-size:12px;padding:5px 12px">📋 کپی خلاصه</button>
         </h3>
+      
+        <!-- پاراگراف روان -->
         <div id="summary" class="summary-box"></div>
-
+      
+        <!-- ۳ کارت قوت/ضعف/پیگیری -->
+        <div id="smartCards" class="smart-cards-row"></div>
+      
+        <!-- توصیه نهایی -->
+        <div id="smartAdvice" class="smart-advice"></div>
+      
       </div>
+
+
 
     </div><!-- /out -->
 
@@ -740,6 +799,7 @@
 <script src="app.js"></script>
 <script src="compare.js"></script>
 <script src="watchlist.js"></script>
+<script src="symbols.js"></script>
 <script src="stock-search.js"></script>
 <script src="sector-patch.js"></script>
 

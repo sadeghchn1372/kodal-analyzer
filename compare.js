@@ -187,7 +187,7 @@
 
       // ⭐ تشخیص نوع صنعت
       if(window.detectSectorType){
-        const sectorType = window.detectSectorType(industry);
+        const sectorType = window.detectSectorType(industry, stock.symbol);
         if(window.MARKET){
           window.MARKET.sectorType = sectorType;
           window.MARKET.industry = industry;

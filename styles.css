@@ -5223,3 +5223,556 @@ body.dark .score-note-top {
 #baseSearchInput {
   border: 2px dashed rgba(229, 57, 53, 0.6) !important;
 }
+
+/* ============================================================
+   ۵۷. کارت پتانسیل افزایش سرمایه
+============================================================ */
+.capital-hero {
+  padding: 18px 20px;
+  background: linear-gradient(135deg, var(--chart-bg), var(--card));
+  border-radius: 14px;
+  border: 1px solid var(--chart-br);
+  border-top: 5px solid #94a3b8;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.capital-icon {
+  font-size: 42px;
+  line-height: 1;
+  margin-bottom: 10px;
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,.15));
+}
+
+.capital-title {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.capital-text {
+  font-size: 13.5px;
+  color: var(--txt);
+  line-height: 1.9;
+  margin-bottom: 12px;
+}
+
+.capital-suggestion {
+  padding: 10px 14px;
+  background: rgba(102,112,133,.08);
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: var(--sub);
+  line-height: 1.8;
+  text-align: right;
+  border-right: 3px solid var(--blue);
+}
+
+.capital-suggestion b {
+  color: var(--blue);
+}
+
+.capital-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.capital-stat {
+  padding: 12px 14px;
+  background: var(--chart-bg);
+  border: 1px solid var(--chart-br);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.capital-stat-label {
+  font-size: 11.5px;
+  color: var(--sub);
+  font-weight: 600;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.capital-stat-value {
+  font-size: 17px;
+  font-weight: 800;
+  direction: rtl;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 600px) {
+  .capital-hero {
+    padding: 14px 16px;
+  }
+  .capital-icon {
+    font-size: 34px;
+    margin-bottom: 8px;
+  }
+  .capital-title {
+    font-size: 15.5px;
+  }
+  .capital-text {
+    font-size: 12.5px;
+  }
+  .capital-suggestion {
+    font-size: 11.5px;
+    padding: 8px 12px;
+  }
+  .capital-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .capital-stat {
+    padding: 10px 12px;
+  }
+  .capital-stat-value {
+    font-size: 14px;
+  }
+  .capital-stat-label {
+    font-size: 10.5px;
+  }
+}
+/* ============================================================
+   ۵۸. تفسیرهای کارت افزایش سرمایه
+============================================================ */
+.capital-interpretations {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.capital-interp {
+  padding: 12px 14px;
+  background: rgba(23,105,224,.06);
+  border-radius: 10px;
+  border-right: 3px solid var(--blue);
+}
+
+.capital-interp-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+  margin-bottom: 6px;
+}
+
+.capital-interp-text {
+  font-size: 12.5px;
+  line-height: 1.85;
+  color: var(--txt);
+}
+
+body.dark .capital-interp {
+  background: rgba(59,130,246,.1);
+}
+
+@media (max-width: 600px) {
+  .capital-interp {
+    padding: 10px 12px;
+  }
+  .capital-interp-label {
+    font-size: 11.5px;
+  }
+  .capital-interp-text {
+    font-size: 12px;
+  }
+}
+
+/* ============================================================
+   ۵۸. تفسیرهای کارت افزایش سرمایه
+============================================================ */
+.capital-interpretations {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.capital-interp {
+  padding: 12px 14px;
+  background: rgba(23,105,224,.06);
+  border-radius: 10px;
+  border-right: 3px solid var(--blue);
+}
+
+.capital-interp-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+  margin-bottom: 6px;
+}
+
+.capital-interp-text {
+  font-size: 12.5px;
+  line-height: 1.85;
+  color: var(--txt);
+}
+
+body.dark .capital-interp {
+  background: rgba(59,130,246,.1);
+}
+
+@media (max-width: 600px) {
+  .capital-interp { padding: 10px 12px; }
+  .capital-interp-label { font-size: 11.5px; }
+  .capital-interp-text { font-size: 12px; }
+}
+
+/* ============================================================
+   🤖 تحلیل هوشمند — کارت‌های ساده و گرافیکی
+============================================================ */
+
+/* خلاصه بالای کارت‌ها */
+.smart-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  margin-bottom: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  animation: smartFadeIn .3s ease;
+}
+.smart-summary-bad {
+  background: linear-gradient(135deg, rgba(198,40,40,.12), rgba(198,40,40,.05));
+  border-right: 5px solid #c62828;
+  color: #c62828;
+}
+.smart-summary-warn {
+  background: linear-gradient(135deg, rgba(234,179,8,.12), rgba(234,179,8,.05));
+  border-right: 5px solid #eab308;
+  color: #a16207;
+}
+.smart-summary-good {
+  background: linear-gradient(135deg, rgba(16,185,129,.12), rgba(16,185,129,.05));
+  border-right: 5px solid #16834a;
+  color: #16834a;
+}
+.smart-summary .ss-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+/* گرید کارت‌ها */
+.smart-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* کارت */
+.smart-card {
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--chart-bg);
+  border: 1px solid var(--chart-br);
+  border-right: 5px solid #94a3b8;
+  transition: transform .15s, box-shadow .15s;
+  animation: smartFadeIn .4s ease;
+}
+.smart-card:hover {
+  transform: translateX(-3px);
+  box-shadow: 0 4px 14px rgba(0,0,0,.08);
+}
+
+.smart-card.smart-good {
+  border-right-color: #16834a;
+  background: linear-gradient(135deg, rgba(16,185,129,.04), var(--chart-bg));
+}
+.smart-card.smart-warn {
+  border-right-color: #eab308;
+  background: linear-gradient(135deg, rgba(234,179,8,.04), var(--chart-bg));
+}
+.smart-card.smart-bad {
+  border-right-color: #c62828;
+  background: linear-gradient(135deg, rgba(198,40,40,.04), var(--chart-bg));
+}
+
+.smart-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.smart-card-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+.smart-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--txt);
+}
+
+.smart-card-text {
+  font-size: 14px;
+  color: var(--txt);
+  line-height: 1.9;
+  margin-bottom: 10px;
+}
+.smart-card-text b {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.smart-card-tip {
+  padding: 10px 14px;
+  background: rgba(102,112,133,.08);
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: var(--sub);
+  line-height: 1.8;
+  border-right: 3px solid var(--blue);
+}
+
+@keyframes smartFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* موبایل */
+@media (max-width: 600px) {
+  .smart-summary {
+    padding: 12px 16px;
+    font-size: 13.5px;
+  }
+  .smart-summary .ss-icon {
+    font-size: 22px;
+  }
+  .smart-card {
+    padding: 13px 14px;
+  }
+  .smart-card-icon {
+    font-size: 20px;
+  }
+  .smart-card-title {
+    font-size: 14px;
+  }
+  .smart-card-text {
+    font-size: 13px;
+  }
+  .smart-card-tip {
+    font-size: 11.5px;
+    padding: 8px 12px;
+  }
+}
+
+/* ============================================================
+   📝 جمع‌بندی هوشمند
+============================================================ */
+
+.smart-cards-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.smart-card {
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--chart-bg);
+  border: 1px solid var(--chart-br);
+  border-right: 5px solid #94a3b8;
+  transition: transform .15s, box-shadow .15s;
+}
+
+.smart-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+}
+
+.smart-card.smart-good {
+  border-right-color: #16834a;
+  background: linear-gradient(135deg, rgba(16,185,129,.06), var(--chart-bg));
+}
+.smart-card.smart-warn {
+  border-right-color: #eab308;
+  background: linear-gradient(135deg, rgba(234,179,8,.06), var(--chart-bg));
+}
+.smart-card.smart-bad {
+  border-right-color: #c62828;
+  background: linear-gradient(135deg, rgba(198,40,40,.06), var(--chart-bg));
+}
+
+.smart-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.smart-card-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+.smart-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sub);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.smart-card-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--txt);
+  margin-bottom: 8px;
+}
+
+.smart-card-detail {
+  font-size: 13px;
+  color: var(--txt);
+  line-height: 1.8;
+}
+
+.smart-advice {
+  margin-top: 16px;
+}
+
+.smart-advice-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--chart-bg);
+  border-radius: 12px;
+  border-right: 4px solid #16834a;
+  font-size: 14px;
+  line-height: 1.9;
+}
+.smart-advice-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.smart-advice-text {
+  color: var(--txt);
+}
+
+.smart-advice-disclaimer {
+  margin-top: 10px;
+  padding: 8px 14px;
+  font-size: 11.5px;
+  color: var(--sub);
+  text-align: center;
+  background: rgba(102,112,133,.06);
+  border-radius: 8px;
+  line-height: 1.7;
+}
+
+@media (max-width: 600px) {
+  .smart-cards-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .smart-card {
+    padding: 13px 14px;
+  }
+  .smart-card-icon { font-size: 20px; }
+  .smart-card-label { font-size: 15px; }
+  .smart-card-detail { font-size: 12.5px; }
+  .smart-advice-inner { font-size: 13px; }
+}
+
+/* ============================================================
+   📅 انتخابگر دستی دوره
+============================================================ */
+
+.period-info-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 10px;
+  padding: 8px 14px;
+  background: var(--card);
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  width: 100%;
+  justify-content: center;
+}
+
+.period-info-box label {
+  font-size: 12.5px;
+  color: var(--sub);
+  margin: 0;
+  font-weight: 600;
+}
+
+.period-info-text {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--blue);
+  padding: 3px 10px;
+  background: rgba(23,105,224,.1);
+  border-radius: 6px;
+  direction: rtl;
+}
+
+.period-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.period-select {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--line);
+  background: var(--chart-bg);
+  color: var(--txt);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  direction: rtl;
+  transition: .15s;
+}
+
+.period-select:hover {
+  border-color: var(--blue);
+}
+
+.period-select:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(23,105,224,.12);
+}
+
+.period-auto-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: rgba(16,185,129,.12);
+  color: #16834a;
+  white-space: nowrap;
+}
+
+.period-auto-badge.manual {
+  background: rgba(234,179,8,.15);
+  color: #a16207;
+}
+
+@media (max-width: 600px) {
+  .period-info-box {
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+  }
+  .period-edit-row {
+    width: 100%;
+    justify-content: center;
+  }
+  .period-select {
+    flex: 1;
+    min-width: 0;
+  }
+}

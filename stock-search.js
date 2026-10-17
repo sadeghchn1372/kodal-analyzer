@@ -1,6 +1,6 @@
 /* ============================================================
    stock-search.js — جستجو + دریافت خودکار از TSETMC
-   نسخه: 2.2.0 — افزودن گروه هلدینگ چندرشته‌ای
+   نسخه: 2.4.0 — P/E و EPS از ClosingPriceDailyList
 ============================================================ */
 
 (function(){
@@ -15,9 +15,11 @@
 
   /* ============================================================
      ⭐ تشخیص نوع صنعت از روی اسم گروه
-     گروه‌ها: normal | bank | insurance | leasing | investment
   ============================================================ */
-  function detectSectorType(industry){
+  function detectSectorType(industry, symbol){
+    if(symbol && window.SYMBOL_MAP && window.SYMBOL_MAP[symbol]){
+      return window.SYMBOL_MAP[symbol];
+    }
     if(!industry) return 'normal';
 
     const s = String(industry)
@@ -28,27 +30,15 @@
       .trim()
       .toLowerCase();
 
-    // ---- بانک ----
     if(/بانک|موسسه اعتباری|موسسات اعتباری|صرافی/.test(s)) return 'bank';
 
-    // ---- بیمه (باید قبل از investment چک بشه) ----
-    // «بیمه و صندوق بازنشستگی به جز تامین اجتماعی» → insurance
-    // ولی «سرمایه‌گذاری صنعت بیمه» (وبیمه) → investment
     if(/بیمه/.test(s) && !/سرمایه ?گذاری/.test(s) && !/سرمايه ?گذاري/.test(s)) return 'insurance';
     if(/صندوق بازنشستگی/.test(s) && !/سرمایه ?گذاری/.test(s) && !/سرمايه ?گذاري/.test(s)) return 'insurance';
 
-    // ---- لیزینگ ----
     if(/لیزینگ/.test(s)) return 'leasing';
-
-    // ---- سایر واسطه‌گری‌های مالی = گروه لیزینگ‌ها ----
-    // نمادهایی مثل ولیز، ولساپا، ولبهمن، ولصنم اینجا قرار می‌گیرن
     if(/سایر\s*واسطه/.test(s)) return 'leasing';
-
-    // ---- شرکت‌های چند رشته‌ای صنعتی (هلدینگ) = investment ----
-    // نمادهایی مثل وغدیر، شستا، وامید، وبانک
     if(/چند\s*رشته/.test(s)) return 'investment';
 
-    // ---- سرمایه‌گذاری (تمام اشکال نوشتاری) ----
     if(/سرمایه ?گذاری/.test(s)) return 'investment';
     if(/سرمايه ?گذاري/.test(s)) return 'investment';
     if(/^سرمایه ?گذاریها$/.test(s)) return 'investment';
@@ -111,6 +101,9 @@
     }));
   }
 
+  /* ============================================================
+     قیمت لحظه‌ای
+  ============================================================ */
   async function fetchPriceInfo(insCode){
     const url = `https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceInfo/${insCode}`;
     const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
@@ -119,6 +112,10 @@
     const data = await response.json();
     const info = data.closingPriceInfo;
     if(!info) throw new Error('ساختار پاسخ نامعتبر');
+
+    // ⭐ لاگ کامل برای دیدن همه فیلدها
+    console.log('🔍 ClosingPriceInfo keys:', Object.keys(info));
+    console.log('🔍 ClosingPriceInfo raw:', info);
 
     const lastPrice = info.pDrCotVal || 0;
     const closePrice = info.pClosing || 0;
@@ -131,9 +128,16 @@
       changePercent = ((lastPrice - yesterdayPrice) / yesterdayPrice) * 100;
     }
 
-    return { lastPrice, closePrice, yesterdayPrice, changePercent };
+    // ⭐ P/E و EPS از همین API (اگه باشه)
+    const tsetmcPE = info.pE && info.pE > 0 ? info.pE : null;
+    const tsetmcEPS = info.eps && info.eps !== 0 ? info.eps : null;
+
+    return { lastPrice, closePrice, yesterdayPrice, changePercent, tsetmcPE, tsetmcEPS };
   }
 
+  /* ============================================================
+     اطلاعات نماد (تعداد سهام، صنعت)
+  ============================================================ */
   async function fetchInstrumentInfo(insCode){
     const url = `https://cdn.tsetmc.com/api/Instrument/GetInstrumentInfo/${insCode}`;
     const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
@@ -156,6 +160,47 @@
     return { shares, industry };
   }
 
+  /* ============================================================
+     ⭐ P/E و EPS از ClosingPriceDailyList
+  ============================================================ */
+  async function fetchTsetmcPE(insCode){
+    try {
+      const url = `https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDailyList/${insCode}/1`;
+      const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if(!response.ok){
+        console.warn('fetchTsetmcPE: خطای شبکه', response.status);
+        return null;
+      }
+
+      const data = await response.json();
+      const list = data.closingPriceDaily;
+      if(!list || !list.length){
+        console.warn('fetchTsetmcPE: لیست خالیه');
+        return null;
+      }
+
+      const latest = list[0];
+
+      // ⭐ لاگ کامل برای دیباگ
+      console.log('🎯 ClosingPriceDaily keys:', Object.keys(latest));
+      console.log('🎯 ClosingPriceDaily raw:', latest);
+
+      const pe = (latest.pE && latest.pE > 0 && latest.pE < 10000) ? latest.pE : null;
+      const eps = (latest.eps && latest.eps !== 0) ? latest.eps : null;
+      const peGroup = (latest.pEgroup && latest.pEgroup > 0) ? latest.pEgroup : null;
+
+      console.log('✅ P/E استخراج‌شده:', pe, '| EPS:', eps, '| PE Group:', peGroup);
+
+      return { pe, eps, peGroup };
+    } catch(e){
+      console.warn('❌ خطا در fetchTsetmcPE:', e.message);
+      return null;
+    }
+  }
+
+  /* ============================================================
+     پر کردن فیلدهای فرم
+  ============================================================ */
   function fillFields(data){
     if($('symbolName')) $('symbolName').value = data.symbol || '';
 
@@ -220,7 +265,6 @@
       <div class="input-section-title">
         <span class="step-badge">۲</span>
         🔍 جستجوی سهم
-       
       </div>
 
       <div class="stock-search-row">
@@ -308,9 +352,11 @@
     if(resultsBox) resultsBox.innerHTML = '';
 
     try{
-      const [priceData, instData] = await Promise.all([
+      // ⭐ سه تا API رو موازی صدا بزن
+      const [priceData, instData, peData] = await Promise.all([
         fetchPriceInfo(stock.insCode),
         fetchInstrumentInfo(stock.insCode).catch(() => null),
+        fetchTsetmcPE(stock.insCode).catch(() => null),
       ]);
 
       const data = {
@@ -319,19 +365,45 @@
         industry: instData?.industry || '',
         ...priceData,
         shares: instData?.shares || null,
+        // ⭐ P/E و EPS از ClosingPriceDailyList
+        tsetmcPE: peData?.pe || null,
+        tsetmcEPS: peData?.eps || null,
+        groupPE: peData?.peGroup || null,
       };
 
+      console.log('📊 نتیجه نهایی:', {
+        symbol: data.symbol,
+        tsetmcPE: data.tsetmcPE,
+        tsetmcEPS: data.tsetmcEPS,
+        groupPE: data.groupPE,
+      });
+
+console.log('🔍 قبل از ذخیره — data.tsetmcPE:', data.tsetmcPE, '| __kodal_setPE:', typeof window.__kodal_setPE);
+
+      // ⭐ ذخیره در MARKET (هم window و هم MARKET داخلی)
+      if(window.MARKET){
+        window.MARKET.tsetmcPE = data.tsetmcPE;
+        window.MARKET.tsetmcEPS = data.tsetmcEPS;
+        window.MARKET.groupPE = data.groupPE;
+      }
+      // ⭐ صدا زدن تابع app.js برای آپدیت MARKET داخلی
+      if(window.__kodal_setPE){
+        window.__kodal_setPE({
+          tsetmcPE: data.tsetmcPE,
+          tsetmcEPS: data.tsetmcEPS,
+          groupPE: data.groupPE,
+        });
+      }
+
       // ⭐ تشخیص نوع صنعت
-      const sectorType = detectSectorType(data.industry);
+      const sectorType = detectSectorType(data.industry, data.symbol);
       const industryName = data.industry || '';
 
-      // ⭐ ذخیره توی window.MARKET
       if(window.MARKET){
         window.MARKET.sectorType = sectorType;
         window.MARKET.industry = industryName;
       }
 
-      // ⭐ صدا زدن تابع app.js برای ست کردن MARKET محلی
       if(window.__kodal_setSector){
         window.__kodal_setSector(sectorType, industryName);
       }
@@ -366,10 +438,15 @@
         ? `<span style="color:#8b5cf6;font-size:11.5px;background:rgba(139,92,246,.12);padding:2px 8px;border-radius:6px;font-weight:600">🏭 ${H.escapeHtml(data.industry)}</span>`
         : '';
 
+      const peHtml = data.tsetmcPE
+        ? `<span style="color:#0ea5e9;font-size:11.5px;background:rgba(14,165,233,.12);padding:2px 8px;border-radius:6px;font-weight:600;margin-right:6px">📊 P/E سایت: ${H.toFa(data.tsetmcPE.toFixed(2))}</span>`
+        : '';
+
       showMessage(`
         <span style="font-weight:700;color:var(--good)">✅ ${H.escapeHtml(data.symbol)}</span>
         <span style="color:var(--sub);font-size:12px;margin-right:6px">${H.escapeHtml(data.name)}</span>
         ${industryHtml}
+        ${peHtml}
         <span style="margin-right:auto;font-size:13px">
           💰 <b>${priceText}</b> ریال ${changeHtml}
           <span style="color:var(--line);margin:0 8px">|</span>
@@ -381,20 +458,19 @@
         window.showToast(`✅ ${data.symbol} بارگذاری شد`);
       }
 
-      // ⭐ فعال کردن دکمه تحلیل
       const goBtn = $('go');
       if(goBtn){
         goBtn.disabled = false;
         console.log('✅ دکمه تحلیل فعال شد');
       }
 
-      // ⭐ اگه تحلیل قبلاً انجام شده بود، دوباره رندر کن
       if(window.PARSED && typeof window.render === 'function'){
         window.render(0);
       }
 
     }catch(err){
       showMessage('❌ ' + H.escapeHtml(err.message), 'error');
+      console.error('selectStock error:', err);
     }
   }
 
@@ -425,6 +501,6 @@
     init();
   }
 
-  console.log('%c🔍 stock-search.js v2.2.0 لود شد (با گروه هلدینگ)', 'color:#8b5cf6;font-weight:bold');
+  console.log('%c🔍 stock-search.js v2.4.0 لود شد (با P/E از ClosingPriceDailyList)', 'color:#8b5cf6;font-weight:bold');
 
 })();
