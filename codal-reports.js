@@ -157,14 +157,50 @@
     const submit = form.querySelector('button');
     submit.disabled = true;
     try {
-      const response = await fetch(API + '/api/search?symbol=' + encodeURIComponent(symbol), {
-        headers: { 'Accept': 'application/json' }
+      // Try Codal directly first; this avoids the Render-to-Codal timeout when browser CORS permits it.
+      const params = new URLSearchParams({
+        Symbol: symbol, LetterType: '6', Category: '1', PageNumber: '1',
+        FromDate: '', ToDate: '', Audited: 'true', NotAudited: 'true',
+        Consolidatable: 'true', NotConsolidatable: 'true', Childs: 'false',
+        Mains: 'true', Publisher: 'false', search: 'true'
       });
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      const data = await response.json();
+      let data;
+      try {
+        const direct = await fetch('https://search.codal.ir/api/search/v2/q?' + params.toString(), {
+          headers: { 'Accept': 'application/json, text/plain, */*' }
+        });
+        if (!direct.ok) throw new Error('Codal HTTP ' + direct.status);
+        const raw = await direct.json();
+        const letters = raw.Letters || raw.letters || [];
+        data = {
+          reports: letters.map((letter) => {
+            const url = letter.Url || letter.url || '';
+            const match = url.match(/LetterSerial=([^&]+)/i);
+            const serial = match ? match[1] : (letter.LetterSerial || letter.letterSerial || '');
+            return {
+              title: letter.Title || letter.title || 'گزارش بدون عنوان',
+              company: letter.CompanyName || letter.companyName || '',
+              date: letter.PublishDateTime || letter.SentDateTime || letter.publishDate || '',
+              serial,
+              links: {
+                html: serial ? 'https://www.codal.ir/Reports/Decision.aspx?LetterSerial=' + encodeURIComponent(serial) + '&rt=0&let=6&ct=0&ft=-1' : url
+              }
+            };
+          }),
+          total: raw.Total || raw.total || letters.length
+        };
+      } catch (directError) {
+        console.warn('[Codal reports] Direct Codal request unavailable; trying backend.', directError);
+        const response = await fetch(API + '/api/search?symbol=' + encodeURIComponent(symbol), {
+          headers: { 'Accept': 'application/json' },
+          signal: AbortSignal.timeout(10000)
+        });
+        if (!response.ok) throw new Error('Backend HTTP ' + response.status);
+        data = await response.json();
+      }
       renderReports(data);
     } catch (error) {
-      status.textContent = 'اتصال به سرویس گزارش‌ها برقرار نشد. چند لحظه بعد دوباره تلاش کن.';
+      status.textContent = 'جست‌وجو از مرورگر و سرور انجام نشد. احتمالاً اتصال کدال از این مسیر محدود است.';
       console.error('[Codal reports]', error);
     } finally {
       submit.disabled = false;
