@@ -128,7 +128,7 @@
       if (serial) {
         const download = document.createElement('a');
         download.className = 'cr-download';
-        download.href = API + '/api/download?serial=' + encodeURIComponent(serial);
+        download.href = report.directExcel || (API + '/api/download?serial=' + encodeURIComponent(serial));
         download.textContent = 'دانلود اکسل';
         download.setAttribute('download', '');
         download.addEventListener('click', () => {
@@ -182,6 +182,7 @@
               company: letter.CompanyName || letter.companyName || '',
               date: letter.PublishDateTime || letter.SentDateTime || letter.publishDate || '',
               serial,
+              directExcel: serial ? 'https://excel.codal.ir/service/Excel/GetAll/' + encodeURIComponent(serial) + '/0' : '',
               links: {
                 html: serial ? 'https://www.codal.ir/Reports/Decision.aspx?LetterSerial=' + encodeURIComponent(serial) + '&rt=0&let=6&ct=0&ft=-1' : url
               }
